@@ -1,5 +1,7 @@
 # Get a Grip Household
 
+> **Being rebuilt (November 2026).** The app at the live address is now a copy (fork) of [Get a grip](https://github.com/DMHMca/get-a-grip), the personal to-do app, with its own separate storage. The household features described below (brainstorm wall, Share out, shared store) are being brought back into it step by step. See `CLAUDE.md` for the plan.
+
 A planning tool for two people who share a household. Instead of a planning session that produces an overwhelming list of fifty jobs, it helps you:
 
 1. **Brainstorm** together on a laptop: a warm-up, then a walk through each area of life (the house room by room, the garden, paperwork; bills, money, the car, the kids, health, business ventures and trips month by month through the coming year), then group the notes into big tasks with small steps.

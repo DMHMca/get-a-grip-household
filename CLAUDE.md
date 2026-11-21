@@ -2,6 +2,26 @@
 
 Read this first. It is the sister project of `DMHMca/get-a-grip` (the owner's personal to-do app). Keep the two separate: household work happens here; changes to Get a grip itself happen in that repository.
 
+## THE AGREED PLAN (21 November 2026, owner's decision): A FORK OF GET A GRIP
+
+The household app becomes a FORK of Get a grip personal: a one-off copy taken now, after which the two apps go their own ways. Nothing is kept in step between them (the owner: his personal changes may not suit Lauren and Josh, and he does not need household features himself). Josh, an experienced developer, may take the code over later. Never change the get-a-grip repository for household work.
+
+The finished app: all of Get a grip's task handling (Today, Big, Small, activities, subtasks, Wait, details, Refresh), plus the household parts (wall, Share out, shared store). Each person's PERSONAL tasks stay private on their own devices and are never sent to the shared store; HOUSEHOLD tasks live in the shared store so both see them. Same address as now.
+
+Stages (each tested in a scripted browser and released on its own so they can try it):
+
+1. Make the copy. Copy Get a grip's code into this repository in place of the old household app. Give it its OWN storage names and its own Google Drive file name, because both apps share the origin `dmhmca.github.io` and would otherwise overwrite each other's data. Plum household name and icon. The old household app stays in git history (commit `2161fca`) for Stage 2.
+2. Bring the household parts in: wall (Brainstorm) and Share out as a Household section; household code and Cloudflare store carry on; each device set once to Lauren or Josh.
+3. Setting up agreed jobs: after Share out, each agreed job becomes a proper Get a grip task (steps, big/small, Wait, time and equipment, details), stored in the shared store in Get a grip's task shape, assigned to Lauren OR Josh.
+4. Today: views "Mine" (personal only), "Household" (household only) and "Everything" (day drawn from both). Ticking a household task updates the shared store. Test that nothing personal ever reaches the shared store.
+5. Tidy and hand over: rewrite this brief and the README for Josh or a future session. Handover items: the repository is on the owner's GitHub account (add Josh or transfer it); the store is on the owner's Cloudflare account (Josh would want his own).
+
+NO GOOGLE DRIVE (owner, 21 Nov 2026): Drive sync keeps asking to sign in, so it is hidden in this app (the Sync line is removed from the More menu; the code is still there, unused). Syncing a person's PERSONAL tasks between their own devices should go through the Cloudflare store instead, under a separate private personal code that is never the household code, so no approval is needed on every start. Not yet built; fit it in alongside Stage 2 or 4 and confirm the design with the owner first.
+
+NO "BOTH" (owner, 21 Nov 2026): every job is assigned to ONE person, never both ("a guarantee that each of them will leave it to the other"). When Share out comes across in Stage 2, drop its Both column; a job is Lauren's or Josh's.
+
+Open questions (ask when they arise): keep made-up example notes while it is a demo? The old household app in `get-a-grip/household/` stays for now (owner, 21 Nov 2026).
+
 ## The owner and how to work with him
 
 - David McAughtry. Very little coding experience. Explain in plain English, give step-by-step instructions for anything he must do, and say exactly what he should see on screen.
@@ -21,13 +41,13 @@ Demo only, with made-up data, until the owner says otherwise. The owner is not y
 
 ## Where things are
 
-- Live: https://dmhmca.github.io/get-a-grip-household/ (GitHub Pages, branch `main`, root). The earlier copy lived at `https://dmhmca.github.io/get-a-grip/household/` in the get-a-grip repository; same origin, so `localStorage` data carries over.
+- Live: https://dmhmca.github.io/get-a-grip-household/ (GitHub Pages, branch `main`, root). Since Stage 1 the root is the fork of Get a grip: `index.html` (APP_VERSION `H1`, bump each release), all storage keys prefixed `gagh.` through the `LS` wrapper, Drive file `get-a-grip-household-data.json`, `sw.js` cache `gagh-vNN`. The earlier copy lived at `https://dmhmca.github.io/get-a-grip/household/` in the get-a-grip repository; same origin, so `localStorage` data carries over.
 - `index.html`: the whole app. `sw.js`: cache `gagh-vNN` (bump on every release; it only deletes caches starting `gagh-`, so it never touches Get a grip's caches). `manifest.webmanifest`: name "Get a Grip Household", plum icons in this folder.
 - Storage: `household.doc.v2` (shared document: `tasks`, `gone`, `day`, `cats`) and `household.local.v2` (this device: `code`, `me`, `tab`, `stage`, `idx`, `area`, `part`, `walkOpen`, `welcomed`, `local`).
 - Shared store: Cloudflare Worker `household-store` on the OWNER's Cloudflare account, `https://household-store.dmhmca-apps.workers.dev` (constant `SERVER`), code in `worker/worker.js`, KV namespace `household-demo` bound as `HOUSEHOLD`. `GET /h/<CODE>` returns `{v,doc}`; `PUT /h/<CODE>` with `{base,doc}` saves only if `base` equals the stored version (else 409 with the current copy). CORS allows `https://dmhmca.github.io`. The Cloudflare API token used to deploy expires 20 December 2026; to redeploy after that, ask the owner for a new token through the secure credential form (Edit Cloudflare Workers template, account resources = his account, zone = all zones, 30 days).
 - Sync in the app: on open, on return, 1.2 s after a change, every 20 s; `merge` takes the later `updated` per task, honours `gone` tombstones (90 days), merges `day` and `cats` by key; `stable` compares documents to avoid needless writes.
 
-## The app today
+## The OLD household app (replaced by the fork in Stage 1; code in commit `2161fca`, to be brought back in Stage 2)
 
 - Tab "1 · Brainstorm": welcome card; rounds (stepper) Warm up (six questions with number and Back buttons; Q2 reworded to avoid blame), Walk each area (opens on TILES; a tile brings in its walk: House, Garden and Paperwork go part by part, the House parts being Whole house, Kitchen, Utility room, Boot room, Larder, Living room, Bathroom, Bedrooms, Halls stairs and corridors, Loft and storage, Annex; Major bills, Money, Car, Kids, Health, Business ventures, Trips & fun go month by month through the coming year with month hints; "Add your own" area stored in `D.cats`; "← All areas", Back, Next, jump buttons; note counts on tiles), The year ahead (general month sweep; the owner may drop it), Group into big tasks (drag a note onto another to make it a step; Not now pile). Tappable examples ("starters") in every part. Two-minute timer. Notes are sticky notes on "the wall", grouped by area and tagged with the part or month. "Remove the example notes" and "Clear the whole wall".
 - Tab "2 · Share out": columns Still to share out, Lauren, Josh, Both; drag or tap the round buttons; steps go with their task; balance strip with a neutral note.
