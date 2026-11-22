@@ -430,7 +430,8 @@ function day(){
 }
 function link(){
  var h='<div class="day"><h2>Sharing</h2>';
- if(L.code)return h+reminders()+'<div class="note2">This device shares a household. The code is<div class="code">'+showCode(L.code)+'</div>On each other device open this page, go to Sharing and choose “Join with a code”.</div><div class="srow"><button data-act="syncnow">Update now</button><button data-act="leave">Stop sharing on this device</button></div></div>';
+ if(!L.code)h+=pinRow();
+ if(L.code)return h+pinRow()+reminders()+'<div class="note2">This device shares a household. The code is<div class="code">'+showCode(L.code)+'</div>On each other device open this page, go to Sharing and choose “Join with a code”.</div><div class="srow"><button data-act="syncnow">Update now</button><button data-act="leave">Stop sharing on this device</button></div></div>';
  return h+'<div class="note2">Lauren and Josh share one household. One of you starts it and gets a code; the other devices join with that code. You do this once per device.</div><div class="srow"><button class="on" data-act="start">Start a new household</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Join with a code</button></div><div class="srow"><button data-act="locally">Just try it on this device</button></div></div>';
 }
 /* ---- reminders: a phone notification a week and a day before a job's due date (the Cloudflare store sends them) ---- */
@@ -487,6 +488,7 @@ function panel(){
  h+='<div class="glab">What it is</div><input type="text" data-g="text" data-id="'+t.id+'" value="'+esc(t.text)+'">';
  if(!par){
   h+='<div class="glab">Size</div>'+seg('gsize',[['small','Small'],['big','Big']],t.size==='big'?'big':'small',t.id);
+  h+='<div class="glab">Area (its activity in My day)</div><select data-g="area" data-id="'+t.id+'">'+allAreas().filter(function(x){return !x.gone;}).map(function(x){return '<option value="'+x.k+'"'+((t.area||'wild')===x.k?' selected':'')+'>'+x.e+' '+esc(x.n)+'</option>';}).join('')+'</select>';
   h+='<div class="glab">Whose job</div>'+seg('gwho',[['0',NAMES[0]],['1',NAMES[1]],['','Not decided yet']],t.to===0||t.to===1?String(t.to):'',t.id);
   h+='<div class="glab">Steps</div>';
   ks.forEach(function(k){h+='<div class="gstep'+(k.done?' done':'')+'"><input type="checkbox" data-act="tick" data-id="'+k.id+'" aria-label="Done"'+(k.done?' checked':'')+'><span class="gt" data-act="gopen" data-id="'+k.id+'">'+esc(k.text)+'</span><button class="x" data-act="del" data-id="'+k.id+'" aria-label="Delete this step">×</button></div>';});
@@ -515,6 +517,7 @@ document.addEventListener('change',function(e){
  else if(k==='notes')gset(t,'notes',el.value.trim()?el.value:'');
  else if(k==='waitdate'){delete t.wf;delete t.wh;gset(t,'wait',el.value);}
  else if(k==='wf'){delete t.wait;delete t.wh;gset(t,'wf',el.value);}
+ else if(k==='area'){t.area=el.value||'wild';kids(t.id).forEach(function(x){x.area=t.area;x.updated=now();});touch(t);}
  else if(k==='due')gset(t,'due',el.value);
  else if(k==='rep')gset(t,'rep',el.checked?'year':'');
  draw(true);
@@ -564,6 +567,60 @@ function tasksTab(){
  if(un)h+='<p class="sub">'+un+' job'+(un>1?'s are':' is')+' still to share out. <button class="lnk" data-act="tab" data-t="alloc">Go to Share out</button></p>';
  return h+'</div>';
 }
+/* ---- DEVICE PIN (owner, 22 Nov 2026). Personal tasks belong to the DEVICE (they are kept in this browser), so once the device's
+   owner sets a PIN, it is asked for whenever personal things would come into view: leaving "Household together" or "Shared screen",
+   or switching the device to the other person. Stored only on this device as a salted SHA-256 hash (L.pin, L.pinSalt, L.pinWho).
+   A curtain against a casual tap, not strong security (the data is still in the browser). Forgotten PIN: "Reset" removes the PIN AND
+   this device's personal tasks, so nothing private is exposed. ---- */
+function pinHash(pin){var b=new TextEncoder().encode((L.pinSalt||'')+':'+pin);return crypto.subtle.digest('SHA-256',b).then(function(h){return Array.from(new Uint8Array(h)).map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function needPin(next){return !!L.pin&&(hhOnly()||(next.me!==undefined&&next.me!==L.me));}
+function applyMove(n){
+ if(n.me!==undefined){L.shared=false;L.together=false;var old=L.me;L.me=n.me;if(old!==L.me&&L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
+ if(n.together!==undefined){L.together=n.together;if(!n.together)L.shared=false;}
+ if(n.shared){L.shared=true;L.together=false;L.tview='both';}
+ if(hhOnly()&&L.tab==='day')L.tab='tasks';
+ persist();
+}
+function askMove(n){if(needPin(n)){ui.pin={mode:'enter',then:n,err:''};}else applyMove(n);}
+function pinPanel(){
+ var P=ui.pin,who=NAMES[L.pinWho===1?1:0];
+ var h='<div class="gsheet"><div class="gpanel" role="dialog" aria-modal="true" aria-label="PIN" style="max-width:420px">';
+ if(P.mode==='set'){
+  h+='<h3>Set a PIN for this device</h3><p class="gnote">It belongs to '+esc(NAMES[L.me])+', whose personal tasks are kept on this device. It will be asked for before anything personal shows again after “Household together”, or before switching to the other person. Four to eight numbers.</p>';
+  h+='<input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="New PIN" maxlength="8"><input type="password" inputmode="numeric" autocomplete="off" id="pin2" placeholder="The same PIN again" maxlength="8" style="margin-top:8px">';
+ }else{
+  h+='<h3>'+esc(who)+'’s PIN</h3><p class="gnote">This device holds '+esc(who)+'’s personal tasks. Enter the PIN to carry on.</p><input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="PIN" maxlength="8">';
+ }
+ if(P.err)h+='<p class="gnote" style="color:var(--small);font-weight:700">'+esc(P.err)+'</p>';
+ h+='<div class="gfoot"><button data-act="pincancel">Cancel</button><button class="on" data-act="pinok">'+(P.mode==='set'?'Set PIN':'OK')+'</button></div>';
+ if(P.mode==='enter')h+='<p class="gnote" style="margin-top:14px">Forgotten it? <button class="lnk" data-act="pinreset">Reset this device</button>: this removes the PIN and the personal tasks kept on this device, so nothing private can be seen.</p>';
+ return h+'</div></div>';
+}
+function pinOk(){
+ var P=ui.pin,a=(document.getElementById('pin1')||{}).value||'',b=(document.getElementById('pin2')||{}).value||'';
+ if(P.mode==='set'){
+  if(!/^\d{4,8}$/.test(a)){P.err='Use four to eight numbers.';draw(true);return;}
+  if(a!==b){P.err='The two PINs are not the same.';draw(true);return;}
+  var r=new Uint8Array(8);crypto.getRandomValues(r);L.pinSalt=Array.from(r).join('.');L.pinWho=L.me;
+  pinHash(a).then(function(hh){L.pin=hh;var n=P.then;ui.pin=null;if(n)applyMove(n);persist();ui.status='PIN set for this device.';draw(true);});
+  return;
+ }
+ if(Date.now()<(ui.pinWait||0)){P.err='Too many tries. Wait a moment, then try again.';draw(true);return;}
+ pinHash(a).then(function(hh){
+  if(hh===L.pin){ui.pinBad=0;var n=P.then;ui.pin=null;if(ui.pinNext==='set'){ui.pinNext=null;ui.pin={mode:'set',then:null,err:''};draw(true);return;}if(n==='remove'){L.pin='';L.pinSalt='';persist();ui.status='PIN removed.';}else applyMove(n);draw(true);}
+  else{ui.pinBad=(ui.pinBad||0)+1;if(ui.pinBad>=5){ui.pinWait=Date.now()+30000;ui.pinBad=0;}P.err='That PIN is not right.';draw(true);}
+ });
+}
+function pinReset(){
+ if(!confirm('Reset this device? The PIN and ALL the personal tasks kept on this device will be removed. Household jobs are not affected.'))return;
+ var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('gagh.')===0)ks.push(k);}
+ ks.forEach(function(k){localStorage.removeItem(k);});
+ L.pin='';L.pinSalt='';var n=ui.pin&&ui.pin.then;ui.pin=null;if(n&&n!=='remove')applyMove(n);persist();ui.status='This device was reset: no PIN, no personal tasks.';draw(true);
+}
+function pinRow(){
+ if(L.shared)return '';
+ return '<div class="note2"><b>PIN for this device</b><br>'+(L.pin?'Set, for '+esc(NAMES[L.pinWho===1?1:0])+'. It is asked for before anything personal shows after “Household together”, or before switching to the other person.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Not set. With a PIN, nobody can tap their way from the household view into '+esc(NAMES[L.me])+'’s personal tasks on this device.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
+}
 function head(){
  var h='<header class="top"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
@@ -572,12 +629,13 @@ function head(){
  h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['tasks','3 · Tasks'],['day','4 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
-function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
+function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
 function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
- a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='tasks'?tasksTab():L.tab==='day'?day():link())+(ui.sheet?panel():'');
+ a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='tasks'?tasksTab():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
+ var pf=document.getElementById('pin1');if(pf)pf.focus();
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();
 }
@@ -604,6 +662,7 @@ function nest(child,parent){
 document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;rollRepeats();touch(t);draw();}});
 document.addEventListener('keydown',function(e){
  if(e.key!=='Enter')return;var el=e.target;
+ if(el.id==='pin1'||el.id==='pin2'){e.preventDefault();if(el.id==='pin1'&&document.getElementById('pin2')){document.getElementById('pin2').focus();return;}pinOk();return;}
  if(el.hasAttribute&&el.hasAttribute('data-addfor')){e.preventDefault();var tx=el.value.trim().replace(/^[\s\-\*•]+/,''),wi=+el.getAttribute('data-addfor');if(tx){D.tasks.push({id:id(),text:tx,size:'small',area:'wild',tag:'',to:wi,by:L.me,done:false,n:Date.now(),updated:now()});changed();}el.value='';draw(true);var nb2=document.querySelector('[data-addfor="'+wi+'"]');if(nb2)nb2.focus();return;}
  if(el.id==='qa'){e.preventDefault();addIdea(el.value);el.value='';changed();draw(true);var q=document.getElementById('qa');if(q)q.focus();}
  else if(el.hasAttribute('data-brk')){e.preventDefault();var p=el.getAttribute('data-brk'),tx=el.value.trim(),par=byId(p);if(tx&&par){D.tasks.push({id:id(),text:tx,size:'small',area:par.area,to:par.to,parent:p,by:L.me,done:false,n:Date.now(),updated:now()});par.size='big';par.updated=now();changed();draw(true);var nb=document.querySelector('[data-brk="'+p+'"]');if(nb)nb.focus();}}
@@ -618,9 +677,14 @@ document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;var act=b.getAttribute('data-act'),t=byId(b.getAttribute('data-id'));
  if(act==='edit'||act==='gopen'){ui.sheet=b.getAttribute('data-id');draw(true);return;}
  if(act==='gclose'){if(e.target!==b&&b.classList.contains('gsheet'))return;ui.sheet=null;draw(true);return;}
- if(act==='together'){L.together=!L.together;if(L.together&&L.tab==='day')L.tab='tasks';}
- else if(act==='me'&&b.getAttribute('data-i')==='2'){L.shared=true;L.together=false;L.tview='both';}
- else if(act==='me'){L.shared=false;L.me=+b.getAttribute('data-i');if(L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
+ if(act==='together'){if(L.together)askMove({together:false});else if(!L.pin){ui.pin={mode:'set',then:{together:true},err:''};}else applyMove({together:true});}
+ else if(act==='me'&&b.getAttribute('data-i')==='2'){applyMove({shared:true});}
+ else if(act==='me'){var wi2=+b.getAttribute('data-i');if(!(wi2===L.me&&!hhOnly()))askMove({me:wi2});}
+ else if(act==='pinok'){pinOk();return;}
+ else if(act==='pincancel'){ui.pin=null;}
+ else if(act==='pinreset'){pinReset();return;}
+ else if(act==='pinset'||act==='pinchange'){if(act==='pinchange'&&L.pin){ui.pin={mode:'enter',then:null,err:''};ui.pinNext='set';}else ui.pin={mode:'set',then:null,err:''};}
+ else if(act==='pinremove'){ui.pin={mode:'enter',then:'remove',err:''};}
  else if(act==='tab'){if(b.getAttribute('data-t')==='day'){persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
  else if(act==='stage'){L.stage=b.getAttribute('data-k');if(L.stage==='areas')L.walkOpen=false;}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}

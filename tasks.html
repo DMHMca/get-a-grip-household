@@ -286,9 +286,20 @@ var ui={view:'today',back:[],partsOpen:{},bigCards:{},tileOpen:{},bigOpen:false,
    Saved on this device only. New tasks added on Big or Small while showing Household go into the Household activity. */
 function getScope(){try{var v=LS.getItem('scope');return v==='hh'||v==='me'?v:'all';}catch(e){return 'all';}}
 function setScope(v){try{LS.setItem('scope',v);}catch(e){}render();}
-function inScope(t){var sc=getScope();if(sc==='all')return true;var hh=(t.activityId===HH_ACT);return sc==='hh'?hh:!hh;}
-function scopeAct(){return getScope()==='hh'?HH_ACT:null;}
-var HH_ACT='hh';
+function inScope(t){var sc=getScope();if(sc==='all')return true;var hh=isHH(t);return sc==='hh'?hh:!hh;}
+function scopeAct(){return getScope()==='hh'?hhActFor('wild'):null;}
+/* HOUSEHOLD ACTIVITIES: each area of the planning wall (House, Car, Health…) is an activity here, id 'hh:<area key>'.
+   Any activity whose id starts 'hh' holds household jobs; every other activity is personal. */
+function isHH(t){return !!(t&&typeof t.activityId==='string'&&t.activityId.indexOf('hh')===0);}
+var HH_AREAS={house:'🏠 House',garden:'🌿 Garden',bills:'🧾 Major bills',money:'💷 Money',car:'🚗 Car',kids:'🧒 Kids',health:'🩺 Health',business:'🚀 Business ventures',trips:'✈️ Trips & fun',paper:'📄 Paperwork',wild:'✨ General'};
+function hhAreaName(k){if(HH_AREAS[k])return HH_AREAS[k];var c=(hhDoc().cats||[]).filter(function(x){return x.k===k;})[0];return c?'📌 '+c.n:'✨ General';}
+function hhActFor(k){
+  k=k||'wild';var id='hh:'+k,a=act(id),nm=hhAreaName(k);
+  if(!a){S.activities.push({id:id,name:nm,created:iso(),archived:null,updated:iso()});}
+  else if(a.name!==nm&&!a.renamed){a.name=nm;}
+  return id;
+}
+function hhAreaOf(f){var k=(f.activityId||'').slice(3);return k||'wild';}
 function scopeBar(){
   var v=ui.view;if(v!=='today'&&v!=='big'&&v!=='small'&&v!=='master')return null;
   var sc=getScope();
@@ -3054,7 +3065,7 @@ function sheetEl(){
 }
 
 function dueRow(t){
-  if(t.activityId!==HH_ACT)return null;
+  if(!isHH(t))return null;
   var inp=h('input',{type:'date','aria-label':'Due date',value:t.due||'',style:'font-size:16px;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)',
     onchange:function(e){var v=e.target.value;if(v)t.due=v;else delete t.due;t.updated=iso();quietSave();}});
   var cb=h('input',{type:'checkbox',checked:t.rep==='year',onchange:function(e){if(e.target.checked)t.rep='year';else delete t.rep;t.updated=iso();quietSave();}});
@@ -3200,7 +3211,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    The planning pages (index.html: Brainstorm, Share out, Sharing) keep the shared household document in
    localStorage 'household.doc.v2' and this device's settings (code, me) in 'household.local.v2', and sync it with
    the Cloudflare store. Here, every job Share out gave to THIS device's person (top-level task with to===me and not
-   "Not now", plus its steps) is shown as an ordinary Get a grip task in the activity 'Household' (id HH.ACT), so all
+   "Not now", plus its steps) is shown as an ordinary Get a grip task in the household activity for its area (id 'hh:<area>', see isHH), so all
    of Get a grip works on it. Changes to those tasks go back into the shared document. Only tasks in the Household
    activity are ever written to the shared document: personal tasks never leave this device. */
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
@@ -3228,9 +3239,11 @@ function hhRanked(list){
 }
 function hhDone(t){return t.done?(typeof t.done==='string'?t.done:(t.updated||iso())):null;}
 function hhEnsureAct(){
-  var a=act(HH.ACT);
-  if(!a){S.activities.push({id:HH.ACT,name:'Household',created:iso(),archived:null,updated:iso()});return true;}
-  return false;
+  var old=act('hh');if(!old)return false;
+  var d=hhDoc(),byid={};d.tasks.forEach(function(t){byid[t.id]=t;});
+  S.tasks.forEach(function(f){if(f.activityId==='hh'){var t=byid[f.id],top=t&&t.parent?byid[t.parent]:t;f.activityId=hhActFor(top&&top.area);}});
+  S.activities=S.activities.filter(function(a){return a.id!=='hh';});
+  return true;
 }
 /* shared document -> this app */
 function hhPull(){
@@ -3242,9 +3255,11 @@ function hhPull(){
   var fresh=[];
   tops.concat(kidsL).forEach(function(t){
     var f=task(t.id);
-    if(f&&f.activityId===HH.ACT&&(f.updated||'')>=(t.updated||''))return;
-    if(!f){f={id:t.id,activityId:HH.ACT,created:t.created||new Date(t.n||Date.now()).toISOString()};if(t.parent)S.tasks.push(f);else fresh.push(f);}
-    f.activityId=HH.ACT;f.text=t.text;f.done=hhDone(t);f.updated=t.updated||iso();
+    /* this phone's copy is as new or newer: keep it (including a job just moved out to a personal activity, which hhPush removes) */
+    if(f&&(f.updated||'')>=(t.updated||'')&&(isHH(f)||inMirror[f.id]))return;
+    var ar=t.parent&&mine[t.parent]?mine[t.parent].area:t.area;
+    if(!f){f={id:t.id,created:t.created||new Date(t.n||Date.now()).toISOString()};if(t.parent)S.tasks.push(f);else fresh.push(f);}
+    f.activityId=hhActFor(ar);f.text=t.text;f.done=hhDone(t);f.updated=t.updated||iso();
     if(t.size==='big')f.size='big';else delete f.size;
     if(t.parent)f.parent=t.parent;else delete f.parent;
     HH.FIELDS.forEach(function(k){if(t[k]!==undefined&&t[k]!==null&&t[k]!=='')f[k]=t[k];else delete f[k];});
@@ -3253,22 +3268,23 @@ function hhPull(){
   if(fresh.length)S.tasks=fresh.concat(S.tasks);
   /* jobs that were here before but are no longer this person's (given to the other person, put to Not now, deleted) leave */
   var before=S.tasks.length;
-  S.tasks=S.tasks.filter(function(f){return !(f.activityId===HH.ACT&&!mine[f.id]&&inMirror[f.id]);});
+  S.tasks=S.tasks.filter(function(f){return !(isHH(f)&&!mine[f.id]&&inMirror[f.id]);});
   if(S.tasks.length!==before)changed=true;
-  hhSetMirror(S.tasks.filter(function(f){return f.activityId===HH.ACT;}).map(function(f){return f.id;}));
+  /* remember household ids, including ones just moved to a personal activity that hhPush has still to take out of the household */
+  hhSetMirror(S.tasks.filter(function(f){return isHH(f)||(inMirror[f.id]&&mine[f.id]);}).map(function(f){return f.id;}));
   /* PRIORITY ORDER: the household jobs follow the shared order (their column on the Tasks tab), keeping their places among
      personal tasks. Skipped when this phone has a reorder of its own not yet sent (hhPush sends it). */
-  var tops=S.tasks.filter(function(f){return f.activityId===HH.ACT&&!f.parent;}),local=tops.map(function(f){return f.id;}),last=hhOrd();
+  var tops=S.tasks.filter(function(f){return isHH(f)&&!f.parent;}),local=tops.map(function(f){return f.id;}),last=hhOrd();
   var sameSet=local.slice().sort().join()===last.slice().sort().join();
   if(!sameSet||local.join()===last.join()){
     var want=hhRanked(local.map(function(id){return d.tasks.find(function(t){return t.id===id;})||{id:id,n:0};})).map(function(t){return t.id;});
     if(want.join()!==local.join()){
-      var slots=[];S.tasks.forEach(function(f,i){if(f.activityId===HH.ACT&&!f.parent)slots.push(i);});
+      var slots=[];S.tasks.forEach(function(f,i){if(isHH(f)&&!f.parent)slots.push(i);});
       var byid={};tops.forEach(function(f){byid[f.id]=f;});
       want.forEach(function(id,k){S.tasks[slots[k]]=byid[id];});changed=true;
     }
   }
-  hhSetOrd(S.tasks.filter(function(f){return f.activityId===HH.ACT&&!f.parent;}).map(function(f){return f.id;}));
+  hhSetOrd(S.tasks.filter(function(f){return isHH(f)&&!f.parent;}).map(function(f){return f.id;}));
   return changed;
 }
 /* this app -> shared document. Only Household tasks are looked at. */
@@ -3277,17 +3293,17 @@ function hhPush(){
   d.tasks.forEach(function(t){byId[t.id]=t;});d.gone.forEach(function(g){gone[g.id]=1;});
   var here={};
   S.tasks.forEach(function(f){
-    if(f.activityId!==HH.ACT)return;
+    if(!isHH(f))return;
     here[f.id]=1;
     var t=byId[f.id];
     if(!t){
       if(gone[f.id])return;
       var par=f.parent?byId[f.parent]:null;
-      t={id:f.id,area:par?par.area:'wild',tag:par?par.tag:'',to:me,by:me,n:Date.now()};
+      t={id:f.id,area:par?par.area:hhAreaOf(f),tag:par?par.tag:'',to:me,by:me,n:Date.now()};
       d.tasks.push(t);byId[f.id]=t;
     }else if((t.updated||'')>(f.updated||''))return;
     var want={text:f.text,size:f.size==='big'?'big':'small',done:f.done||false};
-    if(f.parent)want.parent=f.parent;
+    if(f.parent)want.parent=f.parent;else want.area=hhAreaOf(f);
     HH.FIELDS.forEach(function(k){if(f[k]!==undefined)want[k]=f[k];});
     var diff=false;
     Object.keys(want).forEach(function(k){if(JSON.stringify(t[k])!==JSON.stringify(want[k]))diff=true;});
@@ -3312,7 +3328,7 @@ function hhPush(){
     t.rolled=true;t.updated=iso();changed=true;
   });
   /* this phone reordered its household jobs: that becomes the shared priority order */
-  var local=S.tasks.filter(function(f){return f.activityId===HH.ACT&&!f.parent;}).map(function(f){return f.id;}),last=hhOrd();
+  var local=S.tasks.filter(function(f){return isHH(f)&&!f.parent;}).map(function(f){return f.id;}),last=hhOrd();
   if(local.slice().sort().join()===last.slice().sort().join()&&local.join()!==last.join()){
     local.forEach(function(id,k){var t=byId[id];if(t&&t.r!==k*10){t.r=k*10;t.updated=iso();changed=true;}});
   }
