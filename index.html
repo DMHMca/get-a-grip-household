@@ -248,7 +248,7 @@ var AREAS=[
 var WARM=['What has been nagging at you this week?','What has been hanging around on the list for far too long?','What would you hate to forget this month?','What would make next week easier?','What is the one big thing you would love to have finished by the summer?','What keeps going wrong in the house that you just put up with?'];
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var MHINT={0:['Self Assessment tax return is due by 31 January'],1:['Half-term plans'],2:['Spring clean','Mother’s Day'],3:['New tax year: ISAs and pensions','Bills often change in April'],4:['Book the summer holiday','Planting time in the garden'],5:['Father’s Day','Book summer childcare'],6:['School holidays begin'],7:['Back-to-school uniform and kit'],8:['Boiler service before winter','Clear the gutters'],9:['Clocks go back: test the smoke alarms','Half-term'],10:['Christmas plans and presents','Winter check on the car'],11:['Christmas','Year-end accounts for the business']};
-var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'year',n:'The year ahead'},{k:'group',n:'Group into big tasks'}];
+var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'year',n:'The year ahead'},{k:'group',n:'Group, sort and add details'}];
 function allAreas(){return AREAS.concat((D.cats||[]).filter(function(c){return !c.gone;}).map(function(c){return {k:c.k,n:c.n,e:'📌',c:'#E5E0D6',d:'#3B372E',y:'What needs doing for '+c.n+' in {M}?',s:[],custom:true};}));}
 function tilesList(){return allAreas().filter(function(a){return !a.hidden;});}
 function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
@@ -339,7 +339,7 @@ function stageCard(){
    +(a.custom?'<div class="srow"><button class="lnk" data-act="delcat" data-k="'+a.k+'">Remove this area</button></div>':'')+'</div>';}
  }
  else {
-  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group into big tasks</small><p class="q">Which of these belong together?</p><ul class="hints"><li>Drag one note onto another to make it a step of that task. The task becomes big.</li><li>Tap Small or Big on a note to change it.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
+  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group, sort and add details</small><p class="q">Which of these belong together, and what does each one need?</p><ul class="hints"><li>Drag one note onto another to make it a step of that task. The task becomes big.</li><li>Tap Small or Big on a note to change it.</li><li><b>Tap a note’s words</b> to add the details: steps, how long, what it needs, a wait, a due date.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
   return h;
  }
  return h+'<div class="add big"><input type="text" id="qa" placeholder="Call it out and type it here, then Enter" aria-label="Type an idea" autocomplete="off"><button class="on" data-act="qadd">Add</button></div>'
@@ -357,7 +357,7 @@ function welcome(){
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
- var h='<div class="note '+t.size+(ui.fresh===t.id?' fresh':'')+'" draggable="true" data-id="'+t.id+'" style="--ac:'+a.c+';--acd:'+a.d+';--rot:'+((i%3)-1)*0.8+'deg">';
+ var h='<div class="note '+t.size+(ui.fresh===t.id?' fresh':'')+'"'+(L.stage==='group'?' draggable="true"':'')+' data-id="'+t.id+'" style="--ac:'+a.c+';--acd:'+a.d+';--rot:'+((i%3)-1)*0.8+'deg">';
  h+='<div class="ntop"><button class="pill '+t.size+'" data-act="size" data-id="'+t.id+'">'+(t.size==='big'?'Big':'Small')+'</button>'+(t.tag?'<span class="ntag">'+esc(t.tag)+'</span>':'')+'<button class="x" data-act="del" data-id="'+t.id+'" aria-label="Delete">×</button></div>';
  h+='<div class="ctext" data-act="edit" data-id="'+t.id+'">'+esc(t.text)+'</div>';
  if(ks.length)h+='<div class="nsubs">'+ks.map(function(k){return '<div class="ns">• <span data-act="gopen" data-id="'+k.id+'" style="cursor:pointer">'+esc(k.text)+'</span><button data-act="unlink" data-id="'+k.id+'" title="Take it out of this task" aria-label="Take out">↥</button></div>';}).join('')+'</div>';
