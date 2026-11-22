@@ -8,7 +8,16 @@ The household app becomes a FORK of Get a grip personal: a one-off copy taken no
 
 The finished app: all of Get a grip's task handling (Today, Big, Small, activities, subtasks, Wait, details, Refresh), plus the household parts (wall, Share out, shared store). Each person's PERSONAL tasks stay private on their own devices and are never sent to the shared store; HOUSEHOLD tasks live in the shared store so both see them. Same address as now.
 
-WHERE IT STANDS: Stage 1 was released on its own on 21 Nov 2026 and the owner objected (rightly): the live app lost the planning stage and opened straight into the personal to-do app. It was undone the same day. The LIVE root is the OLD planning app again (sw cache `gagh-v3`), and the fork lives on branch `fork` (commit `bc7360c`). Do NOT release the fork to `main` until it OPENS on the planning stage (the wall), with Get a grip's task screens reachable from there. In practice Stages 1 and 2 go live together.
+WHERE IT STANDS (22 Nov 2026): Stages 1 to 4 are BUILT and live together (first release, version H1, sw cache `gagh-v4`). How it is put together:
+
+- `index.html` is the PLANNING side (the old household app, kept): it always OPENS ON "1 · Brainstorm" (owner). Tabs: 1 · Brainstorm, 2 · Share out (Lauren and Josh only, no Both; any old `to:2` job is put back to Still to share out on load), 3 · My day (a link to `tasks.html`), Sharing. `#share` / `#sharing` in the address open those tabs. Ticks store the ISO time in `done`.
+- `tasks.html` is Get a grip (the fork, unchanged apart from below): Today, Big, Small, Master, Activities and every edit screen. Its own storage keys start `gagh.` (the `LS` wrapper). Header: "‹ Plan together" (back to `index.html`) and "<name>’s day".
+- HOUSEHOLD LINK (in `tasks.html`, block "HOUSEHOLD LINK"): jobs Share out gave to this device's person (`household.local.v2` `me`), and their steps, appear as ordinary tasks in the activity "Household" (id `hh`). Edits, steps, ticks, size, `wait`/`wf`/`wh`, `dur`, `dev`, `notes`, `nm`, `ad` go back into `household.doc.v2` and up to the Cloudflare store (same merge rules as the planning page; every 20 s, on return, 1.2 s after a change). Deleting, or moving a task out of Household, removes it from the household. A job given to the other person leaves this device's list. ONLY tasks in the Household activity are ever written to the shared document. `hh.mirror` (prefixed) remembers which ids came from the household.
+- WHICH TASKS TO SHOW (owner's request): Everything / Household / Personal buttons on Today, Big, Small and Master (`getScope`, `inScope`, saved per device). They filter the lists and Today's Automatic, Custom and Slot choices; a task added on Big or Small while showing Household goes into Household. The planning pages never show personal tasks.
+- `window.GAGH` exposes S, commit, iso, uid, pull, push for scripted tests.
+- Branch `fork` holds the bare Stage 1 copy (commit `bc7360c`); no longer needed.
+
+Still to do: Stage 3's "set up" is done through Get a grip's own edit screen on the phone (open a Household task); a dedicated set-up step on the planning side has not been built. Personal-task sync between a person's own devices via Cloudflare (see NO GOOGLE DRIVE) is not built. Stage 5 (handover) not done.
 
 Stages (each tested in a scripted browser; never release one that takes away something that works today):
 

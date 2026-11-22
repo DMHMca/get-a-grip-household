@@ -223,9 +223,10 @@ function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
-if(L.tab==='board'||L.tab==='list')L.tab='brain';if(L.tab==='share')L.tab='link';
+L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
+D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
 var ui={dsize:'small',status:'',syncing:false,open:{},defer:false,fresh:null,timer:0};
 function lo(k,def){try{var r=localStorage.getItem(k);if(r)return JSON.parse(r);}catch(e){}return def;}
 function persist(){try{localStorage.setItem(DKEY,JSON.stringify(D));localStorage.setItem(LKEY,JSON.stringify(L));}catch(e){}}
@@ -352,7 +353,7 @@ function card(t){
  if(ks.length){if(ks.length>1)h+='<div class="bar"><i style="width:'+Math.round(dn/ks.length*100)+'%"></i></div>';
   h+='<div class="subs">'+ks.map(function(k){return '<div class="sr'+(k.done?' done':'')+'"><input type="checkbox" data-act="tick" data-id="'+k.id+'" aria-label="Done"'+(k.done?' checked':'')+'><span>'+esc(k.text)+'</span></div>';}).join('')+'</div>';}
  if(ui.open[t.id])h+='<div class="brk"><input type="text" data-brk="'+t.id+'" placeholder="A step, then Enter"></div>';
- h+='<div class="cf"><div class="give">'+[0,1,2].map(function(i){return '<button class="av p'+i+(t.to===i?' sel':'')+'" data-act="give" data-id="'+t.id+'" data-i="'+i+'" aria-label="Give to '+who(i)+'" title="'+who(i)+'">'+(i===2?'+':NAMES[i].charAt(0))+'</button>';}).join('')+(t.to!==null&&t.to!==undefined?'<button class="gi" data-act="give" data-id="'+t.id+'" data-i="" title="Back to still to share out">↩</button>':'')+'</div><button class="mini" data-act="brk" data-id="'+t.id+'">'+(ui.open[t.id]?'Done':'+ Step')+'</button></div></article>';
+ h+='<div class="cf"><div class="give">'+[0,1].map(function(i){return '<button class="av p'+i+(t.to===i?' sel':'')+'" data-act="give" data-id="'+t.id+'" data-i="'+i+'" aria-label="Give to '+who(i)+'" title="'+who(i)+'">'+(i===2?'+':NAMES[i].charAt(0))+'</button>';}).join('')+(t.to!==null&&t.to!==undefined?'<button class="gi" data-act="give" data-id="'+t.id+'" data-i="" title="Back to still to share out">↩</button>':'')+'</div><button class="mini" data-act="brk" data-id="'+t.id+'">'+(ui.open[t.id]?'Done':'+ Step')+'</button></div></article>';
  return h;
 }
 function column(to,title,sub,ico){
@@ -365,17 +366,17 @@ function column(to,title,sub,ico){
  return h+'</section>';
 }
 function balance(){
- var c=[0,1,2].map(function(i){return live().filter(function(t){return t.to===i&&!t.done;});});
- var tot=c[0].length+c[1].length+c[2].length,un=live().filter(function(t){return (t.to===null||t.to===undefined)&&!t.done;}).length;
+ var c=[0,1].map(function(i){return live().filter(function(t){return t.to===i&&!t.done;});});
+ var tot=c[0].length+c[1].length,un=live().filter(function(t){return (t.to===null||t.to===undefined)&&!t.done;}).length;
  var bg=c.map(function(a){return a.filter(function(t){return t.size==='big';}).length;});
- var h='<div class="panel balance"><div class="legend">'+[0,1,2].map(function(i){return '<span>'+av(i,22)+' <b>'+who(i)+'</b> '+c[i].length+' <span class="m">('+bg[i]+' big)</span></span>';}).join('')+'<span class="m">Still to share out: '+un+'</span></div>';
- if(tot)h+='<div class="bal" aria-hidden="true">'+[0,1,2].map(function(i){return '<i class="b'+i+'" style="width:'+(c[i].length/tot*100)+'%"></i>';}).join('')+'</div>';
- var msg=Math.abs(bg[0]-bg[1])>=2?(bg[0]>bg[1]?NAMES[0]:NAMES[1])+' is holding more of the big ones. Worth a look together.':(un?'Some are still to share out.':tot?'Everything has a home. Each person’s tasks go to Get a grip on their phone.':'');
+ var h='<div class="panel balance"><div class="legend">'+[0,1].map(function(i){return '<span>'+av(i,22)+' <b>'+who(i)+'</b> '+c[i].length+' <span class="m">('+bg[i]+' big)</span></span>';}).join('')+'<span class="m">Still to share out: '+un+'</span></div>';
+ if(tot)h+='<div class="bal" aria-hidden="true">'+[0,1].map(function(i){return '<i class="b'+i+'" style="width:'+(c[i].length/tot*100)+'%"></i>';}).join('')+'</div>';
+ var msg=Math.abs(bg[0]-bg[1])>=2?(bg[0]>bg[1]?NAMES[0]:NAMES[1])+' is holding more of the big ones. Worth a look together.':(un?'Some are still to share out.':tot?'Everything has a home. Each person’s jobs are now in their My day, ready to set up.':'');
  return h+(msg?'<div class="sub" style="margin:0">'+esc(msg)+'</div>':'')+'</div>';
 }
 function alloc(){
- return '<div class="intro"><h2>Share out</h2><p class="sub">Drag each card to whoever will own it from start to finish: noticing it, planning it and doing it. “Both” is for things you will split up later.</p></div>'+balance()+'<div class="board">'
-  +column(null,'Still to share out','From the wall','<span class="avx">🗂️</span>')+column(0,NAMES[0],'Nothing yet',av(0,38))+column(1,NAMES[1],'Nothing yet',av(1,38))+column(2,'Both','To split up between you',av(2,38))+'</div>';
+ return '<div class="intro"><h2>Share out</h2><p class="sub">Drag each card to whoever will own it from start to finish: noticing it, planning it and doing it. Each job goes to one person.</p></div>'+balance()+'<div class="board">'
+  +column(null,'Still to share out','From the wall','<span class="avx">🗂️</span>')+column(0,NAMES[0],'Nothing yet',av(0,38))+column(1,NAMES[1],'Nothing yet',av(1,38))+'</div>';
 }
 
 /* ---- my day and sharing ---- */
@@ -402,7 +403,7 @@ function link(){
 function head(){
  var h='<header class="top"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','My day'],['link','Sharing']].map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Sharing']].map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.hasAttribute('data-brk')||a.isContentEditable);}
@@ -410,7 +411,6 @@ function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
- if(SERVER&&!L.code&&!L.local)L.tab='link';
  a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='day'?day():link());
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();
@@ -435,7 +435,7 @@ function nest(child,parent){
 }
 
 /* ---- events ---- */
-document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked;touch(t);draw();}});
+document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;touch(t);draw();}});
 document.addEventListener('keydown',function(e){
  if(e.key!=='Enter')return;var el=e.target;
  if(el.id==='qa'){e.preventDefault();addIdea(el.value);el.value='';changed();draw(true);var q=document.getElementById('qa');if(q)q.focus();}
@@ -451,7 +451,7 @@ document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;var act=b.getAttribute('data-act'),t=byId(b.getAttribute('data-id'));
  if(act==='edit'){if(b.isContentEditable)return;b.contentEditable='true';b.focus();var r=document.createRange();r.selectNodeContents(b);var s=getSelection();s.removeAllRanges();s.addRange(r);return;}
  if(act==='me'){L.me=+b.getAttribute('data-i');}
- else if(act==='tab'){L.tab=b.getAttribute('data-t');scrollTo(0,0);}
+ else if(act==='tab'){if(b.getAttribute('data-t')==='day'){persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
  else if(act==='stage'){L.stage=b.getAttribute('data-k');if(L.stage==='areas')L.walkOpen=false;}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
  else if(act==='previ'){var pk=b.getAttribute('data-k'),pn=pk==='warm'?WARM.length:12;L.idx[pk]=Math.max(0,(idx(pk)%pn)-1);}
