@@ -404,8 +404,45 @@ function day(){
 }
 function link(){
  var h='<div class="day"><h2>Sharing</h2>';
- if(L.code)return h+'<div class="note2">This device shares a household. The code is<div class="code">'+showCode(L.code)+'</div>On each other device open this page, go to Sharing and choose “Join with a code”.</div><div class="srow"><button data-act="syncnow">Update now</button><button data-act="leave">Stop sharing on this device</button></div></div>';
+ if(L.code)return h+reminders()+'<div class="note2">This device shares a household. The code is<div class="code">'+showCode(L.code)+'</div>On each other device open this page, go to Sharing and choose “Join with a code”.</div><div class="srow"><button data-act="syncnow">Update now</button><button data-act="leave">Stop sharing on this device</button></div></div>';
  return h+'<div class="note2">Lauren and Josh share one household. One of you starts it and gets a code; the other devices join with that code. You do this once per device.</div><div class="srow"><button class="on" data-act="start">Start a new household</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Join with a code</button></div><div class="srow"><button data-act="locally">Just try it on this device</button></div></div>';
+}
+/* ---- reminders: a phone notification a week and a day before a job's due date (the Cloudflare store sends them) ---- */
+var VAPID_PUBLIC='BIF4lUPSMG6iEYUr3hlgk-zocDazdFyzXfnTCgFRZzJyPhcbwqdD4SEBRVHIGPbxGVOYWaeIQCMeuhh3RWC_wM0';
+function pushOk(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function reminders(){
+ var h='<div class="note2"><b>Reminders on this phone</b><br>';
+ if(!pushOk())return h+'This browser cannot show reminders. On Android, open the app in Chrome.</div>';
+ if(L.push&&Notification.permission==='granted')return h+'On for '+esc(NAMES[L.me])+'’s jobs. A reminder comes a week before and the day before anything with a due date.<div class="srow"><button data-act="pushtest">Send a test reminder</button><button data-act="pushoff">Turn reminders off</button></div></div>';
+ if(Notification.permission==='denied')return h+'Notifications are blocked for this app. In Chrome, tap the three dots, then Settings, Site settings, Notifications, and allow dmhmca.github.io.</div>';
+ return h+'Get a reminder on this phone a week before and the day before any of '+esc(NAMES[L.me])+'’s jobs with a due date.<div class="srow"><button class="on" data-act="pushon">Turn on reminders</button></div></div>';
+}
+function b64key(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+function pushSend(path,body){return fetch(SERVER+path+L.code,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'failed');return j;});});}
+function pushOn(){
+ ui.status='Turning on reminders…';status();
+ Notification.requestPermission().then(function(p){
+  if(p!=='granted')throw new Error('Notifications were not allowed.');
+  return navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready;});
+ }).then(function(reg){
+  return reg.pushManager.getSubscription().then(function(s){return s||reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64key(VAPID_PUBLIC)});});
+ }).then(function(sub){return sync().then(function(){return pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).then(function(){L.push=sub.endpoint;persist();ui.status='Reminders are on.';draw(true);});})
+ .catch(function(e){ui.status='Reminders could not be turned on: '+(e.message||e);draw(true);});
+}
+function pushOff(){
+ var ep=L.push;L.push='';persist();
+ navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription();}).then(function(s){if(s)s.unsubscribe();}).catch(function(){});
+ if(ep&&L.code)pushSend('/unsub/',{endpoint:ep}).catch(function(){});
+ ui.status='Reminders are off on this phone.';draw(true);
+}
+/* yearly repeats: when a repeating job is finished, next year's copy appears (the same rule as on My day) */
+function rollRepeats(){
+ D.tasks.slice().forEach(function(t){
+  if(t.parent||t.rep!=='year'||!t.done||!t.due||t.rolled)return;
+  var p=t.due.split('-').map(Number),nd=new Date(Date.UTC(p[0]+1,p[1]-1,Math.min(p[2],p[1]===2?28:p[2])));
+  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nd.toISOString().slice(0,10),rep:'year',updated:now()});
+  t.rolled=true;t.updated=now();
+ });
 }
 function head(){
  var h='<header class="top"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
@@ -442,7 +479,7 @@ function nest(child,parent){
 }
 
 /* ---- events ---- */
-document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;touch(t);draw();}});
+document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;rollRepeats();touch(t);draw();}});
 document.addEventListener('keydown',function(e){
  if(e.key!=='Enter')return;var el=e.target;
  if(el.id==='qa'){e.preventDefault();addIdea(el.value);el.value='';changed();draw(true);var q=document.getElementById('qa');if(q)q.focus();}
@@ -457,7 +494,7 @@ document.addEventListener('focusout',function(e){
 document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;var act=b.getAttribute('data-act'),t=byId(b.getAttribute('data-id'));
  if(act==='edit'){if(b.isContentEditable)return;b.contentEditable='true';b.focus();var r=document.createRange();r.selectNodeContents(b);var s=getSelection();s.removeAllRanges();s.addRange(r);return;}
- if(act==='me'){L.me=+b.getAttribute('data-i');}
+ if(act==='me'){L.me=+b.getAttribute('data-i');if(L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
  else if(act==='tab'){if(b.getAttribute('data-t')==='day'){persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
  else if(act==='stage'){L.stage=b.getAttribute('data-k');if(L.stage==='areas')L.walkOpen=false;}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
@@ -491,7 +528,10 @@ document.addEventListener('click',function(e){
  else if(act==='join'){var c=(document.getElementById('jc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!==12){alert('That code should have 12 letters and numbers.');return;}L.code=c;ui.status='Joining…';persist();sync();}
  else if(act==='locally'){L.local=true;L.tab='brain';}
  else if(act==='syncnow'){sync();}
- else if(act==='leave'){if(confirm('Stop sharing on this device? Your copy stays here.'))L.code='';}
+ else if(act==='pushon'){pushOn();return;}
+ else if(act==='pushoff'){pushOff();return;}
+ else if(act==='pushtest'){ui.status='Sending a test reminder…';status();pushSend('/test/',{endpoint:L.push}).then(function(j){ui.status=j.ok?'Test sent. It should appear in a few seconds.':'The test could not be sent ('+j.status+').';status();}).catch(function(e){ui.status='The test could not be sent: '+e.message;status();});return;}
+ else if(act==='leave'){if(confirm('Stop sharing on this device? Your copy stays here.')){if(L.push)pushOff();L.code='';}}
  persist();draw(true);
  if(act==='area'||act==='nextpart'||act==='prevpart'){var st=document.querySelector('.stage');if(st&&st.getBoundingClientRect().top<0)st.scrollIntoView({block:'start',behavior:'smooth'});}
 });

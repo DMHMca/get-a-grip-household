@@ -294,6 +294,20 @@ function scopeBar(){
     [['all','Everything'],['hh','Household'],['me','Personal']].map(function(x){
       return h('button',{class:'btn','aria-pressed':sc===x[0]?'true':'false',onclick:function(){setScope(x[0]);}},[x[1]]);}));
 }
+/* ---------- DUE DATES (household app, owner 22 Nov 2026) ----------
+   A household job can carry `due` (YYYY-MM-DD) and `rep:'year'`. The date is kept quiet: it shows only in the edit
+   sheet. Reminders go to the phone a week and a day before (Cloudflare store, daily). A job due within 7 days, or a job
+   with a step due within 7 days, goes to the top of Today's Automatic choices and Refresh. */
+function daysTo(due){if(!due)return null;var p=due.split('-').map(Number),d=new Date(),a=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());return Math.round((Date.UTC(p[0],p[1]-1,p[2])-a)/864e5);}
+function dueSoon(t){
+  function near(x){var n=daysTo(x.due);return !x.done&&n!==null&&n<=7;}
+  return near(t)||childrenOf(t).some(near);
+}
+function dueFirst(list,get){
+  var a=[],b=[];list.forEach(function(x){(dueSoon(get(x))?a:b).push(x);});
+  a.sort(function(x,y){return (daysTo(get(x).due)||0)-(daysTo(get(y).due)||0);});
+  return a.concat(b);
+}
 /* ---------- persistence ---------- */
 function commit(fromSync){
   S.updatedAt=Date.now();
@@ -612,7 +626,7 @@ function lastTouched(t){
   return m;
 }
 function bigCandidates(){
-  return S.tasks.filter(function(t){
+  return dueFirst(S.tasks,function(t){return t;}).filter(function(t){
     if(t.done||!isBig(t)||isChild(t)||isWaiting(t)||!inScope(t))return false;
     var ks=childrenOf(t);
     return !ks.length||ks.some(function(p){return !p.done&&!isWaiting(p);});
@@ -623,7 +637,7 @@ function bigCandidates(){
    is represented by ALL of them together, in order (each its own tile, headed by the parent's name); a task with none is one tile. */
 function smallPicks(n,skip){
   var out=[],seen={};
-  smallRows().forEach(function(r){
+  dueFirst(smallRows(),function(r){return r.t;}).forEach(function(r){
     if(out.length>=n)return;
     if(isWaiting(r.t))return;
     var open=childrenOf(r.t).filter(function(c){return !c.done;});
@@ -3025,7 +3039,7 @@ function sheetEl(){
     showPanel('');
     inner.push(h('div',{class:'field'},[partOf,h('label',null,['Activity',sel]),ti,h('div',{class:'seg',role:'group','aria-label':'Size'},[bSmall,bBig]),subBox||addP,doneBtn,
       h('div',{class:'seg',role:'group','aria-label':'Panels'},[bT,bD]),panel,
-      h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[shownCb,h('span',{text:'Show in the Small and Master lists'})]),toOwn,wBtn,
+      h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[shownCb,h('span',{text:'Show in the Small and Master lists'})]),toOwn,wBtn,dueRow(t),
       h('div',{class:'btns'},[
         h('button',{class:'btn danger',onclick:function(){
           [t.sid,t.gid].forEach(function(l){if(l)S.deleted.push({gid:l,text:t.text,at:iso()});});
@@ -3037,6 +3051,15 @@ function sheetEl(){
   return h('div',null,[h('div',{class:'scrim',onclick:closeSheet}),h('div',{class:'sheet',role:'dialog','aria-modal':'true'},inner)]);
 }
 
+function dueRow(t){
+  if(t.activityId!==HH_ACT)return null;
+  var inp=h('input',{type:'date','aria-label':'Due date',value:t.due||'',style:'font-size:16px;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)',
+    onchange:function(e){var v=e.target.value;if(v)t.due=v;else delete t.due;t.updated=iso();quietSave();}});
+  var cb=h('input',{type:'checkbox',checked:t.rep==='year',onchange:function(e){if(e.target.checked)t.rep='year';else delete t.rep;t.updated=iso();quietSave();}});
+  return h('div',{style:'display:flex;flex-direction:column;gap:6px;padding-top:4px'},[
+    h('div',{style:'font-size:14px;color:var(--muted)',text:'Due date (optional). A reminder comes to the phone a week before and the day before.'}),inp,
+    h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[cb,h('span',{text:'Repeats every year'})])]);
+}
 /* ---------- render ---------- */
 function ensureShape(){plans();migrateParts();}
 /* a new version of the app has installed in the background; the screen in front of you still runs the old one until it reloads */
@@ -3179,7 +3202,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    of Get a grip works on it. Changes to those tasks go back into the shared document. Only tasks in the Household
    activity are ever written to the shared document: personal tasks never leave this device. */
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
-  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad'],busy:false,t:0,on:false};
+  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep'],busy:false,t:0,on:false};
 function hhLoc(){try{return JSON.parse(localStorage.getItem(HH.LKEY)||'{}')||{};}catch(e){return {};}}
 function hhMe(){var m=hhLoc().me;return m===1?1:0;}
 function hhDoc(){var d=null;try{d=JSON.parse(localStorage.getItem(HH.DKEY)||'null');}catch(e){}d=d||{};
@@ -3259,6 +3282,12 @@ function hhPush(){
   mirror.forEach(function(id){
     if(here[id]||!byId[id])return;
     d.gone.push({id:id,at:iso()});d.tasks=d.tasks.filter(function(t){return t.id!==id;});changed=true;
+  });
+  d.tasks.slice().forEach(function(t){
+    if(t.parent||t.rep!=='year'||!t.done||!t.due||t.rolled)return;
+    var p=t.due.split('-').map(Number),nd=new Date(Date.UTC(p[0]+1,p[1]-1,Math.min(p[2],p[1]===2?28:p[2])));
+    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nd.toISOString().slice(0,10),rep:'year',updated:iso()});
+    t.rolled=true;t.updated=iso();changed=true;
   });
   hhSetMirror(Object.keys(here));
   if(changed){hhPutDoc(d);clearTimeout(HH.t);HH.t=setTimeout(hhSync,1200);}
