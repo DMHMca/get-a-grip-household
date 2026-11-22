@@ -30,6 +30,16 @@ button,select,textarea,input{font:inherit;color:inherit}
 button{min-height:44px;padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}
 button:hover{box-shadow:var(--shadow)}button:active{transform:scale(.98)}
 button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.gboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+@media (max-width:620px){.gboard{grid-template-columns:1fr}}
+.gcol{background:var(--colbg);border:1.5px dashed var(--line);border-radius:16px;padding:10px;min-height:140px}
+.gcol.over{border-color:var(--acc);border-style:solid}
+.gcard{position:relative;display:flex;align-items:flex-start;gap:8px;background:var(--card);border-radius:12px;padding:8px;margin:6px 0;box-shadow:var(--shadow);cursor:grab;border-left:5px solid var(--ac)}
+.gcard.over{outline:2px solid var(--acc)}.gcard.overtop{box-shadow:0 -4px 0 var(--acc),var(--shadow)}.gcard.fresh{outline:2px solid var(--acc2)}
+.gcard .tn{font-weight:700;color:var(--mut);min-width:1.4em;text-align:right;font-size:.85rem;padding-top:2px}
+.gcard .gtx{flex:1;min-width:0}.gcard .tt2{font-weight:600}.gcard .tm2{font-size:.8rem;color:var(--mut)}
+.gcard .tarr{display:flex;flex-direction:column;gap:2px}.gcard .tarr button{min-height:26px;min-width:34px;padding:0;font-size:.7rem;line-height:1}.gcard .tarr button:disabled{opacity:.3}
+.gcard .gside{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.gcard .gside .x{position:static}.gcard .gside .lnk{font-size:.75rem}
 .tcols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.tcols.one{grid-template-columns:minmax(0,640px)}
 @media (max-width:720px){.tcols{grid-template-columns:1fr}}
 .tcol{background:var(--colbg);border:1.5px solid var(--line);border-radius:16px;padding:12px;min-height:120px}
@@ -339,7 +349,7 @@ function stageCard(){
    +(a.custom?'<div class="srow"><button class="lnk" data-act="delcat" data-k="'+a.k+'">Remove this area</button></div>':'')+'</div>';}
  }
  else {
-  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group, sort and add details</small><p class="q">Which of these belong together, and what does each one need?</p><ul class="hints"><li>Drag one note onto another to make it a step of that task. The task becomes big.</li><li>Tap Small or Big on a note to change it.</li><li><b>Tap a note’s words</b> to add the details: steps, how long, what it needs, a wait, a due date.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
+  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group, sort and add details</small><p class="q">Which of these belong together, and what does each one need?</p><ul class="hints"><li>Two lists, Big and Small. <b>Drag up or down</b> to put the most important at the top.</li><li>Drag a job into the other list to make it Big or Small.</li><li>Drop a job onto the middle of another to make it a step of that job.</li><li><b>Tap a note’s words</b> to add the details: steps, how long, what it needs, a wait, a due date.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
   return h;
  }
  return h+'<div class="add big"><input type="text" id="qa" placeholder="Call it out and type it here, then Enter" aria-label="Type an idea" autocomplete="off"><button class="on" data-act="qadd">Add</button></div>'
@@ -375,7 +385,41 @@ function wall(){
  if(nn.length)h+='<details class="nnpile"><summary>Not now ('+nn.length+')</summary>'+nn.map(function(t){return '<div class="ns">'+esc(t.text)+' <button class="lnk" data-act="unnn" data-id="'+t.id+'">Bring back</button></div>';}).join('')+'</details>';
  return h;
 }
-function brain(){return welcome()+stepper()+'<div class="bwrap"><div class="stagecol">'+stageCard()+'</div><div class="wallcol">'+wall()+'</div></div>';}
+/* ---- ROUND 4 BOARD (owner, 22 Nov 2026): two columns, Big and Small, each in priority order (field `r`, shared with the Tasks tab
+   and the phones). Drag up or down in a column to set the order; drag into the other column to make it Big or Small; drop onto the
+   MIDDLE of another job to make it a step of that job (the top edge of a job means "put it above"). Arrows do the same on a phone. ---- */
+function gList(size){return ranked(tops().filter(function(t){return !t.nn&&!t.done&&((t.size==='big')===(size==='big'));}));}
+function gmove(t,size,beforeId){
+ if(!t||t.parent)return;
+ var list=gList(size).filter(function(x){return x!==t;}),at=beforeId?list.indexOf(byId(beforeId)):-1;
+ if(at<0)at=list.length;list.splice(at,0,t);t.size=size;
+ list.forEach(function(x,k){if(x.r!==k*10){x.r=k*10;x.updated=now();}});
+ t.updated=now();ui.fresh=t.id;changed();
+}
+function gcard(t,ix,n){
+ var a=area(t.area)||area('wild'),ks=kids(t.id);
+ var h='<div class="gcard '+(t.size==='big'?'big':'small')+(ui.fresh===t.id?' fresh':'')+'" draggable="true" data-id="'+t.id+'" style="--ac:'+a.c+'"><span class="tn">'+(ix+1)+'</span><div class="gtx">';
+ h+='<div class="tt2" data-act="edit" data-id="'+t.id+'" style="cursor:pointer">'+esc(t.text)+'</div><div class="tm2">'+a.e+' '+esc(a.n)+(t.to===0||t.to===1?' · '+esc(NAMES[t.to]):'')+(ks.length?' · '+ks.length+(ks.length>1?' steps':' step'):'')+'</div>';
+ if(ks.length)h+='<div class="nsubs">'+ks.map(function(k){return '<div class="ns">• <span data-act="gopen" data-id="'+k.id+'" style="cursor:pointer">'+esc(k.text)+'</span><button data-act="unlink" data-id="'+k.id+'" title="Take it out of this job" aria-label="Take out">↥</button></div>';}).join('')+'</div>';
+ h+='</div><span class="tarr"><button data-act="gup" data-id="'+t.id+'" aria-label="Higher"'+(ix===0?' disabled':'')+'>▲</button><button data-act="gdown" data-id="'+t.id+'" aria-label="Lower"'+(ix===n-1?' disabled':'')+'>▼</button></span>';
+ h+='<span class="gside"><button class="x" data-act="del" data-id="'+t.id+'" aria-label="Delete">×</button><button class="lnk" data-act="nn" data-id="'+t.id+'" title="Not now">Not now</button></span></div>';
+ return h;
+}
+function groupBoard(){
+ var h='<div class="wallhead"><h2>Big and small</h2><span class="sub">Most important at the top of each list</span></div><div class="gboard">';
+ [['big','Big jobs','Need steps, or take a while'],['small','Small jobs','One go, done']].forEach(function(c){
+  var l=gList(c[0]);
+  h+='<section class="gcol '+c[0]+'" data-size="'+c[0]+'"><div class="ch"><span class="pill '+c[0]+'">'+(c[0]==='big'?'Big':'Small')+'</span><div><h3>'+c[1]+'</h3><div class="cnt">'+(l.length?l.length+(l.length>1?' jobs':' job'):c[2])+'</div></div></div>';
+  if(!l.length)h+='<div class="empty">Drag a job here.</div>';
+  l.forEach(function(t,ix){h+=gcard(t,ix,l.length);});
+  h+='</section>';
+ });
+ h+='</div>';
+ var nn=tops().filter(function(t){return t.nn;});
+ if(nn.length)h+='<details class="nnpile"><summary>Not now ('+nn.length+')</summary>'+nn.map(function(t){return '<div class="ns">'+esc(t.text)+' <button class="lnk" data-act="unnn" data-id="'+t.id+'">Bring back</button></div>';}).join('')+'</details>';
+ return h;
+}
+function brain(){return welcome()+stepper()+'<div class="bwrap"><div class="stagecol">'+stageCard()+'</div><div class="wallcol">'+(L.stage==='group'?groupBoard():wall())+'</div></div>';}
 
 /* ---- the share-out page ---- */
 function card(t){
@@ -723,6 +767,7 @@ document.addEventListener('click',function(e){
  else if(act==='join'){var c=(document.getElementById('jc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!==12){alert('That code should have 12 letters and numbers.');return;}L.code=c;ui.status='Joining…';persist();sync();}
  else if(act==='locally'){L.local=true;L.tab='brain';}
  else if(act==='syncnow'){sync();}
+ else if((act==='gup'||act==='gdown')&&t){var gl=gList(t.size==='big'?'big':'small'),gi=gl.indexOf(t);if(act==='gup'&&gi>0)gmove(t,t.size==='big'?'big':'small',gl[gi-1].id);else if(act==='gdown'&&gi<gl.length-1)gmove(t,t.size==='big'?'big':'small',gl[gi+2]?gl[gi+2].id:null);}
  else if(act==='tview'){L.tview=b.getAttribute('data-v');}
  else if((act==='up'||act==='down')&&t){var cl=colList(t.to),ix=cl.indexOf(t),nb=act==='up'?cl[ix-1]:cl[ix+2];if(act==='up'&&ix>0)moveJob(t,t.to,nb.id);else if(act==='down'&&ix<cl.length-1)moveJob(t,t.to,nb?nb.id:null);}
  else if(act==='pushon'){pushOn();return;}
@@ -734,12 +779,14 @@ document.addEventListener('click',function(e){
 });
 /* drag and drop: onto a note = make it a step; onto a column = give it to that person */
 document.addEventListener('dragstart',function(e){var c=e.target.closest&&e.target.closest('[draggable][data-id]');if(!c)return;e.dataTransfer.setData('text/plain',c.getAttribute('data-id'));e.dataTransfer.effectAllowed='move';c.classList.add('dragging');});
-function clearOver(){document.querySelectorAll('.over').forEach(function(x){x.classList.remove('over');});}
+function clearOver(){document.querySelectorAll('.over,.overtop').forEach(function(x){x.classList.remove('over');x.classList.remove('overtop');});}
 document.addEventListener('dragend',function(e){var c=e.target.closest&&e.target.closest('[data-id]');if(c)c.classList.remove('dragging');clearOver();});
-function target(e){return (e.target.closest&&(e.target.closest('.tjob[data-id]')||e.target.closest('.tcol')||e.target.closest('.note[data-id]')||e.target.closest('.col')));}
-document.addEventListener('dragover',function(e){var c=target(e);if(!c)return;e.preventDefault();if(!c.classList.contains('over')){clearOver();c.classList.add('over');}});
+function target(e){return (e.target.closest&&(e.target.closest('.gcard[data-id]')||e.target.closest('.gcol')||e.target.closest('.tjob[data-id]')||e.target.closest('.tcol')||e.target.closest('.note[data-id]')||e.target.closest('.col')));}
+document.addEventListener('dragover',function(e){var c=target(e);if(!c)return;e.preventDefault();var cls='over';if(c.classList.contains('gcard')){var rc=c.getBoundingClientRect();cls=(e.clientY-rc.top)<rc.height*0.3?'overtop':'over';}if(!c.classList.contains(cls)){clearOver();c.classList.add(cls);}});
 document.addEventListener('drop',function(e){var c=target(e);if(!c)return;e.preventDefault();clearOver();var t=byId(e.dataTransfer.getData('text/plain'));if(!t)return;
- if(c.classList.contains('tjob')){var bt=byId(c.getAttribute('data-id'));if(bt&&bt!==t&&!t.parent)moveJob(t,bt.to,bt.id);}
+ if(c.classList.contains('gcard')){var gt=byId(c.getAttribute('data-id')),rc2=c.getBoundingClientRect();if(gt&&gt!==t){if((e.clientY-rc2.top)<rc2.height*0.3)gmove(t,gt.size==='big'?'big':'small',gt.id);else nest(t,gt);}}
+ else if(c.classList.contains('gcol')){gmove(t,c.getAttribute('data-size'),null);}
+ else if(c.classList.contains('tjob')){var bt=byId(c.getAttribute('data-id'));if(bt&&bt!==t&&!t.parent)moveJob(t,bt.to,bt.id);}
  else if(c.classList.contains('tcol')){if(!t.parent)moveJob(t,+c.getAttribute('data-col'),null);}
  else if(c.classList.contains('note')){nest(t,byId(c.getAttribute('data-id')));}
  else{var v=c.getAttribute('data-to');setOwner(t,v===''?null:+v);}
