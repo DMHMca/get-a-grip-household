@@ -1,11 +1,12 @@
-const CACHE='gagh-v6';
+const CACHE='gagh-v7';
 const SCOPE=new URL(self.registration.scope).pathname;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./manifest.webmanifest']).catch(()=>{})));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gagh-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
   const r=e.request,u=new URL(r.url);
   if(r.method!=='GET'||u.origin!==location.origin||!u.pathname.startsWith(SCOPE))return;
-  e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp)).catch(()=>{});return res;}).catch(()=>caches.match(r).then(m=>m||caches.match('./'))));
+  /* pages always ask the network for the newest copy (no-cache), so a release shows at the next open */
+  e.respondWith(fetch(r,r.mode==='navigate'?{cache:'no-cache'}:undefined).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp)).catch(()=>{});return res;}).catch(()=>caches.match(r).then(m=>m||caches.match('./'))));
 });
 
 /* REMINDERS. The household store sends an empty push; the text waits on the store and is collected here. */
