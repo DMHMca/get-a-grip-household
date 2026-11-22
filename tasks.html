@@ -258,7 +258,7 @@ input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent)}
 <div id="app"></div>
 <script>
 /* a shared screen, or a device in "Household together", never shows personal tasks: go back to the household tasks */
-(function(){try{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');if(l.shared||l.together)location.replace('./#tasks');}catch(e){}})();
+(function(){try{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');if(l.shared||l.together)location.replace('./#share');}catch(e){}})();
 (function(){
 'use strict';
 

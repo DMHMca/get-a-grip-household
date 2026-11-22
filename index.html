@@ -266,7 +266,7 @@ function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
-L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'tasks':'brain');if(L.tab==='share')L.tab='link';
+L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
@@ -622,7 +622,7 @@ function applyMove(n){
  if(n.me!==undefined){L.shared=false;L.together=false;var old=L.me;L.me=n.me;if(old!==L.me&&L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
  if(n.together!==undefined){L.together=n.together;if(!n.together)L.shared=false;}
  if(n.shared){L.shared=true;L.together=false;L.tview='both';}
- if(hhOnly()&&L.tab==='day')L.tab='tasks';
+ if(hhOnly()&&L.tab==='day')L.tab='alloc';
  persist();
 }
 function askMove(n){if(needPin(n)){ui.pin={mode:'enter',then:n,err:''};}else applyMove(n);}
@@ -670,7 +670,7 @@ function head(){
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['tasks','3 · Tasks'],['day','4 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
@@ -678,7 +678,7 @@ function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
- a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='tasks'?tasksTab():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
+ a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
  var pf=document.getElementById('pin1');if(pf)pf.focus();
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();
