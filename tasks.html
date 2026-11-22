@@ -802,7 +802,7 @@ function lastAct(){
 }
 
 function appHeader(){
-  return h('div',{class:'apphead'},[h('a',{class:'brand',href:'./',style:'text-decoration:none;color:inherit',title:'Back to planning together'},['‹ Plan together']),h('p',{class:'brand',style:'margin-left:auto;margin-right:8px',text:hhLoc().me===1?HH.NAMES[1]+'’s day':HH.NAMES[0]+'’s day'}),
+  return h('div',{class:'apphead'},[h('a',{class:'brand',href:'./','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:'margin:0 8px 0 auto;padding-left:12px',text:hhLoc().me===1?HH.NAMES[1]+'’s day':HH.NAMES[0]+'’s day'}),
     h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
       [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)])]);
 }

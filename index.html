@@ -30,6 +30,7 @@ button,select,textarea,input{font:inherit;color:inherit}
 button{min-height:44px;padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}
 button:hover{box-shadow:var(--shadow)}button:active{transform:scale(.98)}
 button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.homeb{font-weight:700;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--acc);color:var(--acc);background:var(--card);margin-right:10px;flex:none}
 .gboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media (max-width:620px){.gboard{grid-template-columns:1fr}}
 .gcol{background:var(--colbg);border:1.5px dashed var(--line);border-radius:16px;padding:10px;min-height:140px}
@@ -363,7 +364,7 @@ function stepper(){
 }
 function welcome(){
  if(L.welcomed&&D.tasks.length)return '';
- return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Four short rounds walk you through it: a warm-up, a walk through each area of your life (the house and garden part by part; bills, the car, the kids and the rest month by month through the coming year), the year ahead month by month, and finally grouping notes into big tasks. Skip any round you like.</p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
+ return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Four short rounds walk you through it: a warm-up, a walk through each area of your life (the house and garden part by part; bills, the car, the kids and the rest month by month through the coming year), the year ahead month by month, and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like.</p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
@@ -666,7 +667,7 @@ function pinRow(){
  return '<div class="note2"><b>PIN for this device</b><br>'+(L.pin?'Set, for '+esc(NAMES[L.pinWho===1?1:0])+'. It is asked for before anything personal shows after “Household together”, or before switching to the other person.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Not set. With a PIN, nobody can tap their way from the household view into '+esc(NAMES[L.me])+'’s personal tasks on this device.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
 }
 function head(){
- var h='<header class="top"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
+ var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
@@ -724,6 +725,7 @@ document.addEventListener('click',function(e){
  if(act==='together'){if(L.together)askMove({together:false});else if(!L.pin){ui.pin={mode:'set',then:{together:true},err:''};}else applyMove({together:true});}
  else if(act==='me'&&b.getAttribute('data-i')==='2'){applyMove({shared:true});}
  else if(act==='me'){var wi2=+b.getAttribute('data-i');if(!(wi2===L.me&&!hhOnly()))askMove({me:wi2});}
+ else if(act==='home'){L.tab='brain';ui.sheet=null;ui.pin=null;scrollTo(0,0);}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
  else if(act==='pinreset'){pinReset();return;}
