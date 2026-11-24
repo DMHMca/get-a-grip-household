@@ -2,6 +2,10 @@
 
 Read this first. It is the sister project of `DMHMca/get-a-grip` (the owner's personal to-do app). Keep the two separate: household work happens here; changes to Get a grip itself happen in that repository.
 
+## Get a grip's task rules (reference only)
+
+Get a grip keeps a short document of its task model and rules: `TASK-MODEL.md` in `DMHMca/get-a-grip` (https://github.com/DMHMca/get-a-grip/blob/main/TASK-MODEL.md; read it with `git show origin/main:TASK-MODEL.md` in a clone). It is a REFERENCE ONLY: this app is a fork and goes its own way, so nothing in it binds us. Borrow a rule only when the owner agrees. Where we deliberately differ (24 Nov 2026): quiet due dates with reminders (their rule 1 says none), and priority as a shared list order (`r`), which fits their "order is the list" rule.
+
 ## THE AGREED PLAN (21 November 2026, owner's decision): A FORK OF GET A GRIP
 
 The household app becomes a FORK of Get a grip personal: a one-off copy taken now, after which the two apps go their own ways. Nothing is kept in step between them (the owner: his personal changes may not suit Lauren and Josh, and he does not need household features himself). Josh, an experienced developer, may take the code over later. Never change the get-a-grip repository for household work.
