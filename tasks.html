@@ -286,7 +286,10 @@ var ui={view:'today',back:[],partsOpen:{},bigCards:{},tileOpen:{},bigOpen:false,
    Saved on this device only. New tasks added on Big or Small while showing Household go into the Household activity. */
 function getScope(){try{var v=LS.getItem('scope');return v==='hh'||v==='me'?v:'all';}catch(e){return 'all';}}
 function setScope(v){try{LS.setItem('scope',v);}catch(e){}render();}
-function inScope(t){var sc=getScope();if(sc==='all')return true;var hh=isHH(t);return sc==='hh'?hh:!hh;}
+/* BROUGHT IN LATER: a household job with `lead` (days) and a due date stays out of Today, Big, Small and Master until `lead` days
+   before it is due (jobs from email: 28). It is still on the Activities page. When its time comes, hhSurface puts it at the top. */
+function notYet(t){var x=t&&t.parent?task(t.parent):t;if(!x||!isHH(x)||!x.lead||!x.due||x.done)return false;var n=daysTo(x.due);return n!==null&&n>x.lead;}
+function inScope(t){if(notYet(t))return false;var sc=getScope();if(sc==='all')return true;var hh=isHH(t);return sc==='hh'?hh:!hh;}
 function scopeAct(){return getScope()==='hh'?hhActFor('wild'):null;}
 /* HOUSEHOLD ACTIVITIES: each area of the planning wall (House, Car, Health…) is an activity here, id 'hh:<area key>'.
    Any activity whose id starts 'hh' holds household jobs; every other activity is personal. */
@@ -3261,7 +3264,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    of Get a grip works on it. Changes to those tasks go back into the shared document. Only tasks in the Household
    activity are ever written to the shared document: personal tasks never leave this device. */
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
-  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep'],busy:false,t:0,on:false};
+  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead'],busy:false,t:0,on:false};
 function hhLoc(){try{return JSON.parse(localStorage.getItem(HH.LKEY)||'{}')||{};}catch(e){return {};}}
 function hhMe(){var m=hhLoc().me;return m===1?1:0;}
 function hhDoc(){var d=null;try{d=JSON.parse(localStorage.getItem(HH.DKEY)||'null');}catch(e){}d=d||{};
@@ -3370,7 +3373,7 @@ function hhPush(){
   });
   d.tasks.slice().forEach(function(t){
     if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
-    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:hhNextDue(t.due,t.rep),rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:iso()});
+    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:hhNextDue(t.due,t.rep),rep:t.rep,lead:t.lead,notes:t.notes,dur:t.dur,dev:t.dev,updated:iso()});
     t.rolled=true;t.updated=iso();changed=true;
   });
   /* this phone reordered its household jobs: that becomes the shared priority order */
@@ -3399,7 +3402,7 @@ function hhStable(d){var t=d.tasks.slice().sort(function(x,y){return x.id<y.id?-
   return JSON.stringify([d.triage||[],d.cats||[],t,d.gone.slice().sort(function(x,y){return x.id<y.id?-1:1;}),k.map(function(x){return [x,d.day[x]];})]);}
 function hhSync(){
   var code=hhLoc().code;
-  if(!code||HH.busy){if(!code&&hhPull())commit(true);return Promise.resolve();}
+  if(!code||HH.busy){if(!code&&(hhPull()|hhSurface()))commit(true);return Promise.resolve();}
   HH.busy=true;
   function req(m,body){return fetch(HH.SERVER+'/h/'+code,{method:m,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});}
   function round(tries){
@@ -3409,11 +3412,20 @@ function hhSync(){
       if(hhStable(m)!==hhStable(remote.doc))return req('PUT',{base:remote.v,doc:m}).then(function(r){if(r.status===409&&tries>0)return round(tries-1);});
     });
   }
-  return round(2).catch(function(){}).then(function(){HH.busy=false;if(hhPull())commit(true);});
+  return round(2).catch(function(){}).then(function(){HH.busy=false;if(hhPull()|hhSurface())commit(true);});
+}
+function hhSurface(){
+  var seen;try{seen=JSON.parse(LS.getItem('hh.surfaced')||'{}');}catch(e){seen={};}
+  var due=S.tasks.filter(function(f){return isHH(f)&&!f.parent&&f.lead&&f.due&&!f.done&&!notYet(f)&&!seen[f.id+'@'+f.due];});
+  if(!due.length)return false;
+  due.sort(function(a,b){return a.due<b.due?1:-1;});
+  due.forEach(function(f){S.tasks=S.tasks.filter(function(x){return x!==f;});S.tasks.unshift(f);seen[f.id+'@'+f.due]=1;});
+  try{LS.setItem('hh.surfaced',JSON.stringify(seen));}catch(e){}
+  return true;
 }
 function hhStart(){
   HH.on=true;
-  if(hhPull())commit(true);
+  if(hhPull()|hhSurface())commit(true);
   hhSync();
   setInterval(function(){if(document.visibilityState==='visible')hhSync();},20000);
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')hhSync();});

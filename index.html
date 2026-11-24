@@ -534,7 +534,7 @@ function nextDue(due,r){
 function rollRepeats(){
  D.tasks.slice().forEach(function(t){
   if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
-  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nextDue(t.due,t.rep),rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:now()});
+  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nextDue(t.due,t.rep),rep:t.rep,lead:t.lead,notes:t.notes,dur:t.dur,dev:t.dev,updated:now()});
   t.rolled=true;t.updated=now();
  });
 }
@@ -700,34 +700,30 @@ function pinRow(){
    Items keep their id (from what + from) so a newer file never brings back what was already added or skipped. ---- */
 function aiPrompt(){
  var d=new Date();d.setFullYear(d.getFullYear()-2);var since=d.toISOString().slice(0,10);
- return ['You are helping a household find its recurring payments and recurring jobs, so they can plan them ahead in an app called Get a Grip Household. Write in British English.',
+ return ['You are helping a household make a list of the recurring things they must act on, for an app called Get a Grip Household. Write in British English. Work in three steps and do not skip step 2.',
  '',
- 'STEP 1. Search my Gmail from '+since+' to today (the last two years). Look for anything that comes round again: renewals, subscriptions, insurance (home, contents, car, pet, travel, life, gadget), breakdown cover, memberships, the TV licence, council tax, energy, water, broadband, mobile phones, streaming, software and apps, domain names and web hosting, professional or club fees, school and activity fees, car tax, MOT and servicing, boiler service, chimney sweep, window cleaner, gutters, tax deadlines, and anything else that repeats. Useful searches include: renewal, renews, "your policy", annual, subscription, "direct debit", receipt, invoice, reminder, MOT, "due date", "price change".',
+ 'STEP 1: SEARCH. Search my Gmail from '+since+' to today (the last two years). Look for anything that comes round again and needs a person to pay it, renew it, decide about it or book it. For example: car tax, MOT, car insurance, breakdown cover, house and contents insurance, health insurance, travel insurance, pet insurance, life insurance, the TV licence, council tax if not paid automatically, boiler service, chimney sweep, domain names and web hosting, professional or club memberships, school and activity fees, tax return deadlines, passport and driving licence renewals, and anything else that comes round and needs action. Useful searches include: renewal, renews, "your policy", annual, "due date", reminder, expires, MOT, "tax your vehicle", invoice, "price change".',
  '',
- 'STEP 2. For each recurring thing, work out: what it is; how often it comes round; the next date it is due (work it out from past dates if needed, and say so in Notes); the last amount paid if it is shown; and what action it needs.',
+ 'LEAVE OUT anything that is simply paid automatically and needs no thought (for example streaming services, phone and broadband bills, energy and water direct debits, card subscriptions), UNLESS it renews with a decision worth making, such as an insurance policy that auto-renews but should be checked or shopped around.',
  '',
- 'Action must be one of these words:',
- '- pay: it has to be paid by hand.',
- '- review: it renews and is worth checking before then (shop around, switch, cancel, or check the new price).',
- '- task: a recurring job that is not a payment (a service, an MOT, a check-up).',
- '- automatic: it is paid automatically and needs nothing. List it anyway.',
+ 'STEP 2: AGREE THE LIST WITH ME. Before writing any file, show me your list in the chat as a short numbered list: what it is, who it is from, how often, the next date and the last amount. Ask me which to keep and which to drop, and correct anything I tell you. Only go on when I say the list is right.',
  '',
- 'Area must be one of these words: house, cleaning, garden, bills, money, car, kids, health, business, trips, paper. Use bills for most payments, car for anything to do with a car, house for the house and its services.',
- '',
- 'PRIVACY. Never include account numbers, policy numbers, card numbers, sort codes, passwords, reference numbers, addresses or anyone’s personal details. Company names and amounts are fine.',
- '',
- 'STEP 3. Give me ONLY a Markdown file called recurring.md, with exactly this heading and table layout (the example row shows the format; replace it with what you found):',
+ 'STEP 3: THE FILE. Then give me ONLY a Markdown file called recurring.md with exactly this heading and table layout (the example row shows the format; replace it with the agreed items):',
  '',
  '# Get a Grip recurring items',
  '',
  '| What | Action | How often | Next due | Last amount | From | Area | Notes |',
  '|---|---|---|---|---|---|---|---|',
- '| Car insurance | review | yearly | 2027-03-14 | £412.60 | Admiral | car | Renewal notice arrives about 3 weeks before |',
+ '| Car insurance | renew | yearly | 2027-03-14 | £412.60 | Admiral | car | Check the renewal price and shop around |',
  '',
- 'Rules for the table: How often is one of weekly, monthly, quarterly, every 6 months, yearly, every 2 years. Next due is written YYYY-MM-DD and must be in the future (if you estimated it, write "estimated" in Notes). One row per thing, no duplicates, no "|" inside a cell, nothing after the table. Sort the rows by Next due.'].join('\n');
+ 'Action is one of: pay (pay it by hand), renew (it renews and should be checked, renewed or switched), task (a recurring job that is not a payment, such as a service or an MOT). How often is one of weekly, monthly, quarterly, every 6 months, yearly, every 2 years. Next due is written YYYY-MM-DD and must be in the future (if you estimated it, write "estimated" in Notes). Area is one of: house, cleaning, garden, bills, money, car, kids, health, business, trips, paper.',
+ '',
+ 'PRIVACY. Never include account numbers, policy numbers, card numbers, sort codes, passwords, reference numbers, addresses or anyone’s personal details. Company names and amounts are fine.',
+ '',
+ 'Rules for the table: one row per thing, no duplicates, no "|" inside a cell, nothing after the table. Sort the rows by Next due.'].join('\n');
 }
 var FREQ={weekly:'week',monthly:'month',quarterly:'3m','every 3 months':'3m','every 6 months':'6m','6 monthly':'6m','twice a year':'6m','half-yearly':'6m',yearly:'year',annual:'year',annually:'year','every year':'year','every 2 years':'2y','every two years':'2y'};
-var ACTS=['pay','review','task','automatic'];
+var ACTS=['pay','renew','task'];
 function slug(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);}
 function parseMd(text){
  var rows=String(text||'').split(/\r?\n/).filter(function(l){return /^\s*\|/.test(l);}).map(function(l){return l.trim().replace(/^\||\|$/g,'').split('|').map(function(c){return c.trim();});});
@@ -738,7 +734,7 @@ function parseMd(text){
   if(r.every(function(c){return /^:?-{2,}:?$/.test(c)||!c;}))return;
   var g=function(n){var i=col(n);return i>=0&&r[i]?r[i]:'';};
   var what=g('what');if(!what)return;
-  var act=g('action').toLowerCase();if(ACTS.indexOf(act)<0)act='review';
+  var act=g('action').toLowerCase();if(act==='review')act='renew';if(ACTS.indexOf(act)<0)act='renew';
   var due=g('next due');if(!/^\d{4}-\d{2}-\d{2}$/.test(due))due='';
   var ar=g('area').toLowerCase();if(!area(ar)||ar==='wild')ar=ar==='cleaning'?'clean':'bills';
   out.push({id:'tr-'+slug(what+'-'+g('from')),what:what,act:act,freq:FREQ[g('how often').toLowerCase()]||'',often:g('how often'),due:due,amount:g('last amount'),from:g('from'),area:ar,notes:g('notes')});
@@ -749,18 +745,17 @@ function bringIn(text){
  var items=parseMd(text);
  if(!items.length){ui.status='No table was found in that file. It should start with “# Get a Grip recurring items” and a table.';draw(true);return;}
  var have={};D.triage.forEach(function(x){have[x.id]=x;});var fresh=0;
- items.forEach(function(it){var o=have[it.id];if(o){['what','act','freq','often','due','amount','from','area','notes'].forEach(function(k){o[k]=it[k];});o.u=now();}else{it.st='new';it.u=now();D.triage.push(it);fresh++;}});
- ui.status='Read '+items.length+' items: '+fresh+' new, '+(items.length-fresh)+' already in the list.';changed();draw(true);
+ items.forEach(function(it){if(have[it.id])return;it.u=now();D.triage.push(it);triAdd(it);fresh++;});
+ ui.status=fresh?'Added '+fresh+(fresh>1?' jobs':' job')+' to Still to share out'+(items.length>fresh?' ('+(items.length-fresh)+' were already here)':'')+'. Each one shows on its owner’s phone four weeks before it is due.':'Nothing new: all '+items.length+' were already here.';changed();draw(true);
 }
 function triAdd(it){
  var due=it.due,r=it.freq,late='';
  /* a date already past may mean it is overdue: make it due today and say when it was due, rather than skipping ahead */
  if(due&&due<today()){late=due;due=today();}
- var renew=due,jd=due;
- if(it.act==='review'&&due){var p=due.split('-').map(Number);jd=new Date(Date.UTC(p[0],p[1]-1,p[2]-14)).toISOString().slice(0,10);if(jd<today())jd=today();}
- var text=it.act==='pay'?'Pay '+it.what:it.act==='review'?'Review '+it.what+' before it renews':it.act==='automatic'?'Check '+it.what:it.what;
- var notes=[late?'Was due '+nice(late)+': check whether it has been done.':'',it.from?'From: '+it.from:'',it.amount?'Last amount: '+it.amount:'',renew&&it.act==='review'?'Renews: '+nice(renew):'',it.often?'How often: '+it.often:'',it.notes].filter(Boolean).join('\n');
- var nid=id();D.tasks.push({id:nid,text:text,size:'small',area:it.area,tag:'From email',to:null,by:L.me,done:false,n:Date.now(),updated:now(),due:jd||undefined,rep:r||undefined,notes:notes||undefined});
+ var text=it.act==='pay'?'Pay '+it.what:it.act==='renew'?'Renew '+it.what:it.what;
+ var notes=[late?'Was due '+nice(late)+': check whether it has been done.':'',it.from?'From: '+it.from:'',it.amount?'Last amount: '+it.amount:'',it.often?'How often: '+it.often:'',it.notes].filter(Boolean).join('\n');
+ /* lead: 28 = it stays out of the phone's lists until four weeks before it is due, then comes in at the top of Small (owner) */
+ var nid=id();D.tasks.push({id:nid,text:text,size:'small',area:it.area,tag:'From email',to:null,by:L.me,done:false,n:Date.now(),updated:now(),due:due||undefined,rep:r||undefined,lead:due?28:undefined,notes:notes||undefined});
  it.st='added';it.job=nid;it.u=now();ui.fresh=nid;changed();
 }
 function triRow(it){
@@ -771,23 +766,19 @@ function triRow(it){
  return h+'</div></div>';
 }
 function mailTab(){
- var h='<div class="intro"><h2>📬 Recurring payments from your email</h2><p class="sub">An AI that can read your Gmail looks back over two years and lists everything that comes round again. You bring its list in here and decide, one by one, what goes on the wall.</p></div>';
- h+='<div class="note2"><b>1. Copy the prompt</b><br>Paste it into an AI that can read your Gmail, for example Claude or ChatGPT with Gmail connected. It returns a file called recurring.md.<div class="srow"><button class="on" data-act="tcopy">Copy the prompt</button></div><details><summary>Show the prompt</summary><textarea id="tprompt" readonly style="width:100%;min-height:220px;box-sizing:border-box;font:inherit;font-size:13px">'+esc(aiPrompt())+'</textarea></details></div>';
- h+='<div class="note2"><b>2. Bring the file in</b><br><div class="srow"><label style="cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--acc);color:var(--onacc);font-weight:700"><input type="file" id="tfile" accept=".md,.txt,text/markdown,text/plain" style="display:none">Choose recurring.md…</label></div>or paste what the AI gave you:<textarea id="tpaste" style="width:100%;min-height:80px;box-sizing:border-box;font:inherit;font-size:14px;margin-top:6px" placeholder="Paste the table here"></textarea><div class="srow"><button data-act="tread">Read what I pasted</button></div></div>';
- var T=D.triage||[];
- h+='<div class="note2"><b>3. Go through them</b><br>';
- if(!T.length)return h+'Nothing brought in yet.</div>';
- var groups=[['pay','To pay by hand'],['review','Worth reviewing before they renew'],['task','Recurring jobs'],['automatic','Paid automatically: nothing to do']];
- groups.forEach(function(g){
-  var l=T.filter(function(x){return x.act===g[0]&&x.st==='new';}).sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;});
-  if(!l.length)return;
-  h+='<h3 style="margin:14px 0 4px">'+g[1]+' <span class="cnt">'+l.length+'</span></h3>'+l.map(triRow).join('');
- });
- var dn=T.filter(function(x){return x.st!=='new';});
- if(!T.some(function(x){return x.st==='new';}))h+='<p>All gone through. Added jobs are on the wall and in Share out.</p>';
- if(dn.length)h+='<details style="margin-top:12px"><summary>Already added or skipped ('+dn.length+')</summary>'+dn.map(triRow).join('')+'</details>';
- h+='<div class="srow" style="margin-top:12px"><button class="lnk" data-act="tclear">Empty this list</button></div>';
- return h+'</div>';
+ var h='<div class="intro"><h2>📬 Recurring payments from your email</h2><p class="sub">An AI that can read your Gmail looks back over two years, goes through what it finds with you, and gives back only the list you agreed. Bring that list in here and each item goes onto the wall, ready to share out. On the phone, each one appears at the top of the Small list four weeks before it is due.</p></div>';
+ h+='<div class="note2"><b>1. Copy the prompt</b><br>Paste it into an AI that can read your Gmail, for example Claude with Gmail connected. It will show you what it found and ask what to keep, then give you a file called recurring.md.<div class="srow"><button class="on" data-act="tcopy">Copy the prompt</button></div><details><summary>Show the prompt</summary><textarea id="tprompt" readonly style="width:100%;min-height:220px;box-sizing:border-box;font:inherit;font-size:13px">'+esc(aiPrompt())+'</textarea></details></div>';
+ h+='<div class="note2"><b>2. Bring the file in</b><br><div class="srow"><label style="cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--acc);color:var(--onacc);font-weight:700"><input type="file" id="tfile" accept=".md,.txt,text/markdown,text/plain" style="display:none">Choose recurring.md…</label></div>or paste what the AI gave you:<textarea id="tpaste" style="width:100%;min-height:80px;box-sizing:border-box;font:inherit;font-size:14px;margin-top:6px" placeholder="Paste the table here"></textarea><div class="srow"><button data-act="tread">Bring in what I pasted</button></div></div>';
+ var T=(D.triage||[]).filter(function(x){return x.st!=='skipped';});
+ if(T.length){
+  h+='<details class="note2"><summary><b>Brought in so far ('+T.length+')</b></summary>';
+  T.slice().sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;}).forEach(function(it){
+   var bits=[it.from,it.often,it.due?'due '+nice(it.due):'',it.amount].filter(Boolean);
+   h+='<div class="trow"><div class="tb2"><div class="tt2">'+esc(it.what)+'</div><div class="tm2">'+esc(bits.join(' · '))+'</div></div><div class="tbtn"><button data-act="tundo" data-tid="'+it.id+'">Take it out</button></div></div>';
+  });
+  h+='</details>';
+ }
+ return h;
 }
 function head(){
  var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
@@ -912,8 +903,7 @@ document.addEventListener('click',function(e){
  else if((act==='gup'||act==='gdown')&&t){var gl=gList(t.size==='big'?'big':'small'),gi=gl.indexOf(t);if(act==='gup'&&gi>0)gmove(t,t.size==='big'?'big':'small',gl[gi-1].id);else if(act==='gdown'&&gi<gl.length-1)gmove(t,t.size==='big'?'big':'small',gl[gi+2]?gl[gi+2].id:null);}
  else if(act==='tcopy'){var pr=aiPrompt();(navigator.clipboard?navigator.clipboard.writeText(pr):Promise.reject()).then(function(){ui.status='Prompt copied. Paste it into the AI.';status();},function(){var ta=document.getElementById('tprompt');if(ta){ta.closest('details').open=true;ta.select();}ui.status='Select the prompt below and copy it.';status();});return;}
  else if(act==='tread'){bringIn((document.getElementById('tpaste')||{}).value||'');return;}
- else if(act==='tadd'||act==='tskip'||act==='tundo'){var it=(D.triage||[]).filter(function(x){return x.id===b.getAttribute('data-tid');})[0];if(it){if(act==='tadd')triAdd(it);else if(act==='tskip'){it.st='skipped';it.u=now();changed();}else{if(it.st==='added'&&it.job&&byId(it.job)&&!confirm('Undo also removes the job “'+byId(it.job).text+'” from the wall. Carry on?'))return;if(it.st==='added'&&it.job&&byId(it.job)){D.gone.push({id:it.job,at:now()});D.tasks=D.tasks.filter(function(x){return x.id!==it.job;});}it.st='new';delete it.job;it.u=now();changed();}}}
- else if(act==='tclear'){if(confirm('Empty the list from email? Jobs already added stay on the wall.')){D.triage=[];changed();}}
+ else if(act==='tundo'){var it=(D.triage||[]).filter(function(x){return x.id===b.getAttribute('data-tid');})[0];if(it){var jb=it.job&&byId(it.job);if(!confirm('Take “'+it.what+'” out? '+(jb?'Its job “'+jb.text+'” is removed from the wall, and a':'A')+' newer file can bring it in again.'))return;if(jb){D.gone.push({id:jb.id,at:now()});D.tasks=D.tasks.filter(function(x){return x!==jb;});}it.st='skipped';it.u=now();changed();}}
  else if(act==='tview'){L.tview=b.getAttribute('data-v');}
  else if((act==='up'||act==='down')&&t){var cl=colList(t.to),ix=cl.indexOf(t),nb=act==='up'?cl[ix-1]:cl[ix+2];if(act==='up'&&ix>0)moveJob(t,t.to,nb.id);else if(act==='down'&&ix<cl.length-1)moveJob(t,t.to,nb?nb.id:null);}
  else if(act==='pushon'){pushOn();return;}
