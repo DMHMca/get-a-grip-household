@@ -84,6 +84,10 @@ Demo only, with made-up data, until the owner says otherwise. The owner is not y
 - Tab "2 · Share out": columns Still to share out, Lauren, Josh (Both removed); drag or tap the round buttons; steps go with their task; balance strip with a neutral note.
 - "My day": one big step plus up to three small things for the chosen person. "Sharing": start a household (code) or join with a code, or "Just try it on this device".
 
+## Input from Lauren (24 Nov 2026, via the owner): routine chores (NOT built; design proposed, awaiting the owner)
+
+They no longer have a cleaner and will do the cleaning themselves, so help organising the endless house chores would be very helpful. Proposed (not yet agreed): a "Cleaning and routines" Brainstorm tile walking room by room with chores and a "how often" (daily, twice a week, weekly, fortnightly, monthly, every few months, yearly); "Repeats every year" generalised to "Repeats every…", a ticked chore disappearing until it is next due (as a Wait) so lists stay short; chores shared out to one person each as now; due chores slipping into My day as small things. Open questions put to the owner: may a chore alternate between them (one week each)? A cap on chores per day? Keep the wording neutral, as everywhere.
+
 ## Next, as the owner has described it (NOT built; confirm before building)
 
 1. After the wall, set each task up with Get a grip's characteristics: subtasks, wait (a day, week, month, a date, or until another task is finished), big/small, time and equipment, details. Best done by storing tasks in exactly Get a grip's task shape (see the get-a-grip CLAUDE.md: `text`, `size:'big'`, `parent`, `wait`, `wf`, `wh`, `dur`, `dev`, `notes`, `done`, `updated`) so nothing needs translating.
