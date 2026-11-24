@@ -291,7 +291,7 @@ function scopeAct(){return getScope()==='hh'?hhActFor('wild'):null;}
 /* HOUSEHOLD ACTIVITIES: each area of the planning wall (House, Car, Health…) is an activity here, id 'hh:<area key>'.
    Any activity whose id starts 'hh' holds household jobs; every other activity is personal. */
 function isHH(t){return !!(t&&typeof t.activityId==='string'&&t.activityId.indexOf('hh')===0);}
-var HH_AREAS={house:'🏠 House',garden:'🌿 Garden',bills:'🧾 Major bills',money:'💷 Money',car:'🚗 Car',kids:'🧒 Kids',health:'🩺 Health',business:'🚀 Business ventures',trips:'✈️ Trips & fun',paper:'📄 Paperwork',wild:'✨ General'};
+var HH_AREAS={clean:'🧽 Cleaning',house:'🏠 House',garden:'🌿 Garden',bills:'🧾 Major bills',money:'💷 Money',car:'🚗 Car',kids:'🧒 Kids',health:'🩺 Health',business:'🚀 Business ventures',trips:'✈️ Trips & fun',paper:'📄 Paperwork',wild:'✨ General'};
 function hhAreaName(k){if(HH_AREAS[k])return HH_AREAS[k];var c=(hhDoc().cats||[]).filter(function(x){return x.k===k;})[0];return c?'📌 '+c.n:'✨ General';}
 function hhActFor(k){
   k=k||'wild';var id='hh:'+k,a=act(id),nm=hhAreaName(k);
