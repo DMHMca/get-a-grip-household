@@ -31,7 +31,7 @@ Stages (each tested in a scripted browser; never release one that takes away som
 4. Today: views "Mine" (personal only), "Household" (household only) and "Everything" (day drawn from both). Ticking a household task updates the shared store. Test that nothing personal ever reaches the shared store.
 5. Tidy and hand over: rewrite this brief and the README for Josh or a future session. Handover items: the repository is on the owner's GitHub account (add Josh or transfer it); the store is on the owner's Cloudflare account (Josh would want his own).
 
-HOME BUTTON (owner, 22 Nov 2026): "⌂ Home" at the top of every screen (planning header, `data-act="home"`; My day header link to `./`) returns to 1 · Brainstorm.
+HOME BUTTON (owner, 22 Nov 2026): "⌂ Home" at the top of every screen (planning header, `data-act="home"`; My day header link to `./`) returns to 1 · Brainstorm. OPENING (owner, 25 Nov 2026): opening the app and Home both go to the very START: 1 · Brainstorm, round Warm up, question 1 (`toStart`), not the last round used. Links with `#share`, `#sharing`, `#email` still open those tabs.
 
 TASKS TAB FOLDED AWAY (owner, 22 Nov 2026): round 4's Big/Small board now sets the priority, so the tab was removed from the bar; tabs are 1 · Brainstorm, 2 · Share out, 3 · My day, Sharing. `tasksTab()` and its helpers are still in `index.html`, unused, in case a per-person view is wanted again. Household-only devices land on Share out (`#share`).
 

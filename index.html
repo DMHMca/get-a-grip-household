@@ -280,8 +280,12 @@ function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.triage=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
+/* always open at the start: Brainstorm, Warm up, first question (owner, 25 Nov 2026) */
+function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':location.hash==='#email'?'mail':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
+if(L.tab==='brain')toStart();
+window.addEventListener('hashchange',function(){var m={'#share':'alloc','#sharing':'link','#tasks':'alloc','#email':'mail'}[location.hash];if(m){L.tab=m;persist();draw(true);}});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
 var ui={dsize:'small',status:'',syncing:false,open:{},defer:false,fresh:null,timer:0};
@@ -872,7 +876,7 @@ document.addEventListener('click',function(e){
  if(act==='together'){if(L.together)askMove({together:false});else if(!L.pin){ui.pin={mode:'set',then:{together:true},err:''};}else applyMove({together:true});}
  else if(act==='me'&&b.getAttribute('data-i')==='2'){applyMove({shared:true});}
  else if(act==='me'){var wi2=+b.getAttribute('data-i');if(!(wi2===L.me&&!hhOnly()))askMove({me:wi2});}
- else if(act==='home'){L.tab='brain';ui.sheet=null;ui.pin=null;scrollTo(0,0);}
+ else if(act==='home'){toStart();ui.sheet=null;ui.pin=null;scrollTo(0,0);}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
  else if(act==='pinreset'){pinReset();return;}
