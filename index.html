@@ -31,6 +31,9 @@ button{min-height:44px;padding:8px 16px;border:1px solid var(--line);background:
 button:hover{box-shadow:var(--shadow)}button:active{transform:scale(.98)}
 button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
 .homeb{font-weight:700;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--acc);color:var(--acc);background:var(--card);margin-right:10px;flex:none}
+.trow{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:10px;margin:6px 0;box-shadow:var(--shadow);color:var(--tx)}
+.trow .tb2{flex:1;min-width:0}.trow .tt2{font-weight:600}.trow .tm2{font-size:.8rem;color:var(--mut)}.trow.tdone{opacity:.7}
+.trow .tbtn{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .gboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media (max-width:620px){.gboard{grid-template-columns:1fr}}
 .gcol{background:var(--colbg);border:1.5px dashed var(--line);border-radius:16px;padding:10px;min-height:140px}
@@ -275,9 +278,9 @@ function tilesList(){return allAreas().filter(function(a){return !a.hidden;});}
 function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
 function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
-var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];
+var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.triage=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
-L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':'brain');if(L.tab==='share')L.tab='link';
+L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':location.hash==='#email'?'mail':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
@@ -307,9 +310,10 @@ function merge(a,b){
  Object.keys(gone).forEach(function(k){if(gone[k]>cut)g.push({id:k,at:gone[k]});});
  Object.keys(day).forEach(function(k){if(k.slice(0,7)<today().slice(0,7))delete day[k];});
  var cats={};[a,b].forEach(function(d){(d.cats||[]).forEach(function(c){if(!cats[c.k]||(c.u||'')>(cats[c.k].u||''))cats[c.k]=c;});});
- return {tasks:out,gone:g,day:day,cats:Object.keys(cats).sort().map(function(k){return cats[k];})};
+ var tri={};[a,b].forEach(function(d){(d.triage||[]).forEach(function(x){if(!tri[x.id]||(x.u||'')>(tri[x.id].u||''))tri[x.id]=x;});});
+ return {tasks:out,gone:g,day:day,cats:Object.keys(cats).sort().map(function(k){return cats[k];}),triage:Object.keys(tri).sort().map(function(k){return tri[k];})};
 }
-function stable(d){var t=d.tasks.slice().sort(function(x,y){return x.id<y.id?-1:1;});var k=Object.keys(d.day).sort();return JSON.stringify([d.cats||[],t,d.gone.slice().sort(function(x,y){return x.id<y.id?-1:1;}),k.map(function(x){return [x,d.day[x]];})]);}
+function stable(d){var t=d.tasks.slice().sort(function(x,y){return x.id<y.id?-1:1;});var k=Object.keys(d.day).sort();return JSON.stringify([d.triage||[],d.cats||[],t,d.gone.slice().sort(function(x,y){return x.id<y.id?-1:1;}),k.map(function(x){return [x,d.day[x]];})]);}
 function req(method,body){return fetch(SERVER+'/h/'+L.code,{method:method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});}
 function sync(){
  if(!SERVER||!L.code||ui.syncing)return Promise.resolve();
@@ -519,11 +523,18 @@ function pushOff(){
  ui.status='Reminders are off on this phone.';draw(true);
 }
 /* yearly repeats: when a repeating job is finished, next year's copy appears (the same rule as on My day) */
+/* REPEATS (24 Nov 2026): `rep` is week, month, 3m, 6m, year or 2y. Finishing a repeating job with a due date makes the next one. */
+var REPS=[['','Does not repeat'],['week','Every week'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
+function nextDue(due,r){
+ var p=due.split('-').map(Number),y=p[0],m=p[1]-1,d=p[2];
+ if(r==='week'){var w=new Date(Date.UTC(y,m,d+7));return w.toISOString().slice(0,10);}
+ var add={month:1,'3m':3,'6m':6,year:12,'2y':24}[r]||12;m+=add;y+=Math.floor(m/12);m=m%12;
+ var last=new Date(Date.UTC(y,m+1,0)).getUTCDate();return new Date(Date.UTC(y,m,Math.min(d,last))).toISOString().slice(0,10);
+}
 function rollRepeats(){
  D.tasks.slice().forEach(function(t){
-  if(t.parent||t.rep!=='year'||!t.done||!t.due||t.rolled)return;
-  var p=t.due.split('-').map(Number),nd=new Date(Date.UTC(p[0]+1,p[1]-1,Math.min(p[2],p[1]===2?28:p[2])));
-  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nd.toISOString().slice(0,10),rep:'year',updated:now()});
+  if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
+  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nextDue(t.due,t.rep),rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:now()});
   t.rolled=true;t.updated=now();
  });
 }
@@ -565,13 +576,14 @@ function panel(){
  if(others.length)h+='<select data-g="wf" data-id="'+t.id+'" aria-label="Wait until another job is finished" style="margin-top:6px"><option value="">…or wait until another job is finished</option>'+others.map(function(x){return '<option value="'+x.id+'"'+(t.wf===x.id?' selected':'')+'>'+esc(x.text)+'</option>';}).join('')+'</select>';
  if(!par){
   h+='<div class="glab">Due date (optional)</div><input type="date" data-g="due" data-id="'+t.id+'" value="'+(t.due||'')+'"><div class="gnote">A reminder comes to the phone a week before and the day before.</div>';
-  h+='<label style="display:flex;align-items:center;gap:10px;margin-top:8px"><input type="checkbox" data-g="rep" data-id="'+t.id+'"'+(t.rep==='year'?' checked':'')+' style="width:22px;height:22px"> Repeats every year</label>';
+  h+='<div class="glab">Repeats</div><select data-g="rep" data-id="'+t.id+'">'+REPS.map(function(r){return '<option value="'+r[0]+'"'+((t.rep||'')===r[0]?' selected':'')+'>'+r[1]+'</option>';}).join('')+'</select><div class="gnote">When it is ticked, the next one appears with its due date moved on.</div>';
  }
  h+='<div class="gfoot"><button data-act="del" data-id="'+t.id+'">Delete</button><button class="on" data-act="gclose">Done</button></div>';
  return h+'</div></div>';
 }
 function gset(t,k,v){if(v===''||v===null||v===undefined)delete t[k];else t[k]=v;touch(t);}
 document.addEventListener('change',function(e){
+ if(e.target&&e.target.id==='tfile'){var f=e.target.files&&e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){bringIn(rd.result);};rd.readAsText(f);}e.target.value='';return;}
  var el=e.target,k=el.getAttribute&&el.getAttribute('data-g');if(!k)return;var t=byId(el.getAttribute('data-id'));if(!t)return;
  if(k==='text'){var v=el.value.trim();if(v&&v!==t.text){t.text=v;touch(t);}}
  else if(k==='notes')gset(t,'notes',el.value.trim()?el.value:'');
@@ -581,7 +593,7 @@ document.addEventListener('change',function(e){
  else if(k==='mergeinto'){var mj=byId(el.value);if(mj&&confirm('Move the '+kids(t.id).length+' steps of “'+t.text+'” into “'+mj.text+'”? “'+t.text+'” will then be removed.'))nest(t,mj);}
  else if(k==='area'){t.area=el.value||'wild';kids(t.id).forEach(function(x){x.area=t.area;x.updated=now();});touch(t);}
  else if(k==='due')gset(t,'due',el.value);
- else if(k==='rep')gset(t,'rep',el.checked?'year':'');
+ else if(k==='rep')gset(t,'rep',el.value);
  draw(true);
 });
 /* ---- 3 · TASKS: household jobs worked on Get a grip style. Views: Lauren and Josh (a column each), Lauren, Josh.
@@ -683,20 +695,114 @@ function pinRow(){
  if(L.shared)return '';
  return '<div class="note2"><b>PIN for this device</b><br>'+(L.pin?'Set, for '+esc(NAMES[L.pinWho===1?1:0])+'. It is asked for before anything personal shows after “Household together”, or before switching to the other person.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Not set. With a PIN, nobody can tap their way from the household view into '+esc(NAMES[L.me])+'’s personal tasks on this device.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
 }
+/* ---- 📬 FROM EMAIL (owner, 24 Nov 2026): a prompt for any AI that can read Gmail, the .md file it returns, and a shared triage
+   list (D.triage) of recurring payments and jobs to Add (as a household job in Still to share out, with due date and repeat) or Skip.
+   Items keep their id (from what + from) so a newer file never brings back what was already added or skipped. ---- */
+function aiPrompt(){
+ var d=new Date();d.setFullYear(d.getFullYear()-2);var since=d.toISOString().slice(0,10);
+ return ['You are helping a household find its recurring payments and recurring jobs, so they can plan them ahead in an app called Get a Grip Household. Write in British English.',
+ '',
+ 'STEP 1. Search my Gmail from '+since+' to today (the last two years). Look for anything that comes round again: renewals, subscriptions, insurance (home, contents, car, pet, travel, life, gadget), breakdown cover, memberships, the TV licence, council tax, energy, water, broadband, mobile phones, streaming, software and apps, domain names and web hosting, professional or club fees, school and activity fees, car tax, MOT and servicing, boiler service, chimney sweep, window cleaner, gutters, tax deadlines, and anything else that repeats. Useful searches include: renewal, renews, "your policy", annual, subscription, "direct debit", receipt, invoice, reminder, MOT, "due date", "price change".',
+ '',
+ 'STEP 2. For each recurring thing, work out: what it is; how often it comes round; the next date it is due (work it out from past dates if needed, and say so in Notes); the last amount paid if it is shown; and what action it needs.',
+ '',
+ 'Action must be one of these words:',
+ '- pay: it has to be paid by hand.',
+ '- review: it renews and is worth checking before then (shop around, switch, cancel, or check the new price).',
+ '- task: a recurring job that is not a payment (a service, an MOT, a check-up).',
+ '- automatic: it is paid automatically and needs nothing. List it anyway.',
+ '',
+ 'Area must be one of these words: house, cleaning, garden, bills, money, car, kids, health, business, trips, paper. Use bills for most payments, car for anything to do with a car, house for the house and its services.',
+ '',
+ 'PRIVACY. Never include account numbers, policy numbers, card numbers, sort codes, passwords, reference numbers, addresses or anyone’s personal details. Company names and amounts are fine.',
+ '',
+ 'STEP 3. Give me ONLY a Markdown file called recurring.md, with exactly this heading and table layout (the example row shows the format; replace it with what you found):',
+ '',
+ '# Get a Grip recurring items',
+ '',
+ '| What | Action | How often | Next due | Last amount | From | Area | Notes |',
+ '|---|---|---|---|---|---|---|---|',
+ '| Car insurance | review | yearly | 2027-03-14 | £412.60 | Admiral | car | Renewal notice arrives about 3 weeks before |',
+ '',
+ 'Rules for the table: How often is one of weekly, monthly, quarterly, every 6 months, yearly, every 2 years. Next due is written YYYY-MM-DD and must be in the future (if you estimated it, write "estimated" in Notes). One row per thing, no duplicates, no "|" inside a cell, nothing after the table. Sort the rows by Next due.'].join('\n');
+}
+var FREQ={weekly:'week',monthly:'month',quarterly:'3m','every 3 months':'3m','every 6 months':'6m','6 monthly':'6m','twice a year':'6m','half-yearly':'6m',yearly:'year',annual:'year',annually:'year','every year':'year','every 2 years':'2y','every two years':'2y'};
+var ACTS=['pay','review','task','automatic'];
+function slug(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);}
+function parseMd(text){
+ var rows=String(text||'').split(/\r?\n/).filter(function(l){return /^\s*\|/.test(l);}).map(function(l){return l.trim().replace(/^\||\|$/g,'').split('|').map(function(c){return c.trim();});});
+ if(rows.length<2)return [];
+ var hd=rows[0].map(function(c){return c.toLowerCase();}),col=function(n){return hd.indexOf(n);};
+ var out=[];
+ rows.slice(1).forEach(function(r){
+  if(r.every(function(c){return /^:?-{2,}:?$/.test(c)||!c;}))return;
+  var g=function(n){var i=col(n);return i>=0&&r[i]?r[i]:'';};
+  var what=g('what');if(!what)return;
+  var act=g('action').toLowerCase();if(ACTS.indexOf(act)<0)act='review';
+  var due=g('next due');if(!/^\d{4}-\d{2}-\d{2}$/.test(due))due='';
+  var ar=g('area').toLowerCase();if(!area(ar)||ar==='wild')ar=ar==='cleaning'?'clean':'bills';
+  out.push({id:'tr-'+slug(what+'-'+g('from')),what:what,act:act,freq:FREQ[g('how often').toLowerCase()]||'',often:g('how often'),due:due,amount:g('last amount'),from:g('from'),area:ar,notes:g('notes')});
+ });
+ return out;
+}
+function bringIn(text){
+ var items=parseMd(text);
+ if(!items.length){ui.status='No table was found in that file. It should start with “# Get a Grip recurring items” and a table.';draw(true);return;}
+ var have={};D.triage.forEach(function(x){have[x.id]=x;});var fresh=0;
+ items.forEach(function(it){var o=have[it.id];if(o){['what','act','freq','often','due','amount','from','area','notes'].forEach(function(k){o[k]=it[k];});o.u=now();}else{it.st='new';it.u=now();D.triage.push(it);fresh++;}});
+ ui.status='Read '+items.length+' items: '+fresh+' new, '+(items.length-fresh)+' already in the list.';changed();draw(true);
+}
+function triAdd(it){
+ var due=it.due,r=it.freq,late='';
+ /* a date already past may mean it is overdue: make it due today and say when it was due, rather than skipping ahead */
+ if(due&&due<today()){late=due;due=today();}
+ var renew=due,jd=due;
+ if(it.act==='review'&&due){var p=due.split('-').map(Number);jd=new Date(Date.UTC(p[0],p[1]-1,p[2]-14)).toISOString().slice(0,10);if(jd<today())jd=today();}
+ var text=it.act==='pay'?'Pay '+it.what:it.act==='review'?'Review '+it.what+' before it renews':it.act==='automatic'?'Check '+it.what:it.what;
+ var notes=[late?'Was due '+nice(late)+': check whether it has been done.':'',it.from?'From: '+it.from:'',it.amount?'Last amount: '+it.amount:'',renew&&it.act==='review'?'Renews: '+nice(renew):'',it.often?'How often: '+it.often:'',it.notes].filter(Boolean).join('\n');
+ var nid=id();D.tasks.push({id:nid,text:text,size:'small',area:it.area,tag:'From email',to:null,by:L.me,done:false,n:Date.now(),updated:now(),due:jd||undefined,rep:r||undefined,notes:notes||undefined});
+ it.st='added';it.job=nid;it.u=now();ui.fresh=nid;changed();
+}
+function triRow(it){
+ var bits=[it.from,it.often,it.due?'next '+nice(it.due):'',it.amount].filter(Boolean);
+ var h='<div class="trow'+(it.st!=='new'?' tdone':'')+'"><div class="tb2"><div class="tt2">'+esc(it.what)+'</div><div class="tm2">'+esc(bits.join(' · '))+'</div>'+(it.notes?'<div class="tm2">'+esc(it.notes)+'</div>':'')+'</div><div class="tbtn">';
+ if(it.st==='new')h+='<button class="on" data-act="tadd" data-tid="'+it.id+'">Add</button><button data-act="tskip" data-tid="'+it.id+'">Skip</button>';
+ else h+='<span class="tm2">'+(it.st==='added'?'Added':'Skipped')+'</span><button data-act="tundo" data-tid="'+it.id+'">Undo</button>';
+ return h+'</div></div>';
+}
+function mailTab(){
+ var h='<div class="intro"><h2>📬 Recurring payments from your email</h2><p class="sub">An AI that can read your Gmail looks back over two years and lists everything that comes round again. You bring its list in here and decide, one by one, what goes on the wall.</p></div>';
+ h+='<div class="note2"><b>1. Copy the prompt</b><br>Paste it into an AI that can read your Gmail, for example Claude or ChatGPT with Gmail connected. It returns a file called recurring.md.<div class="srow"><button class="on" data-act="tcopy">Copy the prompt</button></div><details><summary>Show the prompt</summary><textarea id="tprompt" readonly style="width:100%;min-height:220px;box-sizing:border-box;font:inherit;font-size:13px">'+esc(aiPrompt())+'</textarea></details></div>';
+ h+='<div class="note2"><b>2. Bring the file in</b><br><div class="srow"><label style="cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--acc);color:var(--onacc);font-weight:700"><input type="file" id="tfile" accept=".md,.txt,text/markdown,text/plain" style="display:none">Choose recurring.md…</label></div>or paste what the AI gave you:<textarea id="tpaste" style="width:100%;min-height:80px;box-sizing:border-box;font:inherit;font-size:14px;margin-top:6px" placeholder="Paste the table here"></textarea><div class="srow"><button data-act="tread">Read what I pasted</button></div></div>';
+ var T=D.triage||[];
+ h+='<div class="note2"><b>3. Go through them</b><br>';
+ if(!T.length)return h+'Nothing brought in yet.</div>';
+ var groups=[['pay','To pay by hand'],['review','Worth reviewing before they renew'],['task','Recurring jobs'],['automatic','Paid automatically: nothing to do']];
+ groups.forEach(function(g){
+  var l=T.filter(function(x){return x.act===g[0]&&x.st==='new';}).sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;});
+  if(!l.length)return;
+  h+='<h3 style="margin:14px 0 4px">'+g[1]+' <span class="cnt">'+l.length+'</span></h3>'+l.map(triRow).join('');
+ });
+ var dn=T.filter(function(x){return x.st!=='new';});
+ if(!T.some(function(x){return x.st==='new';}))h+='<p>All gone through. Added jobs are on the wall and in Share out.</p>';
+ if(dn.length)h+='<details style="margin-top:12px"><summary>Already added or skipped ('+dn.length+')</summary>'+dn.map(triRow).join('')+'</details>';
+ h+='<div class="srow" style="margin-top:12px"><button class="lnk" data-act="tclear">Empty this list</button></div>';
+ return h+'</div>';
+}
 function head(){
  var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['mail','📬 From email'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
-function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
+function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
 function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
- a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
+ a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='mail'?mailTab():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
  var pf=document.getElementById('pin1');if(pf)pf.focus();
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();
@@ -804,6 +910,10 @@ document.addEventListener('click',function(e){
  else if(act==='locally'){L.local=true;L.tab='brain';}
  else if(act==='syncnow'){sync();}
  else if((act==='gup'||act==='gdown')&&t){var gl=gList(t.size==='big'?'big':'small'),gi=gl.indexOf(t);if(act==='gup'&&gi>0)gmove(t,t.size==='big'?'big':'small',gl[gi-1].id);else if(act==='gdown'&&gi<gl.length-1)gmove(t,t.size==='big'?'big':'small',gl[gi+2]?gl[gi+2].id:null);}
+ else if(act==='tcopy'){var pr=aiPrompt();(navigator.clipboard?navigator.clipboard.writeText(pr):Promise.reject()).then(function(){ui.status='Prompt copied. Paste it into the AI.';status();},function(){var ta=document.getElementById('tprompt');if(ta){ta.closest('details').open=true;ta.select();}ui.status='Select the prompt below and copy it.';status();});return;}
+ else if(act==='tread'){bringIn((document.getElementById('tpaste')||{}).value||'');return;}
+ else if(act==='tadd'||act==='tskip'||act==='tundo'){var it=(D.triage||[]).filter(function(x){return x.id===b.getAttribute('data-tid');})[0];if(it){if(act==='tadd')triAdd(it);else if(act==='tskip'){it.st='skipped';it.u=now();changed();}else{if(it.st==='added'&&it.job&&byId(it.job)&&!confirm('Undo also removes the job “'+byId(it.job).text+'” from the wall. Carry on?'))return;if(it.st==='added'&&it.job&&byId(it.job)){D.gone.push({id:it.job,at:now()});D.tasks=D.tasks.filter(function(x){return x.id!==it.job;});}it.st='new';delete it.job;it.u=now();changed();}}}
+ else if(act==='tclear'){if(confirm('Empty the list from email? Jobs already added stay on the wall.')){D.triage=[];changed();}}
  else if(act==='tview'){L.tview=b.getAttribute('data-v');}
  else if((act==='up'||act==='down')&&t){var cl=colList(t.to),ix=cl.indexOf(t),nb=act==='up'?cl[ix-1]:cl[ix+2];if(act==='up'&&ix>0)moveJob(t,t.to,nb.id);else if(act==='down'&&ix<cl.length-1)moveJob(t,t.to,nb?nb.id:null);}
  else if(act==='pushon'){pushOn();return;}

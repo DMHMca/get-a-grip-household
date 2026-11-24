@@ -308,7 +308,7 @@ function scopeBar(){
       return h('button',{class:'btn','aria-pressed':sc===x[0]?'true':'false',onclick:function(){setScope(x[0]);}},[x[1]]);}));
 }
 /* ---------- DUE DATES (household app, owner 22 Nov 2026) ----------
-   A household job can carry `due` (YYYY-MM-DD) and `rep:'year'`. The date is kept quiet: it shows only in the edit
+   A household job can carry `due` (YYYY-MM-DD) and `rep` (week, month, 3m, 6m, year, 2y). The date is kept quiet: it shows only in the edit
    sheet. Reminders go to the phone a week and a day before (Cloudflare store, daily). A job due within 7 days, or a job
    with a step due within 7 days, goes to the top of Today's Automatic choices and Refresh. */
 function daysTo(due){if(!due)return null;var p=due.split('-').map(Number),d=new Date(),a=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());return Math.round((Date.UTC(p[0],p[1]-1,p[2])-a)/864e5);}
@@ -3103,14 +3103,21 @@ function partSel(t,before){
   });
   return h('div',{style:'display:flex;flex-direction:column;gap:6px'},[h('div',{style:lab,text:'Part of a big task'}),ps,note]);
 }
+var HH_REPS=[['','Does not repeat'],['week','Every week'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
+function hhNextDue(due,r){
+  var p=due.split('-').map(Number),y=p[0],m=p[1]-1,d=p[2];
+  if(r==='week')return new Date(Date.UTC(y,m,d+7)).toISOString().slice(0,10);
+  var add={month:1,'3m':3,'6m':6,year:12,'2y':24}[r]||12;m+=add;y+=Math.floor(m/12);m=m%12;
+  var last=new Date(Date.UTC(y,m+1,0)).getUTCDate();return new Date(Date.UTC(y,m,Math.min(d,last))).toISOString().slice(0,10);
+}
 function dueRow(t){
   if(!isHH(t))return null;
   var inp=h('input',{type:'date','aria-label':'Due date',value:t.due||'',style:'font-size:16px;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)',
     onchange:function(e){var v=e.target.value;if(v)t.due=v;else delete t.due;t.updated=iso();quietSave();}});
-  var cb=h('input',{type:'checkbox',checked:t.rep==='year',onchange:function(e){if(e.target.checked)t.rep='year';else delete t.rep;t.updated=iso();quietSave();}});
+  var cb=h('select',{class:'sel','aria-label':'Repeats',onchange:function(e){if(e.target.value)t.rep=e.target.value;else delete t.rep;t.updated=iso();quietSave();}},HH_REPS.map(function(r){return h('option',{value:r[0],text:r[1],selected:(t.rep||'')===r[0]});}));
   return h('div',{style:'display:flex;flex-direction:column;gap:6px;padding-top:4px'},[
     h('div',{style:'font-size:14px;color:var(--muted)',text:'Due date (optional). A reminder comes to the phone a week before and the day before.'}),inp,
-    h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[cb,h('span',{text:'Repeats every year'})])]);
+    h('div',{style:'font-size:14px;color:var(--muted)',text:'Repeats (the next one appears when this is ticked)'}),cb]);
 }
 /* ---------- render ---------- */
 function ensureShape(){plans();migrateParts();}
@@ -3362,9 +3369,8 @@ function hhPush(){
     d.gone.push({id:id,at:iso()});d.tasks=d.tasks.filter(function(t){return t.id!==id;});changed=true;
   });
   d.tasks.slice().forEach(function(t){
-    if(t.parent||t.rep!=='year'||!t.done||!t.due||t.rolled)return;
-    var p=t.due.split('-').map(Number),nd=new Date(Date.UTC(p[0]+1,p[1]-1,Math.min(p[2],p[1]===2?28:p[2])));
-    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nd.toISOString().slice(0,10),rep:'year',updated:iso()});
+    if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
+    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:hhNextDue(t.due,t.rep),rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:iso()});
     t.rolled=true;t.updated=iso();changed=true;
   });
   /* this phone reordered its household jobs: that becomes the shared priority order */
@@ -3386,10 +3392,11 @@ function hhMerge(a,b){
   var cut=new Date(Date.now()-90*864e5).toISOString(),g=[];
   Object.keys(gone).forEach(function(k){if(gone[k]>cut)g.push({id:k,at:gone[k]});});
   var cats={};[a,b].forEach(function(d){(d.cats||[]).forEach(function(c){if(!cats[c.k]||(c.u||'')>(cats[c.k].u||''))cats[c.k]=c;});});
-  return {tasks:out,gone:g,day:day,cats:Object.keys(cats).sort().map(function(k){return cats[k];})};
+  var tri={};[a,b].forEach(function(d){(d.triage||[]).forEach(function(x){if(!tri[x.id]||(x.u||'')>(tri[x.id].u||''))tri[x.id]=x;});});
+  return {tasks:out,gone:g,day:day,cats:Object.keys(cats).sort().map(function(k){return cats[k];}),triage:Object.keys(tri).sort().map(function(k){return tri[k];})};
 }
 function hhStable(d){var t=d.tasks.slice().sort(function(x,y){return x.id<y.id?-1:1;});var k=Object.keys(d.day||{}).sort();
-  return JSON.stringify([d.cats||[],t,d.gone.slice().sort(function(x,y){return x.id<y.id?-1:1;}),k.map(function(x){return [x,d.day[x]];})]);}
+  return JSON.stringify([d.triage||[],d.cats||[],t,d.gone.slice().sort(function(x,y){return x.id<y.id?-1:1;}),k.map(function(x){return [x,d.day[x]];})]);}
 function hhSync(){
   var code=hhLoc().code;
   if(!code||HH.busy){if(!code&&hhPull())commit(true);return Promise.resolve();}
