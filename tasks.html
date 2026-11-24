@@ -805,9 +805,10 @@ function lastAct(){
 }
 
 function appHeader(){
-  return h('div',{class:'apphead'},[h('a',{class:'brand',href:'./?home=1','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:'margin:0 8px 0 auto;padding-left:12px',text:hhLoc().me===1?HH.NAMES[1]+'’s day':HH.NAMES[0]+'’s day'}),
+  var isPhone=hhLoc().kind==='phone';
+  return h('div',{class:'apphead'},[isPhone?null:h('a',{class:'brand',href:'./?home=1','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:isPhone?'margin:0 auto 0 12px':'margin:0 8px 0 auto;padding-left:12px',text:hhLoc().me===1?HH.NAMES[1]+'’s day':HH.NAMES[0]+'’s day'}),
     h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
-      [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)])]);
+      [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)])].filter(function(x){return x!==null;}));
 }
 function titleBar(title,tools){return h('div',{class:'topbar'},[h('h2',{class:'title',text:title})].concat(tools||[]));}
 
@@ -1044,7 +1045,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.7';
+var APP_VERSION='H1.8';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -2906,6 +2907,7 @@ function sheetEl(){
     }
     var restoreIn=h('input',{type:'file',accept:'application/json,.json',id:'restorefile',style:'display:none',onchange:function(e){var f=e.target.files&&e.target.files[0];ui.sheet=null;restoreFile(f);e.target.value='';}});
     inner.push(h('h2',{text:'More'}));
+    inner.push(line(svg(ICON.right),'Plan together','Brainstorm, regular payments, share out',function(){location.href='./?home=1';}));
     inner.push(line(svg(ICON.check),'Tag tasks',nTag?nTag+' waiting':'none waiting',function(){ui.tag={ids:untaggedLeaves().map(function(x){return x.id;}),i:0};ui.sheet={type:'tagall'};render();}));
     inner.push(line(svg(ICON.box),'Archive',archived().length+' archived',function(){goSub('archive');}));
     /* Google Drive sync is hidden in the household app (owner, 21 Nov 2026: it asks to sign in too often). Personal sync will move to the Cloudflare store instead. */
@@ -3142,9 +3144,17 @@ function checkForUpdateNow(){
   var done=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready, see the top of the screen':'You have the newest version ('+APP_VERSION+')';render();},2500);};
   try{swReg.update().then(done,done);}catch(e){done();}
 }
+/* a phone opens on Today even before anything has been shared out: say why it is quiet */
+function phoneNote(){
+  if(hhLoc().kind!=='phone'||ui.view!=='today'||S.tasks.some(isHH))return null;
+  return h('div',{role:'status',style:'margin:6px 16px 0;padding:12px 14px;border:1.5px solid var(--accent);border-radius:12px;background:var(--tint)'},[
+    h('div',{style:'font-weight:700',text:'Nothing shared out yet'}),
+    h('div',{style:'padding:4px 0 8px',text:'The household jobs are planned together on the big screen, then shared out. Once yours are shared out they will be here.'}),
+    h('a',{href:'./?home=1',style:'color:var(--accent);font-weight:700',text:'Open the planning'})]);
+}
 function viewKids(){
   app.classList.toggle('wide',ui.view==='today');
-  return [appHeader(),scopeBar(),updateBanner()].filter(Boolean).concat(viewBody());
+  return [appHeader(),scopeBar(),updateBanner(),phoneNote()].filter(Boolean).concat(viewBody());
 }
 function viewBody(){
   var v=ui.view;
