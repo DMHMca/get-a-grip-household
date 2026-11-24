@@ -495,22 +495,30 @@ function day(){
  if(all.length&&dn===all.length)h+='<div class="note2">That is today done. Anything else is a bonus.</div>';
  return h+'<div class="srow"><button data-act="more">Bring in one more</button><button data-act="replan">Start the day again</button></div></div>';
 }
+/* DEVICES page (was "Sharing"; reworded 25 Nov 2026 because the owner found it confusing): 1 linking devices with the household code,
+   2 privacy (PIN), 3 phone reminders. Each section says plainly what it is for. */
 function link(){
- var h='<div class="day"><h2>Sharing</h2>';
- if(!L.code)h+=pinRow();
- if(L.code)return h+pinRow()+reminders()+'<div class="note2">This device shares a household. The code is<div class="code">'+showCode(L.code)+'</div>On each other device open this page, go to Sharing and choose “Join with a code”.</div><div class="srow"><button data-act="syncnow">Update now</button><button data-act="leave">Stop sharing on this device</button></div></div>';
- return h+'<div class="note2">Lauren and Josh share one household. One of you starts it and gets a code; the other devices join with that code. You do this once per device.</div><div class="srow"><button class="on" data-act="start">Start a new household</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Join with a code</button></div><div class="srow"><button data-act="locally">Just try it on this device</button></div></div>';
+ var h='<div class="day"><h2>Devices</h2><p class="sub">Linking your phones and computers, and settings for this one.</p>';
+ h+='<div class="note2"><b>1. Linking your devices</b><br>';
+ if(L.code){
+  h+='This device is linked to your household list. Whatever either of you adds or ticks on a linked device shows up on the others.<br>The household code is<div class="code">'+showCode(L.code)+'</div>To link another device (Lauren’s phone, Josh’s phone, a computer you use together), open the app there, go to Devices and type this code under “Link this device”. You do it once per device. Keep the code between the two of you: anyone with it can see the household list.<div class="srow"><button data-act="syncnow">Sync now</button><button data-act="leave">Unlink this device</button></div></div>';
+ }else{
+  h+='One household list is shared between your devices through a code. One of you creates the code once; every other device (each phone, a computer you use together) is linked by typing it in.<div class="srow"><button class="on" data-act="start">Create a household code</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Link this device</button></div><div class="srow"><button data-act="locally">Just try it on this device for now</button></div></div>';
+ }
+ h+=pinRow();
+ if(L.code)h+=reminders();
+ return h+'</div>';
 }
 /* ---- reminders: a phone notification a week and a day before a job's due date (the Cloudflare store sends them) ---- */
 var VAPID_PUBLIC='BIF4lUPSMG6iEYUr3hlgk-zocDazdFyzXfnTCgFRZzJyPhcbwqdD4SEBRVHIGPbxGVOYWaeIQCMeuhh3RWC_wM0';
 function pushOk(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
 function reminders(){
- var h='<div class="note2"><b>Reminders on this phone</b><br>';
- if(L.shared)return h+'This is a shared screen, so it does not get reminders. Each of you turns them on on your own phone.</div>';
+ var h='<div class="note2"><b>3. Phone reminders</b><br>';
+ if(L.shared)return h+'A shared screen does not get reminders. Each of you turns them on on your own phone.</div>';
  if(!pushOk())return h+'This browser cannot show reminders. On Android, open the app in Chrome.</div>';
  if(L.push&&Notification.permission==='granted')return h+'On for '+esc(NAMES[L.me])+'’s jobs. A reminder comes a week before and the day before anything with a due date.<div class="srow"><button data-act="pushtest">Send a test reminder</button><button data-act="pushoff">Turn reminders off</button></div></div>';
  if(Notification.permission==='denied')return h+'Notifications are blocked for this app. In Chrome, tap the three dots, then Settings, Site settings, Notifications, and allow dmhmca.github.io.</div>';
- return h+'Get a reminder on this phone a week before and the day before any of '+esc(NAMES[L.me])+'’s jobs with a due date.<div class="srow"><button class="on" data-act="pushon">Turn on reminders</button></div></div>';
+ return h+'Turn this on on your own phone: a reminder comes a week before and the day before any of '+esc(NAMES[L.me])+'’s jobs with a due date.<div class="srow"><button class="on" data-act="pushon">Turn on reminders</button></div></div>';
 }
 function b64key(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
 function pushSend(path,body){return fetch(SERVER+path+L.code,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'failed');return j;});});}
@@ -704,7 +712,7 @@ function pinReset(){
 }
 function pinRow(){
  if(L.shared)return '';
- return '<div class="note2"><b>PIN for this device</b><br>'+(L.pin?'Set, for '+esc(NAMES[L.pinWho===1?1:0])+'. It is asked for before anything personal shows after “Household together”, or before switching to the other person.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Not set. With a PIN, nobody can tap their way from the household view into '+esc(NAMES[L.me])+'’s personal tasks on this device.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
+ return '<div class="note2"><b>2. Privacy on this device</b><br>'+(L.pin?'A PIN keeps '+esc(NAMES[L.pinWho===1?1:0])+'’s personal tasks private on this device.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Set a PIN to keep personal tasks private on this device.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
 }
 /* ---- 📬 FROM EMAIL (owner, 24 Nov 2026): a prompt for any AI that can read Gmail, the .md file it returns, and a shared triage
    list (D.triage) of recurring payments and jobs to Add (as a household job in Still to share out, with due date and repeat) or Skip.
@@ -812,7 +820,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H4';
+var APP_VERSION='H5';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -824,7 +832,7 @@ function morePanel(){
  h+='<h3>More</h3>';
  h+='<div class="glab">Version</div><div>This is version <b>'+APP_VERSION+'</b>.</div><div class="srow"><button data-act="mcheck">Check for a new version</button></div>'+(ui.updMsg?'<div class="gnote">'+esc(ui.updMsg)+'</div>':'');
  h+='<div class="glab">Appearance (here and in My day)</div><div class="gseg">'+[['auto','Follow my phone'],['light','Always light'],['dark','Always dark']].map(function(o){return '<button class="'+(th===o[0]?'on':'')+'" data-act="mtheme" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
- h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+(L.shared?'A shared screen.':'Set to '+esc(NAMES[L.me])+(L.together?', showing the household together.':'.'))+' The PIN, reminders and the household code are on Sharing.</div><div class="srow"><button data-act="mgo" data-t="link">Open Sharing</button></div>';
+ h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+(L.shared?'A shared screen.':'Set to '+esc(NAMES[L.me])+(L.together?', showing the household together.':'.'))+' The household code, PIN and reminders are on Devices.</div><div class="srow"><button data-act="mgo" data-t="link">Open Devices</button></div>';
  h+='<div class="glab">Household list</div><div class="srow"><button data-act="mbackup">Download a backup</button></div><div class="gnote">A copy of the shared household list as a file. Personal tasks are not in it (they have their own backup in My day’s menu).</div>';
  h+='<div class="glab">About</div><div class="srow"><a class="lnk" href="privacy.html" target="_blank" rel="noopener">Privacy</a><a class="lnk" href="https://github.com/DMHMca/get-a-grip-household" target="_blank" rel="noopener">About this app</a></div>';
  h+='<div class="gfoot"><span></span><button class="on" data-act="mclose">Done</button></div>';
@@ -836,7 +844,7 @@ function head(){
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Devices']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
