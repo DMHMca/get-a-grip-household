@@ -3120,7 +3120,10 @@ function dueRow(t){
   var cb=h('select',{class:'sel','aria-label':'Repeats',onchange:function(e){if(e.target.value)t.rep=e.target.value;else delete t.rep;t.updated=iso();quietSave();}},HH_REPS.map(function(r){return h('option',{value:r[0],text:r[1],selected:(t.rep||'')===r[0]});}));
   return h('div',{style:'display:flex;flex-direction:column;gap:6px;padding-top:4px'},[
     h('div',{style:'font-size:14px;color:var(--muted)',text:'Due date (optional). A reminder comes to the phone a week before and the day before.'}),inp,
-    h('div',{style:'font-size:14px;color:var(--muted)',text:'Repeats (the next one appears when this is ticked)'}),cb]);
+    h('div',{style:'font-size:14px;color:var(--muted)',text:'Repeats (the next one appears when this is ticked)'}),cb,
+    t.due?h('div',{style:'font-size:14px;color:var(--muted)',text:'Comes into the list'}):null,
+    t.due?h('select',{class:'sel','aria-label':'Comes into the list',onchange:function(e){var v=+e.target.value;if(v)t.lead=v;else delete t.lead;t.updated=iso();quietSave();}},
+      [[0,'Straight away'],[7,'A week before'],[14,'Two weeks before'],[28,'Four weeks before'],[56,'Eight weeks before']].map(function(o){return h('option',{value:String(o[0]),text:o[1],selected:(t.lead||0)===o[0]});})):null].filter(Boolean));
 }
 /* ---------- render ---------- */
 function ensureShape(){plans();migrateParts();}

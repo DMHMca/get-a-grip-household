@@ -576,6 +576,7 @@ function panel(){
  if(others.length)h+='<select data-g="wf" data-id="'+t.id+'" aria-label="Wait until another job is finished" style="margin-top:6px"><option value="">…or wait until another job is finished</option>'+others.map(function(x){return '<option value="'+x.id+'"'+(t.wf===x.id?' selected':'')+'>'+esc(x.text)+'</option>';}).join('')+'</select>';
  if(!par){
   h+='<div class="glab">Due date (optional)</div><input type="date" data-g="due" data-id="'+t.id+'" value="'+(t.due||'')+'"><div class="gnote">A reminder comes to the phone a week before and the day before.</div>';
+  if(t.due)h+='<div class="glab">Comes into the list</div><select data-g="lead" data-id="'+t.id+'"><option value="">Straight away</option>'+LEADS.map(function(o){return '<option value="'+o[0]+'"'+(t.lead===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select><div class="gnote">Until then it stays off the phone’s lists, then appears at the top.</div>';
   h+='<div class="glab">Repeats</div><select data-g="rep" data-id="'+t.id+'">'+REPS.map(function(r){return '<option value="'+r[0]+'"'+((t.rep||'')===r[0]?' selected':'')+'>'+r[1]+'</option>';}).join('')+'</select><div class="gnote">When it is ticked, the next one appears with its due date moved on.</div>';
  }
  h+='<div class="gfoot"><button data-act="del" data-id="'+t.id+'">Delete</button><button class="on" data-act="gclose">Done</button></div>';
@@ -583,6 +584,7 @@ function panel(){
 }
 function gset(t,k,v){if(v===''||v===null||v===undefined)delete t[k];else t[k]=v;touch(t);}
 document.addEventListener('change',function(e){
+ if(e.target&&e.target.hasAttribute&&e.target.hasAttribute('data-tlead')){var ti=(D.triage||[]).filter(function(x){return x.id===e.target.getAttribute('data-tlead');})[0];if(ti){ti.lead=+e.target.value;ti.u=now();changed();}return;}
  if(e.target&&e.target.id==='tfile'){var f=e.target.files&&e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){bringIn(rd.result);};rd.readAsText(f);}e.target.value='';return;}
  var el=e.target,k=el.getAttribute&&el.getAttribute('data-g');if(!k)return;var t=byId(el.getAttribute('data-id'));if(!t)return;
  if(k==='text'){var v=el.value.trim();if(v&&v!==t.text){t.text=v;touch(t);}}
@@ -594,6 +596,7 @@ document.addEventListener('change',function(e){
  else if(k==='area'){t.area=el.value||'wild';kids(t.id).forEach(function(x){x.area=t.area;x.updated=now();});touch(t);}
  else if(k==='due')gset(t,'due',el.value);
  else if(k==='rep')gset(t,'rep',el.value);
+ else if(k==='lead')gset(t,'lead',el.value?+el.value:'');
  draw(true);
 });
 /* ---- 3 · TASKS: household jobs worked on Get a grip style. Views: Lauren and Josh (a column each), Lauren, Josh.
@@ -722,6 +725,7 @@ function aiPrompt(){
  '',
  'Rules for the table: one row per thing, no duplicates, no "|" inside a cell, nothing after the table. Sort the rows by Next due.'].join('\n');
 }
+var LEADS=[[7,'Comes in a week before'],[14,'Two weeks before'],[28,'Four weeks before'],[56,'Eight weeks before']];
 var FREQ={weekly:'week',monthly:'month',quarterly:'3m','every 3 months':'3m','every 6 months':'6m','6 monthly':'6m','twice a year':'6m','half-yearly':'6m',yearly:'year',annual:'year',annually:'year','every year':'year','every 2 years':'2y','every two years':'2y'};
 var ACTS=['pay','renew','task'];
 function slug(x){return String(x||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60);}
@@ -745,8 +749,8 @@ function bringIn(text){
  var items=parseMd(text);
  if(!items.length){ui.status='No table was found in that file. It should start with “# Get a Grip recurring items” and a table.';draw(true);return;}
  var have={};D.triage.forEach(function(x){have[x.id]=x;});var fresh=0;
- items.forEach(function(it){if(have[it.id])return;it.u=now();D.triage.push(it);triAdd(it);fresh++;});
- ui.status=fresh?'Added '+fresh+(fresh>1?' jobs':' job')+' to Still to share out'+(items.length>fresh?' ('+(items.length-fresh)+' were already here)':'')+'. Each one shows on its owner’s phone four weeks before it is due.':'Nothing new: all '+items.length+' were already here.';changed();draw(true);
+ items.forEach(function(it){if(have[it.id])return;it.st='new';it.size='small';it.lead=28;it.u=now();D.triage.push(it);fresh++;});
+ ui.status=fresh?'Brought in '+fresh+(fresh>1?' items':' item')+(items.length>fresh?' ('+(items.length-fresh)+' were already here)':'')+'. Set them up below, or add them all as they are.':'Nothing new: all '+items.length+' were already here.';changed();draw(true);
 }
 function triAdd(it){
  var due=it.due,r=it.freq,late='';
@@ -755,7 +759,7 @@ function triAdd(it){
  var text=it.act==='pay'?'Pay '+it.what:it.act==='renew'?'Renew '+it.what:it.what;
  var notes=[late?'Was due '+nice(late)+': check whether it has been done.':'',it.from?'From: '+it.from:'',it.amount?'Last amount: '+it.amount:'',it.often?'How often: '+it.often:'',it.notes].filter(Boolean).join('\n');
  /* lead: 28 = it stays out of the phone's lists until four weeks before it is due, then comes in at the top of Small (owner) */
- var nid=id();D.tasks.push({id:nid,text:text,size:'small',area:it.area,tag:'From email',to:null,by:L.me,done:false,n:Date.now(),updated:now(),due:due||undefined,rep:r||undefined,lead:due?28:undefined,notes:notes||undefined});
+ var nid=id();D.tasks.push({id:nid,text:text,size:it.size==='big'?'big':'small',area:it.area,tag:'From email',to:null,by:L.me,done:false,n:Date.now(),updated:now(),due:due||undefined,rep:r||undefined,lead:due?(it.lead||28):undefined,notes:notes||undefined});
  it.st='added';it.job=nid;it.u=now();ui.fresh=nid;changed();
 }
 function triRow(it){
@@ -766,15 +770,27 @@ function triRow(it){
  return h+'</div></div>';
 }
 function mailTab(){
- var h='<div class="intro"><h2>📬 Recurring payments from your email</h2><p class="sub">An AI that can read your Gmail looks back over two years, goes through what it finds with you, and gives back only the list you agreed. Bring that list in here and each item goes onto the wall, ready to share out. On the phone, each one appears at the top of the Small list four weeks before it is due.</p></div>';
+ var h='<div class="intro"><h2>📬 Recurring payments from your email</h2><p class="sub">An AI that can read your Gmail looks back over two years, goes through what it finds with you, and gives back only the list you agreed. Bring that list in here, decide for each one whether it is small or big and how long before it is due it should come into the list, and it goes onto the wall, ready to share out. On the phone it appears at the top of the list when its time comes.</p></div>';
  h+='<div class="note2"><b>1. Copy the prompt</b><br>Paste it into an AI that can read your Gmail, for example Claude with Gmail connected. It will show you what it found and ask what to keep, then give you a file called recurring.md.<div class="srow"><button class="on" data-act="tcopy">Copy the prompt</button></div><details><summary>Show the prompt</summary><textarea id="tprompt" readonly style="width:100%;min-height:220px;box-sizing:border-box;font:inherit;font-size:13px">'+esc(aiPrompt())+'</textarea></details></div>';
  h+='<div class="note2"><b>2. Bring the file in</b><br><div class="srow"><label style="cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--acc);color:var(--onacc);font-weight:700"><input type="file" id="tfile" accept=".md,.txt,text/markdown,text/plain" style="display:none">Choose recurring.md…</label></div>or paste what the AI gave you:<textarea id="tpaste" style="width:100%;min-height:80px;box-sizing:border-box;font:inherit;font-size:14px;margin-top:6px" placeholder="Paste the table here"></textarea><div class="srow"><button data-act="tread">Bring in what I pasted</button></div></div>';
- var T=(D.triage||[]).filter(function(x){return x.st!=='skipped';});
+ var N=(D.triage||[]).filter(function(x){return x.st==='new';}).sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;});
+ if(N.length){
+  h+='<div class="note2"><b>3. Set them up</b><br>Small or big, and how long before it is due it should come into the list. Big jobs, such as changing insurer, can be broken into steps later.<div class="srow"><button class="on" data-act="taddall">Add all as they are ('+N.length+')</button><span class="tm2">small, four weeks before (or as set)</span></div>';
+  N.forEach(function(it){
+   var bits=[it.from,it.often,it.due?'due '+nice(it.due):'',it.amount].filter(Boolean);
+   h+='<div class="trow" style="flex-wrap:wrap"><div class="tb2" style="flex-basis:100%"><div class="tt2">'+esc(it.act==='pay'?'Pay '+it.what:it.act==='renew'?'Renew '+it.what:it.what)+'</div><div class="tm2">'+esc(bits.join(' · '))+'</div>'+(it.notes?'<div class="tm2">'+esc(it.notes)+'</div>':'')+'</div>';
+   h+='<div class="gseg">'+[['small','Small'],['big','Big']].map(function(o){return '<button class="'+((it.size||'small')===o[0]?'on':'')+'" data-act="tsize" data-tid="'+it.id+'" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+   h+='<select data-tlead="'+it.id+'" aria-label="When it comes into the list" style="font:inherit;min-height:40px;border-radius:10px;border:1.5px solid var(--line);padding:0 8px">'+LEADS.map(function(o){return '<option value="'+o[0]+'"'+((it.lead||28)===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
+   h+='<div class="tbtn" style="margin-left:auto"><button class="on" data-act="tadd" data-tid="'+it.id+'">Add</button><button data-act="tskip" data-tid="'+it.id+'">Skip</button></div></div>';
+  });
+  h+='</div>';
+ }
+ var T=(D.triage||[]).filter(function(x){return x.st!=='new';});
  if(T.length){
-  h+='<details class="note2"><summary><b>Brought in so far ('+T.length+')</b></summary>';
+  h+='<details class="note2"><summary><b>Already added or skipped ('+T.length+')</b></summary>';
   T.slice().sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;}).forEach(function(it){
    var bits=[it.from,it.often,it.due?'due '+nice(it.due):'',it.amount].filter(Boolean);
-   h+='<div class="trow"><div class="tb2"><div class="tt2">'+esc(it.what)+'</div><div class="tm2">'+esc(bits.join(' · '))+'</div></div><div class="tbtn"><button data-act="tundo" data-tid="'+it.id+'">Take it out</button></div></div>';
+   h+='<div class="trow"><div class="tb2"><div class="tt2">'+esc(it.what)+'</div><div class="tm2">'+esc((it.st==='skipped'?'Skipped · ':'Added · ')+bits.join(' · '))+'</div></div><div class="tbtn">'+(it.st==='skipped'?'<button data-act="tback" data-tid="'+it.id+'">Bring back</button>':'<button data-act="tundo" data-tid="'+it.id+'">Take it out</button>')+'</div></div>';
   });
   h+='</details>';
  }
@@ -903,6 +919,12 @@ document.addEventListener('click',function(e){
  else if((act==='gup'||act==='gdown')&&t){var gl=gList(t.size==='big'?'big':'small'),gi=gl.indexOf(t);if(act==='gup'&&gi>0)gmove(t,t.size==='big'?'big':'small',gl[gi-1].id);else if(act==='gdown'&&gi<gl.length-1)gmove(t,t.size==='big'?'big':'small',gl[gi+2]?gl[gi+2].id:null);}
  else if(act==='tcopy'){var pr=aiPrompt();(navigator.clipboard?navigator.clipboard.writeText(pr):Promise.reject()).then(function(){ui.status='Prompt copied. Paste it into the AI.';status();},function(){var ta=document.getElementById('tprompt');if(ta){ta.closest('details').open=true;ta.select();}ui.status='Select the prompt below and copy it.';status();});return;}
  else if(act==='tread'){bringIn((document.getElementById('tpaste')||{}).value||'');return;}
+ else if(act==='taddall'||act==='tadd'||act==='tskip'||act==='tback'||act==='tsize'){var all=(D.triage||[]),one=all.filter(function(x){return x.id===b.getAttribute('data-tid');})[0];
+  if(act==='taddall'){var nn=0;all.forEach(function(x){if(x.st==='new'){triAdd(x);nn++;}});ui.status='Added '+nn+' jobs to Still to share out.';}
+  else if(one&&act==='tadd'){triAdd(one);ui.status='Added “'+one.what+'” to Still to share out.';}
+  else if(one&&act==='tskip'){one.st='skipped';one.u=now();changed();}
+  else if(one&&act==='tback'){one.st='new';one.u=now();changed();}
+  else if(one&&act==='tsize'){one.size=b.getAttribute('data-v');one.u=now();changed();}}
  else if(act==='tundo'){var it=(D.triage||[]).filter(function(x){return x.id===b.getAttribute('data-tid');})[0];if(it){var jb=it.job&&byId(it.job);if(!confirm('Take “'+it.what+'” out? '+(jb?'Its job “'+jb.text+'” is removed from the wall, and a':'A')+' newer file can bring it in again.'))return;if(jb){D.gone.push({id:jb.id,at:now()});D.tasks=D.tasks.filter(function(x){return x!==jb;});}it.st='skipped';it.u=now();changed();}}
  else if(act==='tview'){L.tview=b.getAttribute('data-v');}
  else if((act==='up'||act==='down')&&t){var cl=colList(t.to),ix=cl.indexOf(t),nb=act==='up'?cl[ix-1]:cl[ix+2];if(act==='up'&&ix>0)moveJob(t,t.to,nb.id);else if(act==='down'&&ix<cl.length-1)moveJob(t,t.to,nb?nb.id:null);}
