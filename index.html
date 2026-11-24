@@ -37,6 +37,7 @@ button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
 .trow{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:10px;margin:6px 0;box-shadow:var(--shadow);color:var(--tx)}
 .trow .tb2{flex:1;min-width:0}.trow .tt2{font-weight:600}.trow .tm2{font-size:.8rem;color:var(--mut)}.trow.tdone{opacity:.7}
 .trow .tbtn{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.paywrap{max-width:820px}
 .gboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media (max-width:620px){.gboard{grid-template-columns:1fr}}
 .gcol{background:var(--colbg);border:1.5px dashed var(--line);border-radius:16px;padding:10px;min-height:140px}
@@ -275,7 +276,7 @@ var AREAS=[
 var WARM=['What has been nagging at you this week?','What has been hanging around on the list for far too long?','What would you hate to forget this month?','What would make next week easier?','What is the one big thing you would love to have finished by the summer?','What keeps going wrong in the house that you just put up with?'];
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var MHINT={0:['Self Assessment tax return is due by 31 January'],1:['Half-term plans'],2:['Spring clean','Mother’s Day'],3:['New tax year: ISAs and pensions','Bills often change in April'],4:['Book the summer holiday','Planting time in the garden'],5:['Father’s Day','Book summer childcare'],6:['School holidays begin'],7:['Back-to-school uniform and kit'],8:['Boiler service before winter','Clear the gutters'],9:['Clocks go back: test the smoke alarms','Half-term'],10:['Christmas plans and presents','Winter check on the car'],11:['Christmas','Year-end accounts for the business']};
-var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'year',n:'The year ahead'},{k:'group',n:'Group, sort and add details'}];
+var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'year',n:'The year ahead'},{k:'pay',n:'Regular payments'},{k:'group',n:'Group, sort and add details'}];
 function allAreas(){return AREAS.concat((D.cats||[]).filter(function(c){return !c.gone;}).map(function(c){return {k:c.k,n:c.n,e:'📌',c:'#E5E0D6',d:'#3B372E',y:'What needs doing for '+c.n+' in {M}?',s:[],custom:true};}));}
 function tilesList(){return allAreas().filter(function(a){return !a.hidden;});}
 function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
@@ -285,10 +286,10 @@ var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.tri
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
 /* always open at the start: Brainstorm, Warm up, first question (owner, 25 Nov 2026) */
 function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
-L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':(location.hash==='#email'||location.hash==='#payments')?'mail':'brain');if(L.tab==='share')L.tab='link';
+L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':(location.hash==='#email'||location.hash==='#payments')?'pay':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
-if(L.tab==='brain')toStart();
-window.addEventListener('hashchange',function(){var m={'#share':'alloc','#sharing':'link','#tasks':'alloc','#email':'mail','#payments':'mail'}[location.hash];if(m){L.tab=m;persist();draw(true);}});
+if(L.tab==='pay'){L.tab='brain';L.stage='pay';}else if(L.tab==='brain')toStart();
+window.addEventListener('hashchange',function(){var m={'#share':'alloc','#sharing':'link','#tasks':'alloc','#email':'pay','#payments':'pay'}[location.hash];if(m==='pay'){L.tab='brain';L.stage='pay';persist();draw(true);}else if(m){L.tab=m;persist();draw(true);}});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
 var ui={dsize:'small',status:'',syncing:false,open:{},defer:false,fresh:null,timer:0};
@@ -385,7 +386,7 @@ function stepper(){
 }
 function welcome(){
  if(L.welcomed&&D.tasks.length)return '';
- return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Four short rounds walk you through it: a warm-up, a walk through each area of your life (the house and garden part by part; bills, the car, the kids and the rest month by month through the coming year), the year ahead month by month, and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like.</p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
+ return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Five short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like.</p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
@@ -441,7 +442,7 @@ function groupBoard(){
  if(nn.length)h+='<details class="nnpile"><summary>Not now ('+nn.length+')</summary>'+nn.map(function(t){return '<div class="ns">'+esc(t.text)+' <button class="lnk" data-act="unnn" data-id="'+t.id+'">Bring back</button></div>';}).join('')+'</details>';
  return h;
 }
-function brain(){return welcome()+stepper()+'<div class="bwrap"><div class="stagecol">'+stageCard()+'</div><div class="wallcol">'+(L.stage==='group'?groupBoard():wall())+'</div></div>';}
+function brain(){if(L.stage==='pay')return welcome()+stepper()+'<div class="paywrap">'+mailTab()+'<div class="srow" style="margin-top:14px"><button class="on" data-act="stage" data-k="group">Next: Group, sort and add details →</button></div></div>';return welcome()+stepper()+'<div class="bwrap"><div class="stagecol">'+stageCard()+'</div><div class="wallcol">'+(L.stage==='group'?groupBoard():wall())+'</div></div>';}
 
 /* ---- the share-out page ---- */
 function card(t){
@@ -811,7 +812,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H3';
+var APP_VERSION='H4';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -835,7 +836,7 @@ function head(){
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['mail','2 · Regular payments'],['alloc','3 · Share out'],['day','4 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Sharing']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
@@ -843,7 +844,7 @@ function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
-  a.innerHTML=head()+updateBanner()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='mail'?mailTab():L.tab==='day'?day():link())+'<p class="sub" style="text-align:center;margin:28px 0 8px">Get a Grip Household · version '+APP_VERSION+'</p>'+(ui.sheet?panel():'')+(ui.more?morePanel():'')+(ui.pin?pinPanel():'');
+  a.innerHTML=head()+updateBanner()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='day'?day():link())+'<p class="sub" style="text-align:center;margin:28px 0 8px">Get a Grip Household · version '+APP_VERSION+'</p>'+(ui.sheet?panel():'')+(ui.more?morePanel():'')+(ui.pin?pinPanel():'');
  var pf=document.getElementById('pin1');if(pf)pf.focus();
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();

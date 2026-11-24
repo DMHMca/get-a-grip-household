@@ -88,7 +88,7 @@ Demo only, with made-up data, until the owner says otherwise. The owner is not y
 
 ## 🔁 REGULAR PAYMENTS (was "📬 From email"; renamed by the owner 25 Nov 2026: "the fact it's from email is incidental"; `#payments`, and `#email` still works)
 
-PLACE IN THE FLOW AND WHOSE JOB (owner, 25 Nov 2026): tabs are 1 · Brainstorm, 2 · Regular payments, 3 · Share out, 4 · My day, Sharing. In the set-up step each item has Whose job: Lauren / Josh / Decide on Share out (`who`, `whoSeg`), plus one "Whose job, for all of them" choice that sets every item at once (Lauren pays most bills at present, so it is one tap; neutral wording: it is simply who pays). Added jobs go straight into that person's column on Share out (tag "Regular payment").
+PLACE IN THE FLOW (owner, 25 Nov 2026, final): Regular payments is ROUND 4 OF BRAINSTORM (stage key `pay`, shown full width by `brain()` with a "Next: Group, sort and add details" button), so the rounds are 1 Warm up, 2 Walk each area, 3 The year ahead, 4 Regular payments, 5 Group, sort and add details; the top bar is back to 1 · Brainstorm, 2 · Share out, 3 · My day, Sharing (no payments tab). `#payments` / `#email` open round 4. WHOSE JOB: In the set-up step each item has Whose job: Lauren / Josh / Decide on Share out (`who`, `whoSeg`), plus one "Whose job, for all of them" choice that sets every item at once (Lauren pays most bills at present, so it is one tap; neutral wording: it is simply who pays). Added jobs go straight into that person's column on Share out (tag "Regular payment").
 
 VERSION: bump `APP_VERSION` in BOTH `index.html` and `tasks.html` on EVERY release, as well as the `sw.js` cache (the owner reads it to tell whether he has the newest copy; H3 = 25 Nov 2026).
 
