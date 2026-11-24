@@ -1,4 +1,4 @@
-const CACHE='gagh-v25';
+const CACHE='gagh-v26';
 const SCOPE=new URL(self.registration.scope).pathname;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./manifest.webmanifest']).catch(()=>{})));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gagh-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

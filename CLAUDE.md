@@ -88,6 +88,10 @@ Demo only, with made-up data, until the owner says otherwise. The owner is not y
 
 ## 🔁 REGULAR PAYMENTS (was "📬 From email"; renamed by the owner 25 Nov 2026: "the fact it's from email is incidental"; `#payments`, and `#email` still works)
 
+PLACE IN THE FLOW AND WHOSE JOB (owner, 25 Nov 2026): tabs are 1 · Brainstorm, 2 · Regular payments, 3 · Share out, 4 · My day, Sharing. In the set-up step each item has Whose job: Lauren / Josh / Decide on Share out (`who`, `whoSeg`), plus one "Whose job, for all of them" choice that sets every item at once (Lauren pays most bills at present, so it is one tap; neutral wording: it is simply who pays). Added jobs go straight into that person's column on Share out (tag "Regular payment").
+
+VERSION: bump `APP_VERSION` in BOTH `index.html` and `tasks.html` on EVERY release, as well as the `sw.js` cache (the owner reads it to tell whether he has the newest copy; H3 = 25 Nov 2026).
+
 RENEWAL DETAILS (owner, 25 Nov 2026): the prompt also asks, for each item, HOW TO RENEW OR PAY with the same supplier (renewal/account/payment web address, phone number, the email address renewals come from, how it was paid last time) and the REFERENCE the supplier asks for, so nobody has to search again. Two extra table columns, `How to renew` and `Reference` (a file without them still reads). They go into the job's notes ("How to renew or pay:" one way per line, "Reference: …"), where My day's list details make web addresses and phone numbers tappable. PRIVACY changed accordingly: policy/customer/supplier account references ARE allowed (needed to renew); passwords, PINs, security answers, card numbers, bank account numbers, sort codes, home addresses and dates of birth are NEVER included. These references live in the shared household list on the owner's Cloudflare account.
 
 ### Earlier notes: FROM EMAIL: recurring payments (owner, 24 Nov 2026; REVISED the same day, sw `gagh-v21`)
