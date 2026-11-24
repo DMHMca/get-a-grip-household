@@ -18,10 +18,13 @@
  --colbg:rgba(255,255,255,.62);--onacc:#fff;--lau:#8A3F9B;--josh:#35505F;--both:#9A6B1C;
  --head:"Fraunces",Georgia,serif;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
  --acc:#C9A7E8;--acc2:#B48BDB;--bg1:#17141C;--bg2:#1E1826;--tx:#F0ECF4;--mut:#A79FB2;--card:#252030;--line:#3A3346;
  --big:#8DBBEB;--bigbg:#1E3248;--small:#E8B75A;--smallbg:#3D3118;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3);
- --colbg:rgba(255,255,255,.04);--onacc:#17141C;--lau:#D79BE6;--josh:#9CC0D6;--both:#E3B36A}}
+ --colbg:rgba(255,255,255,.04);--onacc:#17141C;--lau:#D79BE6;--josh:#9CC0D6;--both:#E3B36A}}:root[data-theme=dark]{
+ --acc:#C9A7E8;--acc2:#B48BDB;--bg1:#17141C;--bg2:#1E1826;--tx:#F0ECF4;--mut:#A79FB2;--card:#252030;--line:#3A3346;
+ --big:#8DBBEB;--bigbg:#1E3248;--small:#E8B75A;--smallbg:#3D3118;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3);
+ --colbg:rgba(255,255,255,.04);--onacc:#17141C;--lau:#D79BE6;--josh:#9CC0D6;--both:#E3B36A}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{background:linear-gradient(160deg,var(--bg1),var(--bg2)) fixed}
@@ -82,7 +85,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .who .lbl{color:var(--mut);font-size:.9rem}
 .av{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;font-weight:700;font-size:.9rem;color:#fff;flex:none}
 .av.p0{background:var(--lau)}.av.p1{background:var(--josh)}.av.p2{background:var(--both)}
-@media (prefers-color-scheme:dark){.av{color:#17141C}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .av{color:#17141C}}:root[data-theme=dark] .av{color:#17141C}
 .pick{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:999px}
 .tabs{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
 .tabs button{border-radius:999px;padding:8px 20px}
@@ -97,9 +100,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .area{min-height:62px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.82rem;border-radius:14px;background:var(--ac,#eee);border:2px solid transparent;color:#1F1B24}
 .area .em{font-size:1.4rem;line-height:1}
 .area.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc) inset}
-@media (prefers-color-scheme:dark){.area{background:var(--acd,#333);color:#F0ECF4}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .area{background:var(--acd,#333);color:#F0ECF4}}:root[data-theme=dark] .area{background:var(--acd,#333);color:#F0ECF4}
 .prompt{border-radius:18px;padding:16px;background:var(--ac,#eee);color:#1F1B24;margin-bottom:12px}
-@media (prefers-color-scheme:dark){.prompt{background:var(--acd,#333);color:#F0ECF4}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .prompt{background:var(--acd,#333);color:#F0ECF4}}:root[data-theme=dark] .prompt{background:var(--acd,#333);color:#F0ECF4}
 .prompt small{opacity:.75;text-transform:uppercase;letter-spacing:.06em;font-size:.72rem;font-weight:700}
 .prompt p{font:500 1.2rem/1.3 var(--head);margin:6px 0 10px}
 .prompt button{min-height:38px;padding:4px 14px;background:rgba(255,255,255,.7);color:#1F1B24}
@@ -109,7 +112,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .seg{display:flex;gap:6px;margin:8px 0}
 .seg button{flex:1;min-height:40px;padding:4px 10px}
 .seg .bigb.on{background:var(--big);border-color:var(--big);color:#fff}.seg .smallb.on{background:var(--small);border-color:var(--small);color:#fff}
-@media (prefers-color-scheme:dark){.seg .bigb.on,.seg .smallb.on{color:#17141C}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .seg .bigb.on,:root:not([data-theme=light]) .seg .smallb.on{color:#17141C}}:root[data-theme=dark] .seg .bigb.on,:root[data-theme=dark] .seg .smallb.on{color:#17141C}
 details.paste{margin-top:10px}details.paste summary{cursor:pointer;color:var(--acc);font-weight:700;min-height:32px}
 textarea{width:100%;min-height:120px;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--card)}
 /* board */
@@ -167,7 +170,7 @@ input[type=text]{min-height:44px;padding:6px 12px;border:2px solid var(--line);b
 .bwrap>div{min-width:0}
 @media (min-width:1000px){.bwrap{grid-template-columns:420px minmax(0,1fr);align-items:start}.stagecol{position:sticky;top:12px}}
 .stage{border-radius:24px;padding:22px;background:var(--ac);color:#1F1B24;box-shadow:var(--shadow);margin-bottom:14px}
-@media (prefers-color-scheme:dark){.stage{background:var(--acd);color:#F0ECF4}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .stage{background:var(--acd);color:#F0ECF4}}:root[data-theme=dark] .stage{background:var(--acd);color:#F0ECF4}
 .stage small{text-transform:uppercase;letter-spacing:.07em;font-size:.74rem;font-weight:700;opacity:.75}
 .stage .q{font:600 1.75rem/1.2 var(--head);margin:8px 0 12px}
 .hints{margin:0 0 14px;padding-left:20px;font-size:1rem}.hints li{margin:3px 0}
@@ -189,12 +192,12 @@ input[type=text]{min-height:44px;padding:6px 12px;border:2px solid var(--line);b
 .note.small{border-top:5px solid var(--small)}
 .note.over{outline:3px dashed var(--acc);outline-offset:3px;transform:scale(1.03)}
 .note.dragging{opacity:.4}
-@media (prefers-color-scheme:dark){.note{background:var(--acd);color:#F0ECF4}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .note{background:var(--acd);color:#F0ECF4}}:root[data-theme=dark] .note{background:var(--acd);color:#F0ECF4}
 .ntop{display:flex;gap:6px;align-items:center;padding-right:24px;margin-bottom:6px}
 .ntag{font-size:.72rem;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.6);color:#1F1B24}
 .note .ctext{font-size:1rem;flex:1}
 .nsubs{font-size:.88rem;margin:6px 0;padding:6px 8px;background:rgba(255,255,255,.45);border-radius:8px}
-@media (prefers-color-scheme:dark){.nsubs{background:rgba(0,0,0,.2)}.ntag{background:rgba(0,0,0,.25);color:#F0ECF4}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .nsubs{background:rgba(0,0,0,.2)}:root:not([data-theme=light]) .ntag{background:rgba(0,0,0,.25);color:#F0ECF4}}:root[data-theme=dark] .nsubs{background:rgba(0,0,0,.2)}:root[data-theme=dark] .ntag{background:rgba(0,0,0,.25);color:#F0ECF4}
 .ns{display:flex;gap:6px;align-items:center}.ns span{flex:1}.ns button{min-height:26px;padding:0 6px;border:0;background:none;color:inherit;opacity:.7}
 .nfoot{display:flex;justify-content:space-between;margin-top:6px}
 .lnk{min-height:30px;padding:0 6px;border:0;background:none;color:inherit;opacity:.75;font-size:.85rem;text-decoration:underline}
@@ -800,8 +803,29 @@ function mailTab(){
  }
  return h;
 }
+/* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
+   bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
+var APP_VERSION='H2';
+function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
+function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
+applyTheme();
+var swReg=null;
+function checkUpdate(){if(swReg){try{swReg.update();}catch(e){}}}
+function morePanel(){
+ var th=getTheme();
+ var h='<div class="gsheet" data-act="mclose"><div class="gpanel" role="dialog" aria-modal="true" aria-label="More" style="max-width:460px">';
+ h+='<h3>More</h3>';
+ h+='<div class="glab">Version</div><div>This is version <b>'+APP_VERSION+'</b>.</div><div class="srow"><button data-act="mcheck">Check for a new version</button></div>'+(ui.updMsg?'<div class="gnote">'+esc(ui.updMsg)+'</div>':'');
+ h+='<div class="glab">Appearance (here and in My day)</div><div class="gseg">'+[['auto','Follow my phone'],['light','Always light'],['dark','Always dark']].map(function(o){return '<button class="'+(th===o[0]?'on':'')+'" data-act="mtheme" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+ h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+(L.shared?'A shared screen.':'Set to '+esc(NAMES[L.me])+(L.together?', showing the household together.':'.'))+' The PIN, reminders and the household code are on Sharing.</div><div class="srow"><button data-act="mgo" data-t="link">Open Sharing</button></div>';
+ h+='<div class="glab">Household list</div><div class="srow"><button data-act="mbackup">Download a backup</button></div><div class="gnote">A copy of the shared household list as a file. Personal tasks are not in it (they have their own backup in My day’s menu).</div>';
+ h+='<div class="glab">About</div><div class="srow"><a class="lnk" href="privacy.html" target="_blank" rel="noopener">Privacy</a><a class="lnk" href="https://github.com/DMHMca/get-a-grip-household" target="_blank" rel="noopener">About this app</a></div>';
+ h+='<div class="gfoot"><span></span><button class="on" data-act="mclose">Done</button></div>';
+ return h+'</div></div>';
+}
+function updateBanner(){return ui.updateReady?'<div class="note2" role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1.5px solid var(--acc)"><b>A new version is ready</b><button class="on" data-act="mreload">Update now</button></div>':'';}
 function head(){
- var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
+ var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><button class="homeb" data-act="more" aria-label="More: version, updates, appearance, backup">⋮ More</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
  h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
  if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
@@ -813,7 +837,7 @@ function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
  var a=document.getElementById('app'),q=document.getElementById('qa'),qv=q?q.value:'',bs=document.querySelector('.board'),sx=bs?bs.scrollLeft:0,nn=document.querySelector('.nnpile'),nno=nn&&nn.open;
- a.innerHTML=head()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='mail'?mailTab():L.tab==='day'?day():link())+(ui.sheet?panel():'')+(ui.pin?pinPanel():'');
+  a.innerHTML=head()+updateBanner()+(L.tab==='brain'?brain():L.tab==='alloc'?alloc():L.tab==='mail'?mailTab():L.tab==='day'?day():link())+'<p class="sub" style="text-align:center;margin:28px 0 8px">Get a Grip Household · version '+APP_VERSION+'</p>'+(ui.sheet?panel():'')+(ui.more?morePanel():'')+(ui.pin?pinPanel():'');
  var pf=document.getElementById('pin1');if(pf)pf.focus();
  var q2=document.getElementById('qa');if(q2)q2.value=qv;var b2=document.querySelector('.board');if(b2)b2.scrollLeft=sx;var n2=document.querySelector('.nnpile');if(n2&&nno)n2.open=true;
  ui.fresh=null;tick();
@@ -877,6 +901,13 @@ document.addEventListener('click',function(e){
  else if(act==='me'&&b.getAttribute('data-i')==='2'){applyMove({shared:true});}
  else if(act==='me'){var wi2=+b.getAttribute('data-i');if(!(wi2===L.me&&!hhOnly()))askMove({me:wi2});}
  else if(act==='home'){toStart();ui.sheet=null;ui.pin=null;scrollTo(0,0);}
+ else if(act==='more'){ui.more=true;ui.updMsg='';}
+ else if(act==='mclose'){if(e.target!==b&&b.classList.contains('gsheet'))return;ui.more=false;}
+ else if(act==='mtheme'){try{localStorage.setItem('gagh.gag.theme',b.getAttribute('data-v'));}catch(x){}applyTheme();}
+ else if(act==='mgo'){ui.more=false;L.tab=b.getAttribute('data-t');}
+ else if(act==='mreload'){location.reload();return;}
+ else if(act==='mcheck'){if(!swReg){location.reload();return;}ui.updMsg='Checking…';draw(true);var fin=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready: tap Update now at the top.':'You have the newest version ('+APP_VERSION+').';draw(true);},2500);};try{swReg.update().then(fin,fin);}catch(x){fin();}return;}
+ else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
  else if(act==='pinreset'){pinReset();return;}
@@ -956,7 +987,13 @@ document.addEventListener('drop',function(e){var c=target(e);if(!c)return;e.prev
 document.addEventListener('visibilitychange',function(){if(!document.hidden)sync();});
 setInterval(function(){if(!document.hidden)sync();},20000);
 draw(true);sync();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+if('serviceWorker' in navigator){
+ var hadCtl=!!navigator.serviceWorker.controller;
+ navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadCtl){ui.updateReady=true;draw(true);}});
+ navigator.serviceWorker.register('sw.js').then(function(r){swReg=r;checkUpdate();}).catch(function(){});
+ document.addEventListener('visibilitychange',function(){if(!document.hidden)checkUpdate();});
+ setInterval(checkUpdate,20*60*1000);
+}
 
 })();
 </script>
