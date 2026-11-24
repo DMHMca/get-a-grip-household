@@ -288,6 +288,7 @@ var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
 function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':(location.hash==='#email'||location.hash==='#payments')?'pay':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
+if(L.shared){L.shared=false;L.together=true;}
 if(L.tab==='pay'){L.tab='brain';L.stage='pay';}else if(L.tab==='brain')toStart();
 window.addEventListener('hashchange',function(){var m={'#share':'alloc','#sharing':'link','#tasks':'alloc','#email':'pay','#payments':'pay'}[location.hash];if(m==='pay'){L.tab='brain';L.stage='pay';persist();draw(true);}else if(m){L.tab=m;persist();draw(true);}});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
@@ -661,7 +662,7 @@ function tasksTab(){
  return h+'</div>';
 }
 /* ---- DEVICE PIN (owner, 22 Nov 2026). Personal tasks belong to the DEVICE (they are kept in this browser), so once the device's
-   owner sets a PIN, it is asked for whenever personal things would come into view: leaving "Household together" or "Shared screen",
+   owner sets a PIN, it is asked for whenever personal things would come into view: leaving "Household view",
    or switching the device to the other person. Stored only on this device as a salted SHA-256 hash (L.pin, L.pinSalt, L.pinWho).
    A curtain against a casual tap, not strong security (the data is still in the browser). Forgotten PIN: "Reset" removes the PIN AND
    this device's personal tasks, so nothing private is exposed. ---- */
@@ -679,7 +680,7 @@ function pinPanel(){
  var P=ui.pin,who=NAMES[L.pinWho===1?1:0];
  var h='<div class="gsheet"><div class="gpanel" role="dialog" aria-modal="true" aria-label="PIN" style="max-width:420px">';
  if(P.mode==='set'){
-  h+='<h3>Set a PIN for this device</h3><p class="gnote">It belongs to '+esc(NAMES[L.me])+', whose personal tasks are kept on this device. It will be asked for before anything personal shows again after “Household together”, or before switching to the other person. Four to eight numbers.</p>';
+  h+='<h3>Set a PIN for this device</h3><p class="gnote">It belongs to '+esc(NAMES[L.me])+', whose personal tasks are kept on this device. It will be asked for before anything personal shows again after “Household view”, or before switching to the other person. Four to eight numbers.</p>';
   h+='<input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="New PIN" maxlength="8"><input type="password" inputmode="numeric" autocomplete="off" id="pin2" placeholder="The same PIN again" maxlength="8" style="margin-top:8px">';
  }else{
   h+='<h3>'+esc(who)+'’s PIN</h3><p class="gnote">This device holds '+esc(who)+'’s personal tasks. Enter the PIN to carry on.</p><input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="PIN" maxlength="8">';
@@ -820,7 +821,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H5';
+var APP_VERSION='H6';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -832,7 +833,7 @@ function morePanel(){
  h+='<h3>More</h3>';
  h+='<div class="glab">Version</div><div>This is version <b>'+APP_VERSION+'</b>.</div><div class="srow"><button data-act="mcheck">Check for a new version</button></div>'+(ui.updMsg?'<div class="gnote">'+esc(ui.updMsg)+'</div>':'');
  h+='<div class="glab">Appearance (here and in My day)</div><div class="gseg">'+[['auto','Follow my phone'],['light','Always light'],['dark','Always dark']].map(function(o){return '<button class="'+(th===o[0]?'on':'')+'" data-act="mtheme" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
- h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+(L.shared?'A shared screen.':'Set to '+esc(NAMES[L.me])+(L.together?', showing the household together.':'.'))+' The household code, PIN and reminders are on Devices.</div><div class="srow"><button data-act="mgo" data-t="link">Open Devices</button></div>';
+ h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+('Set to '+esc(NAMES[L.me])+(L.together?', in Household view.':'.'))+' The household code, PIN and reminders are on Devices.</div><div class="srow"><button data-act="mgo" data-t="link">Open Devices</button></div>';
  h+='<div class="glab">Household list</div><div class="srow"><button data-act="mbackup">Download a backup</button></div><div class="gnote">A copy of the shared household list as a file. Personal tasks are not in it (they have their own backup in My day’s menu).</div>';
  h+='<div class="glab">About</div><div class="srow"><a class="lnk" href="privacy.html" target="_blank" rel="noopener">Privacy</a><a class="lnk" href="https://github.com/DMHMca/get-a-grip-household" target="_blank" rel="noopener">About this app</a></div>';
  h+='<div class="gfoot"><span></span><button class="on" data-act="mclose">Done</button></div>';
@@ -842,8 +843,7 @@ function updateBanner(){return ui.updateReady?'<div class="note2" role="status" 
 function head(){
  var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home: back to the start of Brainstorm">⌂ Home</button><button class="homeb" data-act="more" aria-label="More: version, updates, appearance, backup">⋮ More</button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>Work it out together. Do a little each day.</div></div><div class="who"><span class="lbl">This device is</span>';
  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
- h+='<button class="pick'+(L.shared?' on':'')+'" data-act="me" data-i="2">🖥️ Shared screen</button>';
- if(!L.shared)h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide anything personal while you look at the household together">'+(L.together?'Household together · tap for just me':'Household together')+'</button>';
+ h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide My day and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button>';
  h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · My day'],['link','Devices']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
