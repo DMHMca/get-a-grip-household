@@ -289,6 +289,20 @@ function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 L.tab=(location.hash==='#share'?'alloc':location.hash==='#sharing'?'link':location.hash==='#tasks'?'alloc':(location.hash==='#email'||location.hash==='#payments')?'pay':'brain');if(L.tab==='share')L.tab='link';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 if(L.shared){L.shared=false;L.together=true;}
+/* OPENING (owner, 25 Nov 2026): once the brainstorming has been done on the big screen and jobs shared out, a person's own device
+   should not show the brainstorming again: it opens straight on My day. Rule (L.open): 'auto' (default) = My day when this device
+   is not in Household view and has an unfinished household job shared out to its person; 'plan' = always Brainstorm; 'day' = always
+   My day. Links with a #address, and Home (./?home=1), are never redirected. */
+function hasJobs(){return D.tasks.some(function(t){return !t.parent&&!t.done&&!t.nn&&t.to===L.me;});}
+function opensOnMyDay(){
+  if(L.together||L.shared)return false;
+  var m=L.open||'auto';
+  return m==='day'||(m==='auto'&&hasJobs());
+}
+if(!location.hash&&!/[?&]home=1/.test(location.search)&&opensOnMyDay()){
+  document.documentElement.style.visibility='hidden';
+  location.replace('tasks.html');
+}
 if(L.tab==='pay'){L.tab='brain';L.stage='pay';}else if(L.tab==='brain')toStart();
 window.addEventListener('hashchange',function(){var m={'#share':'alloc','#sharing':'link','#tasks':'alloc','#email':'pay','#payments':'pay'}[location.hash];if(m==='pay'){L.tab='brain';L.stage='pay';persist();draw(true);}else if(m){L.tab=m;persist();draw(true);}});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
@@ -507,14 +521,19 @@ function link(){
   h+='One household list is shared between your devices through a code. One of you creates the code once; every other device (each phone, a computer you use together) is linked by typing it in.<div class="srow"><button class="on" data-act="start">Create a household code</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Link this device</button></div><div class="srow"><button data-act="locally">Just try it on this device for now</button></div></div>';
  }
  h+=pinRow();
+ h+=openRow();
  if(L.code)h+=reminders();
  return h+'</div>';
 }
 /* ---- reminders: a phone notification a week and a day before a job's due date (the Cloudflare store sends them) ---- */
 var VAPID_PUBLIC='BIF4lUPSMG6iEYUr3hlgk-zocDazdFyzXfnTCgFRZzJyPhcbwqdD4SEBRVHIGPbxGVOYWaeIQCMeuhh3RWC_wM0';
 function pushOk(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function openRow(){
+ var m=L.open||'auto';
+ return '<div class="note2"><b>3. When this device opens</b><br>Once you have done the brainstorming together, you do not want to see it again on your own phone. “Automatic” opens on My day as soon as jobs have been shared out to '+esc(NAMES[L.me])+', and on Brainstorm until then. Household view always opens on Brainstorm. ⌂ Home always goes to Brainstorm.<div class="gseg" style="margin-top:8px">'+[['auto','Automatic'],['plan','Always Brainstorm'],['day','Always My day']].map(function(o){return '<button class="'+(m===o[0]?'on':'')+'" data-act="opensel" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
+}
 function reminders(){
- var h='<div class="note2"><b>3. Phone reminders</b><br>';
+ var h='<div class="note2"><b>4. Phone reminders</b><br>';
  if(L.shared)return h+'A shared screen does not get reminders. Each of you turns them on on your own phone.</div>';
  if(!pushOk())return h+'This browser cannot show reminders. On Android, open the app in Chrome.</div>';
  if(L.push&&Notification.permission==='granted')return h+'On for '+esc(NAMES[L.me])+'’s jobs. A reminder comes a week before and the day before anything with a due date.<div class="srow"><button data-act="pushtest">Send a test reminder</button><button data-act="pushoff">Turn reminders off</button></div></div>';
@@ -821,7 +840,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.6';
+var APP_VERSION='H1.7';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -923,6 +942,7 @@ document.addEventListener('click',function(e){
  else if(act==='mreload'){location.reload();return;}
  else if(act==='mcheck'){if(!swReg){location.reload();return;}ui.updMsg='Checking…';draw(true);var fin=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready: tap Update now at the top.':'You have the newest version ('+APP_VERSION+').';draw(true);},2500);};try{swReg.update().then(fin,fin);}catch(x){fin();}return;}
  else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
+ else if(act==='opensel'){L.open=b.getAttribute('data-v');}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
  else if(act==='pinreset'){pinReset();return;}
