@@ -350,7 +350,7 @@ function stageCard(){
    +(a.custom?'<div class="srow"><button class="lnk" data-act="delcat" data-k="'+a.k+'">Remove this area</button></div>':'')+'</div>';}
  }
  else {
-  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group, sort and add details</small><p class="q">Which of these belong together, and what does each one need?</p><ul class="hints"><li>Two lists, Big and Small. <b>Drag up or down</b> to put the most important at the top.</li><li>Drag a job into the other list to make it Big or Small.</li><li>Drop a job onto the middle of another to make it a step of that job.</li><li><b>Tap a note’s words</b> to add the details: steps, how long, what it needs, a wait, a due date.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
+  h='<div class="stage" style="--ac:#DCE9F7;--acd:#1E3248"><small>Group, sort and add details</small><p class="q">Which of these belong together, and what does each one need?</p><ul class="hints"><li>Two lists, Big and Small. <b>Drag up or down</b> to put the most important at the top.</li><li>Drag a job into the other list to make it Big or Small.</li><li>Drop a job onto the middle of another to make it a step of that job. A job that has steps of its own hands its steps over instead.</li><li><b>Tap a note’s words</b> to add the details: steps, how long, what it needs, a wait, a due date.</li><li>Move anything that is not for now to <b>Not now</b>. It is kept, just out of the way.</li><li>When the wall looks right, go to <b>Share out</b>.</li></ul><div class="srow"><button class="on" data-act="tab" data-t="alloc">Go to Share out →</button></div></div>';
   return h;
  }
  return h+'<div class="add big"><input type="text" id="qa" placeholder="Call it out and type it here, then Enter" aria-label="Type an idea" autocomplete="off"><button class="on" data-act="qadd">Add</button></div>'
@@ -531,6 +531,12 @@ function panel(){
  var h='<div class="gsheet" data-act="gclose"><div class="gpanel" role="dialog" aria-modal="true" aria-label="Set up this job">';
  h+='<h3>'+(par?'A step':'Set up this job')+'</h3>'+(par?'<div class="gnote">Part of “'+esc(par.text)+'”. <button class="lnk" data-act="gopen" data-id="'+par.id+'">Open the whole job</button></div>':'');
  h+='<div class="glab">What it is</div><input type="text" data-g="text" data-id="'+t.id+'" value="'+esc(t.text)+'">';
+ var bigs=live().filter(function(x){return x.size==='big'&&!x.done&&x.id!==t.id&&x.id!==(par&&par.id);});
+ if(par||(t.size!=='big'&&!ks.length)){
+  h+='<div class="glab">Part of a big job</div><select data-g="partof" data-id="'+t.id+'"><option value="">None: a job on its own</option>'+(par?'<option value="'+par.id+'" selected>'+esc(par.text)+'</option>':'')+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">It becomes the last step of that job and takes its area.</div>';
+ }else if(!par&&t.size!=='big'&&ks.length&&bigs.length){
+  h+='<div class="glab">Move its steps into a big job</div><select data-g="mergeinto" data-id="'+t.id+'"><option value="">Choose a big job…</option>'+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">All its steps move across in order, ticks kept. Its details are added to that job’s, and this one is removed.</div>';
+ }
  if(!par){
   h+='<div class="glab">Size</div>'+seg('gsize',[['small','Small'],['big','Big']],t.size==='big'?'big':'small',t.id);
   h+='<div class="glab">Area (its activity in My day)</div><select data-g="area" data-id="'+t.id+'">'+allAreas().filter(function(x){return !x.gone;}).map(function(x){return '<option value="'+x.k+'"'+((t.area||'wild')===x.k?' selected':'')+'>'+x.e+' '+esc(x.n)+'</option>';}).join('')+'</select>';
@@ -538,7 +544,6 @@ function panel(){
   h+='<div class="glab">Steps</div>';
   ks.forEach(function(k){h+='<div class="gstep'+(k.done?' done':'')+'"><input type="checkbox" data-act="tick" data-id="'+k.id+'" aria-label="Done"'+(k.done?' checked':'')+'><span class="gt" data-act="gopen" data-id="'+k.id+'">'+esc(k.text)+'</span><button class="x" data-act="del" data-id="'+k.id+'" aria-label="Delete this step">×</button></div>';});
   h+='<input type="text" data-brk="'+t.id+'" placeholder="Add a step, then Enter" style="margin-top:8px">';
-  if(ks.length&&t.size!=='big')h+='<div class="gnote">A job with steps is usually a big one.</div>';
  }
  h+='<div class="glab">How long it takes</div>'+seg('gdur',DURS.concat([['','Not set']]),t.dur||'',t.id);
  h+='<div class="glab">Needs at least</div>'+seg('gdev',DEVS.concat([['','Not set']]),t.dev||'',t.id);
@@ -562,6 +567,8 @@ document.addEventListener('change',function(e){
  else if(k==='notes')gset(t,'notes',el.value.trim()?el.value:'');
  else if(k==='waitdate'){delete t.wf;delete t.wh;gset(t,'wait',el.value);}
  else if(k==='wf'){delete t.wait;delete t.wh;gset(t,'wf',el.value);}
+ else if(k==='partof'){if(!el.value)unnest(t);else{var pj=byId(el.value);if(pj&&pj.id!==t.parent){if(t.parent)delete t.parent;nest(t,pj);}}}
+ else if(k==='mergeinto'){var mj=byId(el.value);if(mj&&confirm('Move the '+kids(t.id).length+' steps of “'+t.text+'” into “'+mj.text+'”? “'+t.text+'” will then be removed.'))nest(t,mj);}
  else if(k==='area'){t.area=el.value||'wild';kids(t.id).forEach(function(x){x.area=t.area;x.updated=now();});touch(t);}
  else if(k==='due')gset(t,'due',el.value);
  else if(k==='rep')gset(t,'rep',el.checked?'year':'');
@@ -697,20 +704,37 @@ function example(){
 }
 function addIdea(text,size){text=text.replace(/^[\s\-\*•\d\.\)]+/,'').trim();if(!text)return;var c=context(),nid=id();ui.fresh=nid;D.tasks.push({id:nid,text:text,size:size||ui.dsize,area:c.area,tag:c.tag,to:null,by:L.me,done:false,n:Date.now(),updated:now()});L.welcomed=true;}
 function setOwner(t,v){t.to=v;kids(t.id).forEach(function(k){k.to=v;k.updated=now();});ui.fresh=t.id;touch(t);}
+/* Get a grip's rules (TASK-MODEL.md, adopted 24 Nov 2026): a job put under another becomes its LAST step and takes its area and
+   owner (rule 4); size is never changed for you (rule 2); a job that has steps of its own hands them over instead, in order with
+   their ticks, its details are added to the receiving job's details, and the emptied job is removed (rule 6). */
 function nest(child,parent){
  if(!child||!parent||child===parent||child.parent||parent.parent)return false;
- if(kids(child.id).length){alert('That note already has its own steps, so it cannot go inside another one.');return false;}
- child.parent=parent.id;child.to=parent.to;child.n=Date.now();child.updated=now();parent.size='big';parent.updated=now();ui.fresh=parent.id;changed();return true;
+ var ks=kids(child.id),base=Date.now();
+ if(ks.length){
+  ks.forEach(function(k,i){k.parent=parent.id;k.area=parent.area;k.to=parent.to;k.n=base+i;k.updated=now();});
+  if(child.notes&&child.notes.trim())parent.notes=(parent.notes&&parent.notes.trim()?parent.notes.replace(/\s+$/,'')+'\n\n':'')+child.notes;
+  D.gone.push({id:child.id,at:now()});D.tasks=D.tasks.filter(function(x){return x!==child;});
+  if(ui.sheet===child.id)ui.sheet=parent.id;
+ }else{child.parent=parent.id;child.area=parent.area;child.to=parent.to;child.n=base;child.updated=now();}
+ parent.updated=now();ui.fresh=parent.id;changed();return true;
+}
+function unnest(t){if(!t||!t.parent)return;delete t.parent;t.n=Date.now();touch(t);}
+/* rule 7: a SMALL job finishes itself when its last step is ticked, and reopens if one is unticked; a big job only by a person */
+function autoFinish(step){
+ var p=step&&step.parent?byId(step.parent):null;if(!p||p.size==='big')return;
+ var ks=kids(p.id);if(!ks.length)return;
+ if(ks.every(function(k){return k.done;})){if(!p.done){p.done=now();p.ad=true;p.updated=now();}}
+ else if(p.done&&p.ad){p.done=false;delete p.ad;p.updated=now();}
 }
 
 /* ---- events ---- */
-document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;rollRepeats();touch(t);draw();}});
+document.addEventListener('change',function(e){var el=e.target,t=byId(el.getAttribute('data-id'));if(el.getAttribute('data-act')==='tick'&&t){t.done=el.checked?now():false;autoFinish(t);rollRepeats();touch(t);draw();}});
 document.addEventListener('keydown',function(e){
  if(e.key!=='Enter')return;var el=e.target;
  if(el.id==='pin1'||el.id==='pin2'){e.preventDefault();if(el.id==='pin1'&&document.getElementById('pin2')){document.getElementById('pin2').focus();return;}pinOk();return;}
  if(el.hasAttribute&&el.hasAttribute('data-addfor')){e.preventDefault();var tx=el.value.trim().replace(/^[\s\-\*•]+/,''),wi=+el.getAttribute('data-addfor');if(tx){D.tasks.push({id:id(),text:tx,size:'small',area:'wild',tag:'',to:wi,by:L.me,done:false,n:Date.now(),updated:now()});changed();}el.value='';draw(true);var nb2=document.querySelector('[data-addfor="'+wi+'"]');if(nb2)nb2.focus();return;}
  if(el.id==='qa'){e.preventDefault();addIdea(el.value);el.value='';changed();draw(true);var q=document.getElementById('qa');if(q)q.focus();}
- else if(el.hasAttribute('data-brk')){e.preventDefault();var p=el.getAttribute('data-brk'),tx=el.value.trim(),par=byId(p);if(tx&&par){D.tasks.push({id:id(),text:tx,size:'small',area:par.area,to:par.to,parent:p,by:L.me,done:false,n:Date.now(),updated:now()});par.size='big';par.updated=now();changed();draw(true);var nb=document.querySelector('[data-brk="'+p+'"]');if(nb)nb.focus();}}
+ else if(el.hasAttribute('data-brk')){e.preventDefault();var p=el.getAttribute('data-brk'),tx=el.value.trim(),par=byId(p);if(tx&&par){D.tasks.push({id:id(),text:tx,size:'small',area:par.area,to:par.to,parent:p,by:L.me,done:false,n:Date.now(),updated:now()});par.updated=now();changed();draw(true);var nb=document.querySelector('[data-brk="'+p+'"]');if(nb)nb.focus();}}
  else if(el.isContentEditable){e.preventDefault();el.blur();}
 });
 document.addEventListener('focusout',function(e){

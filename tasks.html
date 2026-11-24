@@ -3052,7 +3052,7 @@ function sheetEl(){
     showPanel('');
     inner.push(h('div',{class:'field'},[partOf,h('label',null,['Activity',sel]),ti,h('div',{class:'seg',role:'group','aria-label':'Size'},[bSmall,bBig]),subBox||addP,doneBtn,
       h('div',{class:'seg',role:'group','aria-label':'Panels'},[bT,bD]),panel,
-      h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[shownCb,h('span',{text:'Show in the Small and Master lists'})]),toOwn,wBtn,dueRow(t),
+      h('label',{style:'flex-direction:row;align-items:center;gap:12px;font-size:16px;color:var(--text)'},[shownCb,h('span',{text:'Show in the Small and Master lists'})]),toOwn,partSel(t,applyFields),wBtn,dueRow(t),
       h('div',{class:'btns'},[
         h('button',{class:'btn danger',onclick:function(){
           [t.sid,t.gid].forEach(function(l){if(l)S.deleted.push({gid:l,text:t.text,at:iso()});});
@@ -3064,6 +3064,45 @@ function sheetEl(){
   return h('div',null,[h('div',{class:'scrim',onclick:closeSheet}),h('div',{class:'sheet',role:'dialog','aria-modal':'true'},inner)]);
 }
 
+/* Get a grip's rules 4 to 6 (TASK-MODEL.md, adopted 24 Nov 2026). "Part of a big task": put a small task under a big task (it
+   becomes the last subtask and takes the big task's activity), move it to another, or None to stand on its own again.
+   "Move its subtasks into a big task" for a small task that has subtasks: they move across in order with their ticks, its details
+   are added to the big task's details, and the emptied task is removed. HOUSEHOLD TWIST: only big tasks from the SAME side are
+   offered (personal with personal, household with household), so nothing is shared or unshared by accident. */
+function partSel(t,before){
+  if(isBig(t)&&!isChild(t))return null;
+  var side=isHH(t),kidsNow=isChild(t)?[]:childrenOf(t),cur=isChild(t)?task(t.parent):null;
+  var bigs=S.tasks.filter(function(x){return isBig(x)&&!x.done&&!isChild(x)&&x.id!==t.id&&isHH(x)===side;});
+  var lab='font-size:14px;color:var(--muted);padding-top:4px';
+  var note=h('div',{style:'font-size:13px;color:var(--muted)',text:side?'Only household big tasks are offered here.':'Only your personal big tasks are offered here.'});
+  if(kidsNow.length){
+    if(!bigs.length)return null;
+    var ms=h('select',{class:'sel','aria-label':'Move its subtasks into a big task'},[h('option',{value:'',text:'Choose a big task…'})].concat(bigs.map(function(x){return h('option',{value:x.id,text:x.text});})));
+    ms.addEventListener('change',function(){
+      var big=task(ms.value);if(!big)return;
+      if(before&&!before())return;
+      if(!confirm('Move the '+kidsNow.length+' subtasks of “'+t.text+'” into “'+big.text+'”? “'+t.text+'” will then be removed.')){ms.value='';return;}
+      S.tasks.filter(function(x){return x.parent===t.id;}).forEach(function(k){attachTo(k,big);});
+      if(t.notes&&t.notes.trim())big.notes=(big.notes&&big.notes.trim()?big.notes.replace(/\s+$/,'')+'\n\n':'')+t.notes;
+      big.updated=iso();
+      S.gone.push({id:t.id,at:iso()});S.tasks=S.tasks.filter(function(x){return x.id!==t.id;});
+      ui.sheet=null;commit();
+    });
+    return h('div',{style:'display:flex;flex-direction:column;gap:6px'},[h('div',{style:lab,text:'Move its subtasks into a big task'}),ms,note]);
+  }
+  var opts=[h('option',{value:'',text:'None: a task on its own',selected:!cur})];
+  if(cur&&bigs.indexOf(cur)<0)opts.push(h('option',{value:cur.id,text:cur.text,selected:true}));
+  bigs.forEach(function(x){opts.push(h('option',{value:x.id,text:x.text,selected:!!cur&&cur.id===x.id}));});
+  if(!cur&&!bigs.length)return null;
+  var ps=h('select',{class:'sel','aria-label':'Part of a big task'},opts);
+  ps.addEventListener('change',function(){
+    if(before&&!before())return;
+    if(!ps.value){delete t.parent;t.updated=iso();}
+    else{var big=task(ps.value);if(!big)return;attachTo(t,big);}
+    ui.sheet=null;commit();
+  });
+  return h('div',{style:'display:flex;flex-direction:column;gap:6px'},[h('div',{style:lab,text:'Part of a big task'}),ps,note]);
+}
 function dueRow(t){
   if(!isHH(t))return null;
   var inp=h('input',{type:'date','aria-label':'Due date',value:t.due||'',style:'font-size:16px;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--text)',
@@ -3303,7 +3342,8 @@ function hhPush(){
       d.tasks.push(t);byId[f.id]=t;
     }else if((t.updated||'')>(f.updated||''))return;
     var want={text:f.text,size:f.size==='big'?'big':'small',done:f.done||false};
-    if(f.parent)want.parent=f.parent;else want.area=hhAreaOf(f);
+    if(f.parent)want.parent=f.parent;
+    want.area=hhAreaOf(f);
     HH.FIELDS.forEach(function(k){if(f[k]!==undefined)want[k]=f[k];});
     var diff=false;
     Object.keys(want).forEach(function(k){if(JSON.stringify(t[k])!==JSON.stringify(want[k]))diff=true;});
