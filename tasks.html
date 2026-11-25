@@ -1053,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.16';
+var APP_VERSION='H1.17';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3168,13 +3168,8 @@ function checkForUpdateNow(){
   try{swReg.update().then(done,done);}catch(e){done();}
 }
 /* a phone opens on Today even before anything has been shared out: say why it is quiet */
-function phoneNote(){
-  if(hhLoc().kind!=='phone'||ui.view!=='today'||getScope()!=='hh'||S.tasks.some(isHH))return null;
-  return h('div',{role:'status',style:'margin:6px 16px 0;padding:12px 14px;border:1.5px solid var(--accent);border-radius:12px;background:var(--tint)'},[
-    h('div',{style:'font-weight:700',text:'No household jobs yet'}),
-    h('div',{style:'padding:4px 0 8px',text:'You are looking at household jobs only. None have been shared out to you yet. Your own personal tasks are under the Personal button.'}),
-    h('a',{href:'./?home=1',style:'color:var(--accent);font-weight:700',text:'Open the planning'})]);
-}
+/* the card that said "No household jobs yet" was removed (owner, 25 Nov 2026, H1.17): an empty Household list is simply empty */
+function phoneNote(){return null;}
 function viewKids(){
   app.classList.toggle('wide',ui.view==='today');
   return [appHeader(),scopeBar(),updateBanner(),phoneNote()].filter(Boolean).concat(viewBody());
