@@ -7,7 +7,7 @@ const B='http://localhost:8765/get-a-grip-household/';
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(B);await p.waitForTimeout(500);
 await p.fill('#qa','Clear the gutters');await p.press('#qa','Enter');await p.waitForTimeout(200);
-await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(500);
+await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(500);
 await p.locator('article.card',{hasText:'Clear the gutters'}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(300);
 await p.goto(B+'tasks.html');await p.waitForTimeout(900);
 const small=()=>p.getByRole('button',{name:'Small',exact:true}).last().click();

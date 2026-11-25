@@ -9,7 +9,7 @@ await c.addInitScript(()=>{Object.defineProperty(Notification,'permission',{get:
 const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(B);await p.waitForTimeout(300);
 for(const x of ['Job A','Job B','Job C','Pay the TV licence']){await p.fill('#qa',x);await p.press('#qa','Enter');await p.waitForTimeout(100);}
-await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(200);
+await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(200);
 for(const x of ['Job A','Job B','Job C','Pay the TV licence']){await p.locator('article.card',{hasText:x}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(100);}
 await p.goto(B+'tasks.html');await p.waitForTimeout(900);
 await p.evaluate(()=>{var S=GAGH.S,t=S.tasks.find(x=>x.text==='Pay the TV licence');t.due=new Date(Date.now()+6*864e5).toISOString().slice(0,10);t.updated=GAGH.iso();S.tasks=S.tasks.filter(x=>x!==t).concat([t]);GAGH.commit();});

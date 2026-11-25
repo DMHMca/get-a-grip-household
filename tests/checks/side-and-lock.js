@@ -8,14 +8,14 @@ const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accep
 const here=()=>p.url().replace(B,'')||'(planning)';
 const L=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')||'{}'));
 const setL=o=>p.evaluate(o=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');Object.assign(l,o);localStorage.setItem('household.local.v2',JSON.stringify(l));},o);
-const tabOn=async()=>((await p.locator('nav.tabs button.on').allTextContents())[0]||'');
+const tabOn=async()=>((await p.locator('.steps button.on').allTextContents())[0]||'');
 await p.goto(B);await p.waitForTimeout(500);
 await p.click('[data-act=kindfirst][data-v=computer]');await p.waitForTimeout(300);
 console.log('1 first open: tab',await tabOn(),'| side pill:',await p.locator('.sidebtn').count());
-await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(200);
+await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(200);
 await p.goto(B);await p.waitForTimeout(500);console.log('2 reopened: remembers',await tabOn(),'(want 2 · Share out)');
 await p.goto(B+'?home=1');await p.waitForTimeout(500);console.log('3 Home link: goes to',await tabOn(),'| url',here());
-await p.click('nav.tabs >> text=2 · Share out');await p.click('.sidebtn');await p.waitForTimeout(900);
+await p.click('[data-act=stage][data-k=share]');await p.click('.sidebtn');await p.waitForTimeout(900);
 console.log('4 the title switched to:',here(),'| side saved:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(900);console.log('5 reopened: lands on',here(),'(want tasks.html)');
 console.log('5b a computer is asked whose, here on Getting a grip:',await p.locator('[aria-label="Whose device is this"]').count(),'| none on the planning side');
@@ -28,7 +28,7 @@ await setL({pin:'x',pinSalt:'s',pinWho:0,lockMin:2,me:0,kind:'computer',side:'gr
 await p.clock.install();await p.goto(B+'tasks.html');await p.waitForTimeout(500);
 await p.clock.runFor(60*1000);console.log('8 after 1 quiet minute, still on',here());
 await p.clock.runFor(90*1000);await p.waitForTimeout(800);
-console.log('9 after 2.5 quiet minutes: ',here(),'| together:',(await L()).together,'| tabs:',(await p.locator('nav.tabs button').allTextContents()).join(' | '));
+console.log('9 after 2.5 quiet minutes: ',here(),'| together:',(await L()).together,'| tabs:',(await p.locator('.steps button').allTextContents()).join(' | '));
 await setL({together:false,lockMin:0});await p.goto(B+'tasks.html');await p.waitForTimeout(300);await p.clock.runFor(60*60*1000);
 console.log('10 "Never": still on',here());
 await setL({kind:'phone',lockMin:2,together:false});await p.goto(B+'tasks.html');await p.waitForTimeout(300);await p.clock.runFor(10*60*1000);

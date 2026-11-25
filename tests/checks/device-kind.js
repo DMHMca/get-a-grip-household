@@ -5,7 +5,7 @@ const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
 const here=()=>p.url().replace(B,'')||'(planning start)';
-const tabs=async()=>(await p.locator('nav.tabs button').allTextContents()).join(' | ');
+const tabs=async()=>(await p.locator('.steps button').allTextContents()).join(' | ');
 await p.goto(B);await p.waitForTimeout(600);
 console.log('1 first open: card shown:',await p.locator('[data-act=kindfirst]').count(),'| stays on planning:',here(),'| guess marked:',(await p.locator('[data-act=kindfirst].on').textContent()));
 await p.screenshot({path:'kind.png'});
@@ -36,7 +36,7 @@ await p.goto(B);await p.waitForTimeout(1500);console.log('9b stuck-in-Household-
 await p.goto(B+'?home=1');await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=computer]');await p.waitForTimeout(200);
 await p.click('[data-act=home]');await p.waitForTimeout(200);
 await p.fill('#qa','Redo the bathroom');await p.press('#qa','Enter');await p.waitForTimeout(150);
-await p.click('nav.tabs >> text=2 · Share out');await p.locator('article.card',{hasText:'Redo the bathroom'}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(200);
+await p.click('[data-act=stage][data-k=share]');await p.locator('article.card',{hasText:'Redo the bathroom'}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(200);
 await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=phone]');await p.waitForTimeout(200);
 await p.goto(B);await p.waitForTimeout(1500);console.log('10 job shared out, phone opens:',here(),'| quiet note gone:',(await p.locator('text=Nothing shared out yet').count())===0);
 console.log('errors',errs);await b.close();})();

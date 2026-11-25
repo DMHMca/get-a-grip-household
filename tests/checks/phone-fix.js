@@ -18,8 +18,8 @@ await p.goto(B);await p.waitForTimeout(1500);
 console.log('3 stuck phone opens on:',here(),'| PIN panel:',await p.locator('#pin1').count(),'| Household view still on:',await p.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')).together));
 // the planning header on a phone
 await p.goto(B+'?home=1');await p.waitForTimeout(500);
-console.log('4 planning header on a phone: person chips',await p.locator('.who').count(),'| Household view button',await p.locator('[data-act=together]').count(),'| tabs',(await p.locator('nav.tabs button').allTextContents()).join(' | '));
-const m=await p.evaluate(()=>{var t=document.querySelector('nav.tabs').getBoundingClientRect(),b=document.querySelector('nav.tabs button').getBoundingClientRect(),h=document.querySelector('[data-act=home]').getBoundingClientRect();return {headerBottom:Math.round(t.bottom),tabHeight:Math.round(b.height),homeHeight:Math.round(h.height),overflowX:document.documentElement.scrollWidth-innerWidth};});
+console.log('4 planning header on a phone: person chips',await p.locator('.who').count(),'| Household view button',await p.locator('[data-act=together]').count(),'| tabs',(await p.locator('.steps button').allTextContents()).join(' | '));
+const m=await p.evaluate(()=>{var t=document.querySelector('.steps').getBoundingClientRect(),b=document.querySelector('.steps button').getBoundingClientRect(),h=document.querySelector('[data-act=home]').getBoundingClientRect();return {headerBottom:Math.round(t.bottom),tabHeight:Math.round(b.height),homeHeight:Math.round(h.height),overflowX:document.documentElement.scrollWidth-innerWidth};});
 console.log('5 sizes (px):',JSON.stringify(m),'| slim header:',m.headerBottom<130&&m.tabHeight<=38&&m.homeHeight<=38&&m.overflowX<=0);
 await p.screenshot({path:'phone_plan.png'});
 // Settings on a phone: tabs scroll, nothing runs off the side

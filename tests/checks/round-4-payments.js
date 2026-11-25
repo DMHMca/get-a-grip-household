@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:1280,height:900}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(B);await p.waitForTimeout(300);
-console.log('tabs:',(await p.locator('nav.tabs button').allTextContents()).join(' | '));
+console.log('tabs:',(await p.locator('.steps button').allTextContents()).join(' | '));
 console.log('rounds:',(await p.locator('.steps button').allTextContents()).map(x=>x.trim()).join(' | '));
 await p.click('[data-act=stage][data-k=year]');await p.waitForTimeout(200);
 const nx=await p.locator('.stage button',{hasText:/Next|round/}).allTextContents();console.log('year round buttons:',nx.join(' | '));

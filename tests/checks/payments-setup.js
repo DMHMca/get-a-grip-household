@@ -25,7 +25,7 @@ await p.locator('summary',{hasText:'Already added or skipped'}).click();await ro
 await row('Pay TV licence').locator('select').selectOption('7');await row('Pay TV licence').locator('[data-act=tadd]').click();await p.waitForTimeout(200);
 d=await doc();const tv=d.tasks.find(t=>t.text==='Pay TV licence');console.log('brought back and added:',tv.size,tv.lead);
 // panel shows lead
-await p.click('nav.tabs >> text=2 · Share out');await p.locator('article.card .ctext',{hasText:'Renew Car insurance'}).click();await p.waitForTimeout(200);
+await p.click('[data-act=stage][data-k=share]');await p.locator('article.card .ctext',{hasText:'Renew Car insurance'}).click();await p.waitForTimeout(200);
 console.log('panel comes-in shows:',await p.locator('.gpanel select[data-g=lead] option:checked').textContent());
 await p.selectOption('.gpanel select[data-g=lead]','14');await p.waitForTimeout(200);d=await doc();console.log('changed in panel:',d.tasks.find(t=>t.text==='Renew Car insurance').lead);
 await p.click('.gpanel [data-act=gclose].on');

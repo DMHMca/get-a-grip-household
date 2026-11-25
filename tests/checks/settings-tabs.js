@@ -8,7 +8,7 @@ const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accep
 await p.goto(B+'?home=1');await p.waitForTimeout(300);
 await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.reload();await p.waitForTimeout(300);
-console.log('top bar tabs:',(await p.locator('nav.tabs button').allTextContents()).join(' | '));
+console.log('top bar tabs:',(await p.locator('.steps button').allTextContents()).join(' | '));
 await p.click('[data-act=more]');await p.waitForTimeout(200);
 console.log('settings tabs:',(await p.locator('.settings .stabs').first().locator('button,a').allTextContents()).join(' | '));
 console.log('General has version:',/H\d+\.\d+/.test(await p.locator('.settings').textContent()));

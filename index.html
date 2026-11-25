@@ -453,13 +453,15 @@ function stageCard(){
 }
 function tb(k){var n=live().filter(function(t){return t.area===k;}).length;return n?'<span class="tb">'+n+'</span>':'';}
 function tiles(lead){var a=L.stage==='areas'?L.area:null;return '<div class="tilebox">'+(lead?'<div class="sl tlead">'+lead+'</div>':'')+'<div class="areas">'+tilesList().map(function(x){return '<button class="area'+(x.k===a?' sel':'')+'" style="--ac:'+x.c+';--acd:'+x.d+'" data-act="area" data-k="'+x.k+'"><span class="em">'+x.e+'</span>'+esc(x.n)+tb(x.k)+'</button>';}).join('')+'<button class="area addcat" data-act="addcat"><span class="em">＋</span>Add your own</button></div></div>';}
+/* PLANNING IN ONE ROW (owner, 25 Nov 2026, H1.23): the six rounds are the whole planning side. Share out is round 6; there is no separate tab row. */
 function stepper(){
- var ci=STAGES.map(function(s){return s.k;}).indexOf(L.stage);
- return '<ol class="steps">'+STAGES.map(function(s,i){return '<li><button class="'+(s.k===L.stage?'on':i<ci?'past':'')+'" data-act="stage" data-k="'+s.k+'"><span class="num">'+(i+1)+'</span>'+s.n+'</button></li>';}).join('')+'</ol>';
+ var onShare=L.tab==='alloc',ci=onShare?STAGES.length:STAGES.map(function(s){return s.k;}).indexOf(L.stage);
+ var all=STAGES.concat([{k:'share',n:'Share out'}]);
+ return '<ol class="steps">'+all.map(function(s,i){var on=s.k==='share'?onShare:(!onShare&&s.k===L.stage);return '<li><button class="'+(on?'on':i<ci?'past':'')+'" data-act="stage" data-k="'+s.k+'"><span class="num">'+(i+1)+'</span>'+s.n+'</button></li>';}).join('')+'</ol>';
 }
 function welcome(){
  if(L.welcomed&&D.tasks.length)return '';
- return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Five short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like. <a href="help.html">New here? Read the short help.</a></p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
+ return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Six short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), then grouping, sorting and adding details, with the most important at the top, and finally sharing the jobs out between you. Skip any round you like. <a href="help.html">New here? Read the short help.</a></p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
@@ -472,7 +474,7 @@ function note(t,i){
  return h;
 }
 function wall(){
- var ts=live(),exn=exList().length,h='<div class="wallhead"><h2>The wall</h2><span class="sub">'+ts.length+(ts.length===1?' note':' notes')+(ts.length?' · '+ts.filter(function(t){return t.size==='big';}).length+' big':'')+'</span><span class="wallact">'+(exn?'<button class="mini" data-act="clearex">Remove the example notes ('+exn+')</button>':'')+(D.tasks.length?'<button class="lnk" data-act="clearall">Clear the whole wall</button>':'')+'</span></div>';
+ var ts=live(),exn=exList().length,h='<div class="wallhead"><h2>The wall</h2><span class="sub">'+ts.length+(ts.length===1?' note':' notes')+(ts.length?' · '+ts.filter(function(t){return t.size==='big';}).length+' big':'')+'</span><span class="wallact">'+(exn?'<button class="mini" data-act="clearex">Remove the example notes ('+exn+')</button>':'')+'</span></div>';
  if(!ts.length)h+='<div class="empty">Notes will appear here as you call them out.</div>';
  var n=0;
  tilesList().concat([area('wild')]).forEach(function(a){var g=ts.filter(function(t){return (area(t.area)?t.area:'wild')===a.k;});if(!g.length)return;
@@ -548,7 +550,7 @@ function balance(){
  return h+(msg?'<div class="sub" style="margin:0">'+esc(msg)+'</div>':'')+'</div>';
 }
 function alloc(){
- return '<div class="intro"><h2>Share out</h2><p class="sub">Drag each card to whoever will own it from start to finish: noticing it, planning it and doing it. Each job goes to one person.</p></div>'+balance()+'<div class="board">'
+ return stepper()+'<div class="intro"><h2>Share out</h2><p class="sub">Drag each card to whoever will own it from start to finish: noticing it, planning it and doing it. Each job goes to one person.</p></div>'+balance()+'<div class="board">'
   +column(null,'Still to share out','From the wall','<span class="avx">🗂️</span>')+column(0,NAMES[0],'Nothing yet',av(0,38))+column(1,NAMES[1],'Nothing yet',av(1,38))+'</div>';
 }
 
@@ -609,6 +611,7 @@ function generalTab(){
  var h='<div class="note2"><b>Version</b><br>This is version <b>'+APP_VERSION+'</b>.<div class="srow"><button data-act="mcheck">Check for a new version</button></div>'+(ui.updMsg?'<div class="gnote">'+esc(ui.updMsg)+'</div>':'')+'</div>';
  h+='<div class="note2"><b>Appearance</b> (here and in Getting a grip)<div class="gseg" style="margin-top:6px">'+[['auto','Follow my phone'],['light','Always light'],['dark','Always dark']].map(function(o){return '<button class="'+(th===o[0]?'on':'')+'" data-act="mtheme" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
  h+='<div class="note2"><b>Backup</b><br>A copy of the shared household list as a file. Personal tasks are not in it: they have their own backup in the ⋮ menu on the Getting a grip side.<div class="srow"><button data-act="mbackup">Download a backup</button></div></div>';
+ h+='<div class="note2"><b>Start again</b><br>Removes every note and every job on the wall and on Share out, for both of you. It cannot be undone, so you are asked to confirm.<div class="srow"><button data-act="clearall">Clear the whole wall…</button></div></div>';
  h+='<div class="note2"><b>About</b><br>Get a Grip Household is a shared to-do app for two. <a href="https://github.com/DMHMca/get-a-grip-household" target="_blank" rel="noopener">The code is public on GitHub</a>.</div>';
  return h;
 }
@@ -971,7 +974,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.22';
+var APP_VERSION='H1.23';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -990,7 +993,7 @@ function head(){
  if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1'+(g===o[0]?' on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
  if(needWho)h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
  if(!ph&&L.kind)h+='<button class="pick hv'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button>';
- h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out']].map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ h+='</div></header>'+'<div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pjoin'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
@@ -1094,7 +1097,7 @@ document.addEventListener('click',function(e){
  else if(act==='pinset'||act==='pinchange'){if(act==='pinchange'&&L.pin){ui.pin={mode:'enter',then:null,err:''};ui.pinNext='set';}else ui.pin={mode:'set',then:null,err:''};}
  else if(act==='pinremove'){ui.pin={mode:'enter',then:'remove',err:''};}
  else if(act==='tab'){if(b.getAttribute('data-t')==='day'){persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
- else if(act==='stage'){L.stage=b.getAttribute('data-k');if(L.stage==='areas')L.walkOpen=false;}
+ else if(act==='stage'){var sk=b.getAttribute('data-k');if(sk==='share'){L.tab='alloc';}else{L.tab='brain';L.stage=sk;if(sk==='areas')L.walkOpen=false;}scrollTo(0,0);}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
  else if(act==='previ'){var pk=b.getAttribute('data-k'),pn=pk==='warm'?WARM.length:12;L.idx[pk]=Math.max(0,(idx(pk)%pn)-1);}
  else if(act==='seti'){L.idx[b.getAttribute('data-k')]=+b.getAttribute('data-i');}
@@ -1112,7 +1115,7 @@ document.addEventListener('click',function(e){
  else if(act==='qadd'){var q=document.getElementById('qa');addIdea(q.value);q.value='';changed();}
  else if(act==='example'){example();}
  else if(act==='clearex'){removeAll(exList());}
- else if(act==='clearall'){if(confirm('Clear every note from the wall and from Share out, for both of you? This cannot be undone.'))removeAll(D.tasks.slice());}
+ else if(act==='clearall'){{var cn=D.tasks.length;if(cn&&confirm('Are you sure?\n\nThis removes all '+cn+' notes and jobs from the wall and from Share out, for both of you, including everything already shared out. It cannot be undone.'))removeAll(D.tasks.slice());else if(!cn)alert('The wall is already empty.');}}
  else if(act==='give'&&t){var v=b.getAttribute('data-i');setOwner(t,v===''?null:+v);}
  else if(act==='gsize'&&t){t.size=b.getAttribute('data-v');touch(t);}
  else if(act==='gwho'&&t){var gv=b.getAttribute('data-v');setOwner(t,gv===''?null:+gv);ui.fresh=null;}

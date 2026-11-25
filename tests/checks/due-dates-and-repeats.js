@@ -9,7 +9,7 @@ const errs=[];p.on('pageerror',e=>errs.push(e.message));
 const doc=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.doc.v2')));
 await p.goto(B);await p.waitForTimeout(500);
 for(const x of ['Clean the oven','Sort the freezer','Wash the car','Renew the car insurance']){await p.fill('#qa',x);await p.press('#qa','Enter');await p.waitForTimeout(150);}
-await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(300);
+await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(300);
 for(const x of ['Clean the oven','Sort the freezer','Wash the car','Renew the car insurance']){await p.locator('article.card',{hasText:x}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(150);}
 await p.goto(B+'tasks.html');await p.waitForTimeout(1000);
 await p.getByRole('button',{name:'Small',exact:true}).last().click();await p.waitForTimeout(300);

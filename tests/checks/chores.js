@@ -21,7 +21,7 @@ console.log('1 starters carry how often:',g('Put things back where they live').r
 await p.evaluate((x)=>{var d=JSON.parse(localStorage.getItem('household.doc.v2'));var t=(id,text,o)=>Object.assign({id,text,size:'small',area:'clean',to:0,done:false,n:1,updated:'2026-11-24T09:00:00Z'},o);
  d.tasks.push(t('w1','Hoover downstairs',{rep:'week',alt:true}),t('d1','Wipe the kitchen surfaces',{rep:'day'}),t('b1','Renew the TV licence',{area:'bills',rep:'year',due:x.due,lead:28}));localStorage.setItem('household.doc.v2',JSON.stringify(d));},{due:ymd(10)});
 await p.reload();await p.waitForTimeout(400);
-await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(300);
+await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(300);
 for(const x of ['Hoover downstairs','Wipe the kitchen surfaces','Renew the TV licence']){await p.locator('article.card',{hasText:x}).locator('input.tk').first().click();await p.waitForTimeout(250);}
 d=await doc();
 const nw=d.tasks.filter(t=>t.text==='Hoover downstairs'&&!t.done)[0],nd=d.tasks.filter(t=>t.text==='Wipe the kitchen surfaces'&&!t.done)[0],nb=d.tasks.filter(t=>t.text==='Renew the TV licence'&&!t.done)[0];
@@ -32,7 +32,7 @@ console.log('4 bill: next due counted from the old due date:',nb&&nb.due===yr.to
 console.log('5 only one next copy each:',['Hoover downstairs','Wipe the kitchen surfaces','Renew the TV licence'].map(x=>d.tasks.filter(t=>t.text===x&&!t.done).length).join(','));
 // the set-up panel offers how often and take turns
 await p.locator('article.card',{hasText:'Put things back where they live'}).locator('[data-act=edit]').first().click().catch(()=>{});await p.waitForTimeout(300);
-if(!(await p.locator('.gpanel').count())){await p.click('nav.tabs >> text=1 · Brainstorm');}
+if(!(await p.locator('.gpanel').count())){await p.click('[data-act=stage][data-k=warm]');}
 console.log('6 panel open:',await p.locator('.gpanel').count());
 // phone
 await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.me=1;localStorage.setItem('household.local.v2',JSON.stringify(l));});
