@@ -10,6 +10,7 @@ await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=link]');a
 await p.click('nav.tabs >> text=2 · Share out');await p.click('[data-act=home]');await p.waitForTimeout(200);console.log('from Share out:',await on());
 await p.click('nav.tabs >> text=3 · Getting a grip');await p.waitForTimeout(900);await p.screenshot({path:'home_myday.png'});
 await p.getByRole('button',{name:'Big',exact:true}).last().click();await p.waitForTimeout(200);
-await p.getByRole('link',{name:/Home/}).click();await p.waitForTimeout(600);console.log('from My day Big:',p.url().replace(B,'')||'(start)',await on());
+await p.getByRole('button',{name:/Home/}).click();await p.waitForTimeout(600);console.log('Home on Getting a grip Big goes to Today, same side:',p.url().replace(B,'')||'(start)','| Today shown:',await p.locator('text=Start today').count()>0);
+await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(800);console.log('the title switches to Planning where it was left:',p.url().replace(B,'')||'(start)',await on());
 await p.screenshot({path:'home_plan.png'});
 console.log('errors',errs);await b.close();})();

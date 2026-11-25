@@ -33,6 +33,8 @@ button,select,textarea,input{font:inherit;color:inherit}
 button{min-height:44px;padding:8px 16px;border:1px solid var(--line);background:var(--card);border-radius:12px;cursor:pointer;transition:transform .12s,box-shadow .12s,background .12s}
 button:hover{box-shadow:var(--shadow)}button:active{transform:scale(.98)}
 button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.sidebtn{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--tx);flex:none;margin-right:10px}
+.sidebtn b{color:var(--acc)}
 .homeb{font-weight:700;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--acc);color:var(--acc);background:var(--card);margin-right:10px;flex:none}
 .trow{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:10px;margin:6px 0;box-shadow:var(--shadow);color:var(--tx)}
 .trow .tb2{flex:1;min-width:0}.trow .tt2{font-weight:600}.trow .tm2{font-size:.8rem;color:var(--mut)}.trow.tdone{opacity:.7}
@@ -104,6 +106,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
  .top{gap:8px;padding:8px 0 4px;flex-wrap:nowrap;align-items:center}
  .lbl2{display:none}
  .homeb{min-height:34px;padding:0 12px;margin-right:0;font-size:1rem}
+ .sidebtn{min-height:34px;padding:0 10px;margin-right:0;font-size:.95rem}
  .logo{width:32px;height:32px;border-radius:9px;grid-template-columns:repeat(2,6px);grid-template-rows:repeat(3,6px);gap:3px;margin-left:auto}
  .brand{display:none}
  .who{margin-left:0;width:100%;gap:6px}
@@ -317,7 +320,12 @@ function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 /* where an address with a #hash points. Settings has sub-tabs (General, Link, This device, Reminders; Help and Privacy are their own pages). */
 function tabFromHash(h){return {'#share':['alloc'],'#tasks':['alloc'],'#sharing':['set','link'],'#devices':['set','link'],'#settings':['set','general'],'#set-general':['set','general'],'#set-link':['set','link'],'#set-device':['set','device'],'#set-reminders':['set','reminders'],'#email':['pay'],'#payments':['pay']}[h]||null;}
 var HT=tabFromHash(location.hash);
-L.tab=HT?(HT[0]==='pay'?'brain':HT[0]):'brain';if(HT&&HT[0]==='set')L.stab=HT[1];if(HT&&HT[0]==='pay')L.stage='pay';
+/* REMEMBER THE LAST PAGE (owner, 25 Nov 2026, H1.12): the very first open lands on Warm up; after that a computer comes back to the planning page
+   (Brainstorm round, or Share out) it was last on, and to the side it was last on. Home (?home=1) goes to the start of Brainstorm again;
+   ?side=plan means "planning, where I was" (used by the title on Getting a grip). */
+var HOMEQ=/[?&]home=1/.test(location.search),SIDEQ=/[?&]side=plan/.test(location.search);
+var savedTab=L.tab;
+L.tab=HT?(HT[0]==='pay'?'brain':HT[0]):((!HOMEQ&&L.opened&&(savedTab==='brain'||savedTab==='alloc'))?savedTab:'brain');if(HT&&HT[0]==='set')L.stab=HT[1];if(HT&&HT[0]==='pay')L.stage='pay';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 if(L.shared){L.shared=false;L.together=true;}
 /* DEVICE KIND (owner, 25 Nov 2026, H1.8): L.kind is 'phone' (for DOING: opens on Getting a grip, planning tucked behind "Planning")
@@ -328,17 +336,24 @@ function opensOnMyDay(){return L.kind==='phone';}
 /* a phone is one person's own device with its own lock: no Household view, no PIN (owner, 25 Nov 2026, H1.11) */
 if(L.kind==='phone'&&(L.together||L.shared)){L.together=false;L.shared=false;persist();}
 function guessKind(){try{return (matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<700)?'phone':'computer';}catch(e){return 'computer';}}
-if(!location.hash&&!/[?&]home=1/.test(location.search)&&opensOnMyDay()){
+/* a computer that was last on Getting a grip opens there again (Household view always opens on planning) */
+function opensOnGrip(){return L.kind==='computer'&&L.side==='grip'&&!L.together&&!L.shared;}
+var REDIR=!location.hash&&!HOMEQ&&!SIDEQ&&(opensOnMyDay()||opensOnGrip());
+if(REDIR){
   document.documentElement.style.visibility='hidden';
   location.replace('tasks.html');
+}else{
+  if(!HT&&(HOMEQ||!L.opened)&&L.tab==='brain')toStart();
+  L.opened=true;L.side='plan';
+  try{if(HOMEQ||SIDEQ)history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
 }
-if(!HT&&L.tab==='brain')toStart();
 window.addEventListener('hashchange',function(){var t=tabFromHash(location.hash);if(!t)return;if(t[0]==='pay'){L.tab='brain';L.stage='pay';}else{L.tab=t[0];if(t[0]==='set')L.stab=t[1];}persist();draw(true);});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
 var ui={dsize:'small',status:'',syncing:false,open:{},defer:false,fresh:null,timer:0};
 function lo(k,def){try{var r=localStorage.getItem(k);if(r)return JSON.parse(r);}catch(e){}return def;}
 function persist(){try{localStorage.setItem(DKEY,JSON.stringify(D));localStorage.setItem(LKEY,JSON.stringify(L));}catch(e){}}
+if(!REDIR)persist();
 function now(){return new Date().toISOString();}
 function id(){return 'h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -568,7 +583,7 @@ function deviceTab(){
  var h='<div class="note2"><b>Whose device is this?</b><br>'+whoSeg2('whoset')+'</div>';
  h+=kindRow();
  if(L.kind==='phone')h+='<div class="note2"><b>PIN</b><br>A phone does not need one: it has its own lock, and it never shows Household view. A PIN is for a laptop that the two of you sit at together.</div>';
- else h+=pinRow();
+ else{h+=pinRow();if(L.pin)h+=lockRow();}
  return h;
 }
 function settingsView(){
@@ -583,6 +598,10 @@ function settingsView(){
 /* ---- reminders: a phone notification a week and a day before a job's due date (the Cloudflare store sends them) ---- */
 var VAPID_PUBLIC='BIF4lUPSMG6iEYUr3hlgk-zocDazdFyzXfnTCgFRZzJyPhcbwqdD4SEBRVHIGPbxGVOYWaeIQCMeuhh3RWC_wM0';
 function pushOk(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function lockMins(){return L.lockMin===undefined?5:L.lockMin;}
+function lockRow(){
+ return '<div class="note2"><b>Lock when not used</b><br>After this long without a tap, Getting a grip and personal tasks are hidden again, and the PIN is asked for before they come back. The planning page you were on stays where it is.<div class="gseg" style="margin-top:8px">'+[[2,'2 minutes'],[5,'5 minutes'],[15,'15 minutes'],[30,'30 minutes'],[0,'Never']].map(function(o){return '<button class="'+(lockMins()===o[0]?'on':'')+'" data-act="lockset" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
+}
 function kindRow(){
  var k=L.kind||'';
  return '<div class="note2"><b>Phone or computer?</b><br>A <b>phone</b> is for doing: it opens on Getting a grip, and the planning pages are tucked away under “Planning” in its ⋮ menu. A <b>computer</b> is for planning together: it opens on Brainstorm.<div class="gseg" style="margin-top:8px">'+[['phone','📱 A phone'],['computer','💻 A computer']].map(function(o){return '<button class="'+(k===o[0]?'on':'')+'" data-act="kindset" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
@@ -895,7 +914,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.12';
+var APP_VERSION='H1.13';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -909,7 +928,7 @@ function kindCard(){
 }
 function head(){
  var ph=(L.kind==='phone');
- var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>'+(ph?esc(NAMES[L.me])+'’s phone':'Work it out together. Do a little each day.')+'</div></div>';
+ var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>'+(hhOnly()?'':'<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>')+'<div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>'+(ph?esc(NAMES[L.me])+'’s phone':'Work it out together. Do a little each day.')+'</div></div>';
  if(!ph){
   h+='<div class="who"><span class="lbl">This device is</span>';
   [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
@@ -995,6 +1014,7 @@ document.addEventListener('click',function(e){
  else if(act==='mcheck'){if(!swReg){location.reload();return;}ui.updMsg='Checking…';draw(true);var fin=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready: tap Update now at the top.':'You have the newest version ('+APP_VERSION+').';draw(true);},2500);};try{swReg.update().then(fin,fin);}catch(x){fin();}return;}
  else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
  else if(act==='kindset'){L.kind=b.getAttribute('data-v');}
+ else if(act==='lockset'){L.lockMin=+b.getAttribute('data-v');}
  else if(act==='kindfirst'){L.kind=b.getAttribute('data-v');persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
@@ -1073,6 +1093,15 @@ document.addEventListener('drop',function(e){var c=target(e);if(!c)return;e.prev
  else if(c.classList.contains('note')){nest(t,byId(c.getAttribute('data-id')));}
  else{var v=c.getAttribute('data-to');setOwner(t,v===''?null:+v);}
  draw(true);});
+/* PIN timeout (owner, 25 Nov 2026): a computer with a PIN locks itself into Household view after a few quiet minutes */
+var lastTap=Date.now();
+['pointerdown','keydown','touchstart','wheel'].forEach(function(ev){document.addEventListener(ev,function(){lastTap=Date.now();},{passive:true,capture:true});});
+function lockCheck(){
+ if(L.kind==='phone'||!L.pin||hhOnly()||!lockMins()||ui.pin)return;
+ if(Date.now()-lastTap>=lockMins()*60000){L.together=true;L.shared=false;if(L.tab==='day')L.tab='alloc';ui.status='Locked after a quiet spell. Getting a grip needs the PIN.';persist();draw(true);}
+}
+setInterval(lockCheck,10000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)lockCheck();});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)sync();});
 setInterval(function(){if(!document.hidden)sync();},20000);
 draw(true);sync();

@@ -805,10 +805,18 @@ function lastAct(){
 }
 
 function appHeader(){
-  var isPhone=hhLoc().kind==='phone';
-  return h('div',{class:'apphead'},[isPhone?null:h('a',{class:'brand',href:'./?home=1','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:isPhone?'margin:0 auto 0 12px':'margin:0 8px 0 auto;padding-left:12px',text:'Getting a grip · '+(hhLoc().me===1?HH.NAMES[1]:HH.NAMES[0])}),
-    h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
-      [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)])].filter(function(x){return x!==null;}));
+  var isPhone=hhLoc().kind==='phone',nm=(hhLoc().me===1?HH.NAMES[1]:HH.NAMES[0]);
+  var pillCss='text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap;background:transparent;font:inherit;cursor:pointer;min-height:0';
+  var kids=[];
+  if(isPhone){kids.push(h('p',{class:'brand',style:'margin:0 auto 0 12px',text:'Getting a grip · '+nm}));}
+  else{
+    /* a computer: Home = the start of THIS side (Today); the title says which side you are on and switches to Planning */
+    kids.push(h('button',{class:'brand',type:'button','aria-label':'Home: back to Today',style:pillCss,onclick:function(){go('today');}},['⌂ Home']));
+    kids.push(h('a',{class:'brand',href:'./?side=plan','aria-label':'Switch to Planning',title:'Switch to Planning',style:'margin:0 8px 0 auto;padding-left:12px;text-decoration:none;color:inherit;white-space:nowrap'},[h('b',{style:'color:var(--accent)',text:'Getting a grip · '+nm}),' ⇄ Planning']));
+  }
+  kids.push(h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
+      [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)]));
+  return h('div',{class:'apphead'},kids);
 }
 function titleBar(title,tools){return h('div',{class:'topbar'},[h('h2',{class:'title',text:title})].concat(tools||[]));}
 
@@ -1045,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.12';
+var APP_VERSION='H1.13';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3277,6 +3285,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    "Not now", plus its steps) is shown as an ordinary Get a grip task in the household activity for its area (id 'hh:<area>', see isHH), so all
    of Get a grip works on it. Changes to those tasks go back into the shared document. Only tasks in the Household
    activity are ever written to the shared document: personal tasks never leave this device. */
+/* H1.12: remember which side this device was last on, and lock after a quiet spell (computers with a PIN) */
+function hhSetLoc(patch){try{var l=hhLoc();for(var k in patch)l[k]=patch[k];localStorage.setItem(HH.LKEY,JSON.stringify(l));}catch(e){}}
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
   NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead'],busy:false,t:0,on:false};
 function hhLoc(){try{return JSON.parse(localStorage.getItem(HH.LKEY)||'{}')||{};}catch(e){return {};}}
@@ -3449,6 +3459,19 @@ function hhStart(){
 /* =================== END HOUSEHOLD LINK =================== */
 if(migrateParts()){try{LS.setItem(KEY,JSON.stringify(S));}catch(e){}}
 hhStart();
+/* remember that this device was last on Getting a grip, and lock after a quiet spell (computers with a PIN) */
+(function(){
+  hhSetLoc({side:'grip'});
+  var last=Date.now();
+  ['pointerdown','keydown','touchstart','wheel'].forEach(function(ev){document.addEventListener(ev,function(){last=Date.now();},{passive:true,capture:true});});
+  function check(){
+    var l=hhLoc(),m=l.lockMin===undefined?5:l.lockMin;
+    if(l.kind==='phone'||!l.pin||l.together||!m)return;
+    if(Date.now()-last>=m*60000){hhSetLoc({together:true});location.replace('./?side=plan');}
+  }
+  setInterval(check,10000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')check();});
+})();
 /* for testing in the browser console and in scripted tests */
 window.GAGH={get S(){return S;},commit:commit,iso:iso,uid:uid,pull:hhPull,push:hhPush};
 /* the Google Tasks list sync is not part of this app any more */

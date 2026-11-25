@@ -3,7 +3,7 @@
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
-(async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:900}});const p=await c.newPage();
+(async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:1300}});const p=await c.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
 const doc=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.doc.v2')));
 await p.goto(B+'?home=1');await p.waitForTimeout(300);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';localStorage.setItem('household.local.v2',JSON.stringify(l));});

@@ -24,3 +24,4 @@ household-view:
 device-kind:
 help-page:
 worker-logic:
+side-and-lock:
