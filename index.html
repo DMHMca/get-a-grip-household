@@ -973,7 +973,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.24';
+var APP_VERSION='H1.25';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -991,7 +991,7 @@ function head(){
  var h='<header class="top2"><div class="brandrow"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1></div></div><div class="ctl">';
  h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button><a class="homeb" href="help.html'+(helpKey()?'#'+helpKey():'')+'" aria-label="Help" title="Help for this page">?<span class="lbl2"> Help</span></a>';
  if(!hhOnly())h+='<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>';
- if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1'+(g===o[0]?' on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
+ if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
  if(needWho)h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
  if(!ph&&L.kind)h+='<button class="pick hv'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button>';
  h+='</div></header>'+'<div class="status" id="st">'+esc(ui.status)+'</div>';

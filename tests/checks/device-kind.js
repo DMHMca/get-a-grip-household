@@ -7,7 +7,7 @@ const B='http://localhost:8765/get-a-grip-household/';
 const here=()=>p.url().replace(B,'')||'(planning start)';
 const tabs=async()=>(await p.locator('.steps button').allTextContents()).join(' | ');
 await p.goto(B);await p.waitForTimeout(600);
-console.log('1 first open: card shown:',await p.locator('[data-act=kindfirst]').count(),'| stays on planning:',here(),'| guess marked:',(await p.locator('[data-act=kindfirst].on').textContent()));
+console.log('1 first open: card shown:',await p.locator('[data-act=kindfirst]').count(),'| stays on planning:',here());
 await p.screenshot({path:'kind.png'});
 await p.click('[data-act=kindfirst][data-v=phone]');await p.waitForTimeout(300);console.log('  a phone then asks whose:',await p.locator('[data-act=whofirst]').count());await p.click('[data-act=whofirst][data-v="0"]');await p.waitForTimeout(1200);
 console.log('2 chose phone, lands on:',here(),'| header Home link:',await p.getByRole('link',{name:/Home/}).count(),'| name:',(await p.locator('.apphead .brand').allTextContents()).join(','));
