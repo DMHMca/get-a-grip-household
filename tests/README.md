@@ -19,4 +19,5 @@ tests/run.sh device-kind devices-page  # just these
 - The first time a device opens the planning page it shows a "What is this device?" card, which pushes the page down. A check that drags things must answer it first (set `kind` in `household.local.v2`).
 - A device that is a phone, or that has jobs shared out and is not in Household view, may be redirected to My day on open. Reopen the planning page with `?home=1` to stay put.
 - The shared store is pretended with Playwright's `context.route` in the two-phone checks (`two-phones-link`, `payments-shared`), because the real one is reachable only from the owner's Cloudflare account.
+- The Help page is checked by `help-page`; update it when screens or button names change.
 - A real phone, real notifications and a real AI reading real Gmail have not been tested by these checks.

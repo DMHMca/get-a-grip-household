@@ -1045,7 +1045,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.8';
+var APP_VERSION='H1.9';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -2919,6 +2919,7 @@ function sheetEl(){
     inner.push(h('div',{class:'sep'}));
     inner.push(line(svg('<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/>'),'Check for a new version',ui.updMsg||('This is '+APP_VERSION),function(){checkForUpdateNow();}));
     if(lv&&!migrationDone())inner.push(line(svg('<path d="M9 7H6a3 3 0 0 0 0 6h3M15 7h3a3 3 0 0 1 0 6h-3M8 10h8"/>'),'Bring over my tasks from the preview',lv.activities.length+' activities, '+lv.tasks.length+' tasks',function(){ui.sheet={type:'moveover'};render();}));
+    inner.push(h('a',{class:'opt link',href:'help.html',style:'text-decoration:none'},[svg(ICON.right),h('span',{class:'l',text:'Help'})]));
     inner.push(h('a',{class:'opt link',href:'privacy.html',target:'_blank',rel:'noopener',style:'text-decoration:none'},[svg(ICON.right),h('span',{class:'l',text:'Privacy'})]));
     inner.push(h('a',{class:'opt link',href:'https://github.com/DMHMca/get-a-grip-household',target:'_blank',rel:'noopener',style:'text-decoration:none'},[svg(ICON.right),h('span',{class:'l',text:'About this app'})]));
     inner.push(h('p',{class:'note',style:'padding:8px 20px 0',text:'Version '+APP_VERSION}));

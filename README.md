@@ -33,7 +33,7 @@ No libraries and no build step: static files on GitHub Pages (branch `main`, roo
 | `tasks.html` | My day: Get a grip's code (Today, Big, Small, Master, Activities, every edit screen) plus the household link that brings a person's household jobs in and sends changes back. |
 | `sw.js` | Service worker: keeps the app installable and always fetches the newest page, and shows reminder notifications. |
 | `worker/worker.js` | The Cloudflare Worker: one JSON document per household code in KV (with a version check so two devices cannot overwrite each other), the reminder sign-ups, and a daily check that sends the reminders. |
-| `privacy.html` | The privacy page. |
+| `privacy.html`, `help.html` | The privacy page, and the Help page: the idea in three paragraphs, how-tos for the less obvious parts, and a technical section for a developer (how it is built, how to fork it, how personal tasks could be scrambled). Reachable from the ⋮ menus. |
 | `tests/` | Scripted-browser checks (see `tests/README.md`). |
 | `CLAUDE.md` | The full project brief, with the current state first and every decision recorded. Read this before changing anything. |
 

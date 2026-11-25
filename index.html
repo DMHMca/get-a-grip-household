@@ -397,7 +397,7 @@ function stepper(){
 }
 function welcome(){
  if(L.welcomed&&D.tasks.length)return '';
- return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Five short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like.</p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
+ return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Five short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), and finally grouping, sorting and adding details, with the most important at the top. Skip any round you like. <a href="help.html">New here? Read the short help.</a></p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
@@ -836,7 +836,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.8';
+var APP_VERSION='H1.9';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -850,6 +850,7 @@ function morePanel(){
  h+='<div class="glab">Appearance (here and in My day)</div><div class="gseg">'+[['auto','Follow my phone'],['light','Always light'],['dark','Always dark']].map(function(o){return '<button class="'+(th===o[0]?'on':'')+'" data-act="mtheme" data-v="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
  h+='<div class="glab">This device</div><div class="gnote" style="margin:0 0 6px">'+('Set to '+esc(NAMES[L.me])+(L.together?', in Household view.':'.'))+' The household code, PIN and reminders are on Devices.</div><div class="srow"><button data-act="mgo" data-t="link">Open Devices</button></div>';
  h+='<div class="glab">Household list</div><div class="srow"><button data-act="mbackup">Download a backup</button></div><div class="gnote">A copy of the shared household list as a file. Personal tasks are not in it (they have their own backup in My day’s menu).</div>';
+ h+='<div class="glab">Help</div><div class="srow"><a class="lnk" href="help.html">📖 How it all fits together, and how-tos</a></div>';
  h+='<div class="glab">About</div><div class="srow"><a class="lnk" href="privacy.html" target="_blank" rel="noopener">Privacy</a><a class="lnk" href="https://github.com/DMHMca/get-a-grip-household" target="_blank" rel="noopener">About this app</a></div>';
  h+='<div class="gfoot"><span></span><button class="on" data-act="mclose">Done</button></div>';
  return h+'</div></div>';

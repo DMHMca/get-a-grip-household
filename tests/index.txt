@@ -21,4 +21,5 @@ round-4-payments:agreed
 devices-page:
 household-view:
 device-kind:
+help-page:
 worker-logic:
