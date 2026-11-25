@@ -1053,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.13';
+var APP_VERSION='H1.14';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3117,12 +3117,24 @@ function partSel(t,before){
   });
   return h('div',{style:'display:flex;flex-direction:column;gap:6px'},[h('div',{style:lab,text:'Part of a big task'}),ps,note]);
 }
-var HH_REPS=[['','Does not repeat'],['week','Every week'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
+var HH_REPS=[['','Does not repeat'],['day','Every day'],['3d','Every few days'],['week','Every week'],['2w','Every 2 weeks'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
 function hhNextDue(due,r){
   var p=due.split('-').map(Number),y=p[0],m=p[1]-1,d=p[2];
-  if(r==='week')return new Date(Date.UTC(y,m,d+7)).toISOString().slice(0,10);
+  var days={day:1,'3d':3,week:7,'2w':14}[r];
+  if(days)return new Date(Date.UTC(y,m,d+days)).toISOString().slice(0,10);
   var add={month:1,'3m':3,'6m':6,year:12,'2y':24}[r]||12;m+=add;y+=Math.floor(m/12);m=m%12;
   var last=new Date(Date.UTC(y,m+1,0)).getUTCDate();return new Date(Date.UTC(y,m,Math.min(d,last))).toISOString().slice(0,10);
+}
+/* CHORES (H1.14): same rule as the planning side (see nextCopy in index.html) */
+var HH_SHORT={day:1,'3d':1,week:1,'2w':1},HH_CLEAD={day:0,'3d':0,week:1,'2w':2,month:3,'3m':7,'6m':7,year:7,'2y':7};
+function hhYmd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function hhAdd(ds,n){var p=ds.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10);}
+function hhNextCopy(t){
+  var o={},td=hhYmd(new Date());
+  if(t.due&&!HH_SHORT[t.rep]){o.due=hhNextDue(t.due,t.rep);if(t.lead)o.lead=t.lead;}
+  else{var nd=hhNextDue(td,t.rep);if(t.due)o.due=nd;var w=hhAdd(nd,-(HH_CLEAD[t.rep]||0));if(w>td)o.wait=w;}
+  if(t.alt){o.alt=true;if(t.to===0||t.to===1)o.to=1-t.to;}
+  return o;
 }
 function dueRow(t){
   if(!isHH(t))return null;
@@ -3131,7 +3143,8 @@ function dueRow(t){
   var cb=h('select',{class:'sel','aria-label':'Repeats',onchange:function(e){if(e.target.value)t.rep=e.target.value;else delete t.rep;t.updated=iso();quietSave();}},HH_REPS.map(function(r){return h('option',{value:r[0],text:r[1],selected:(t.rep||'')===r[0]});}));
   return h('div',{style:'display:flex;flex-direction:column;gap:6px;padding-top:4px'},[
     h('div',{style:'font-size:14px;color:var(--muted)',text:'Due date (optional). A reminder comes to the phone a week before and the day before.'}),inp,
-    h('div',{style:'font-size:14px;color:var(--muted)',text:'Repeats (the next one appears when this is ticked)'}),cb,
+    h('div',{style:'font-size:14px;color:var(--muted)',text:'How often (when it is ticked, the next one comes back by itself)'}),cb,
+    t.rep?h('select',{class:'sel','aria-label':'Whose turn next',onchange:function(e){if(e.target.value)t.alt=true;else delete t.alt;t.updated=iso();quietSave();}},[h('option',{value:'',text:'The same person every time',selected:!t.alt}),h('option',{value:'1',text:'Take turns: the next one goes to the other person',selected:!!t.alt})]):null,
     t.due?h('div',{style:'font-size:14px;color:var(--muted)',text:'Comes into the list'}):null,
     t.due?h('select',{class:'sel','aria-label':'Comes into the list',onchange:function(e){var v=+e.target.value;if(v)t.lead=v;else delete t.lead;t.updated=iso();quietSave();}},
       [[0,'Straight away'],[7,'A week before'],[14,'Two weeks before'],[28,'Four weeks before'],[56,'Eight weeks before']].map(function(o){return h('option',{value:String(o[0]),text:o[1],selected:(t.lead||0)===o[0]});})):null].filter(Boolean));
@@ -3288,7 +3301,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
 /* H1.12: remember which side this device was last on, and lock after a quiet spell (computers with a PIN) */
 function hhSetLoc(patch){try{var l=hhLoc();for(var k in patch)l[k]=patch[k];localStorage.setItem(HH.LKEY,JSON.stringify(l));}catch(e){}}
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
-  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead'],busy:false,t:0,on:false};
+  NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead','alt'],busy:false,t:0,on:false};
 function hhLoc(){try{return JSON.parse(localStorage.getItem(HH.LKEY)||'{}')||{};}catch(e){return {};}}
 function hhMe(){var m=hhLoc().me;return m===1?1:0;}
 function hhDoc(){var d=null;try{d=JSON.parse(localStorage.getItem(HH.DKEY)||'null');}catch(e){}d=d||{};
@@ -3396,8 +3409,9 @@ function hhPush(){
     d.gone.push({id:id,at:iso()});d.tasks=d.tasks.filter(function(t){return t.id!==id;});changed=true;
   });
   d.tasks.slice().forEach(function(t){
-    if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
-    d.tasks.push({id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:hhNextDue(t.due,t.rep),rep:t.rep,lead:t.lead,notes:t.notes,dur:t.dur,dev:t.dev,updated:iso()});
+    if(t.parent||!t.rep||!t.done||t.rolled)return;
+    var c={id:uid(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:iso()},o=hhNextCopy(t);for(var k in o)c[k]=o[k];
+    d.tasks.push(c);
     t.rolled=true;t.updated=iso();changed=true;
   });
   /* this phone reordered its household jobs: that becomes the shared priority order */

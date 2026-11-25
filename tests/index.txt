@@ -25,3 +25,4 @@ device-kind:
 help-page:
 worker-logic:
 side-and-lock:
+chores:

@@ -481,7 +481,7 @@ function gmove(t,size,beforeId){
 function gcard(t,ix,n){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
  var h='<div class="gcard '+(t.size==='big'?'big':'small')+(ui.fresh===t.id?' fresh':'')+'" draggable="true" data-id="'+t.id+'" style="--ac:'+a.c+'"><span class="tn">'+(ix+1)+'</span><div class="gtx">';
- h+='<div class="tt2" data-act="edit" data-id="'+t.id+'" style="cursor:pointer">'+esc(t.text)+'</div><div class="tm2">'+a.e+' '+esc(a.n)+(t.to===0||t.to===1?' · '+esc(NAMES[t.to]):'')+(ks.length?' · '+ks.length+(ks.length>1?' steps':' step'):'')+'</div>';
+ h+='<div class="tt2" data-act="edit" data-id="'+t.id+'" style="cursor:pointer">'+esc(t.text)+'</div><div class="tm2">'+a.e+' '+esc(a.n)+(t.to===0||t.to===1?' · '+esc(NAMES[t.to]):'')+(t.rep&&REPW[t.rep]?' · ↻ '+REPW[t.rep]+(t.alt?', taking turns':''):'')+(ks.length?' · '+ks.length+(ks.length>1?' steps':' step'):'')+'</div>';
  if(ks.length)h+='<div class="nsubs">'+ks.map(function(k){return '<div class="ns">• <span data-act="gopen" data-id="'+k.id+'" style="cursor:pointer">'+esc(k.text)+'</span><button data-act="unlink" data-id="'+k.id+'" title="Take it out of this job" aria-label="Take out">↥</button></div>';}).join('')+'</div>';
  h+='</div><span class="tarr"><button data-act="gup" data-id="'+t.id+'" aria-label="Higher"'+(ix===0?' disabled':'')+'>▲</button><button data-act="gdown" data-id="'+t.id+'" aria-label="Lower"'+(ix===n-1?' disabled':'')+'>▼</button></span>';
  h+='<span class="gside"><button class="x" data-act="del" data-id="'+t.id+'" aria-label="Delete">×</button><button class="lnk" data-act="nn" data-id="'+t.id+'" title="Not now">Not now</button></span></div>';
@@ -634,17 +634,38 @@ function pushOff(){
 }
 /* yearly repeats: when a repeating job is finished, next year's copy appears (the same rule as on My day) */
 /* REPEATS (24 Nov 2026): `rep` is week, month, 3m, 6m, year or 2y. Finishing a repeating job with a due date makes the next one. */
-var REPS=[['','Does not repeat'],['week','Every week'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
+var REPS=[['','Does not repeat'],['day','Every day'],['3d','Every few days'],['week','Every week'],['2w','Every 2 weeks'],['month','Every month'],['3m','Every 3 months'],['6m','Every 6 months'],['year','Every year'],['2y','Every 2 years']];
+var REPW={day:'every day','3d':'every few days',week:'every week','2w':'every 2 weeks',month:'every month','3m':'every 3 months','6m':'every 6 months',year:'every year','2y':'every 2 years'};
 function nextDue(due,r){
  var p=due.split('-').map(Number),y=p[0],m=p[1]-1,d=p[2];
- if(r==='week'){var w=new Date(Date.UTC(y,m,d+7));return w.toISOString().slice(0,10);}
+ var days={day:1,'3d':3,week:7,'2w':14}[r];
+ if(days){var w=new Date(Date.UTC(y,m,d+days));return w.toISOString().slice(0,10);}
  var add={month:1,'3m':3,'6m':6,year:12,'2y':24}[r]||12;m+=add;y+=Math.floor(m/12);m=m%12;
  var last=new Date(Date.UTC(y,m+1,0)).getUTCDate();return new Date(Date.UTC(y,m,Math.min(d,last))).toISOString().slice(0,10);
 }
+/* CHORES (owner, 25 Nov 2026, H1.14: "how often", from Lauren's cleaning idea). A job with a "how often" and NO due date is a quiet routine chore:
+   when it is ticked the next one comes back by itself, counted from TODAY (so a late chore never piles up), and stays out of the lists (as a Wait)
+   until a little before it is next wanted, so the lists stay short. Short repeats (day, few days, week, 2 weeks) work this way even with a due date.
+   Longer repeats WITH a due date (bills, MOT) keep the old rule: counted from the due date. "Take turns" (alt) sends the next one to the other person. */
+var SHORTREP={day:1,'3d':1,week:1,'2w':1};
+var CHORELEAD={day:0,'3d':0,week:1,'2w':2,month:3,'3m':7,'6m':7,year:7,'2y':7};
+function ymdAdd(ds,n){var p=ds.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10);}
+function nextCopy(t){
+ var o={},td=today();
+ if(t.due&&!SHORTREP[t.rep]){o.due=nextDue(t.due,t.rep);if(t.lead)o.lead=t.lead;}
+ else{
+  var nd=nextDue(td,t.rep);if(t.due)o.due=nd;
+  var w=ymdAdd(nd,-(CHORELEAD[t.rep]||0));if(w>td)o.wait=w;
+ }
+ if(t.alt){o.alt=true;if(t.to===0||t.to===1)o.to=1-t.to;}
+ return o;
+}
 function rollRepeats(){
  D.tasks.slice().forEach(function(t){
-  if(t.parent||!t.rep||!t.done||!t.due||t.rolled)return;
-  D.tasks.push({id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,due:nextDue(t.due,t.rep),rep:t.rep,lead:t.lead,notes:t.notes,dur:t.dur,dev:t.dev,updated:now()});
+  if(t.parent||!t.rep||!t.done||t.rolled)return;
+  var c={id:id(),text:t.text,size:t.size||'small',area:t.area,tag:t.tag,to:t.to,by:t.by,n:Date.now(),done:false,rep:t.rep,notes:t.notes,dur:t.dur,dev:t.dev,updated:now()};
+  var o=nextCopy(t);for(var k in o)c[k]=o[k];
+  D.tasks.push(c);
   t.rolled=true;t.updated=now();
  });
 }
@@ -687,7 +708,8 @@ function panel(){
  if(!par){
   h+='<div class="glab">Due date (optional)</div><input type="date" data-g="due" data-id="'+t.id+'" value="'+(t.due||'')+'"><div class="gnote">A reminder comes to the phone a week before and the day before.</div>';
   if(t.due)h+='<div class="glab">Comes into the list</div><select data-g="lead" data-id="'+t.id+'"><option value="">Straight away</option>'+LEADS.map(function(o){return '<option value="'+o[0]+'"'+(t.lead===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select><div class="gnote">Until then it stays off the phone’s lists, then appears at the top.</div>';
-  h+='<div class="glab">Repeats</div><select data-g="rep" data-id="'+t.id+'">'+REPS.map(function(r){return '<option value="'+r[0]+'"'+((t.rep||'')===r[0]?' selected':'')+'>'+r[1]+'</option>';}).join('')+'</select><div class="gnote">When it is ticked, the next one appears with its due date moved on.</div>';
+  h+='<div class="glab">How often</div><select data-g="rep" data-id="'+t.id+'">'+REPS.map(function(r){return '<option value="'+r[0]+'"'+((t.rep||'')===r[0]?' selected':'')+'>'+r[1]+'</option>';}).join('')+'</select><div class="gnote">'+(t.rep&&!t.due?'A routine chore: when it is ticked it goes quiet and comes back by itself, counted from the day it was done.':'When it is ticked, the next one appears.')+'</div>';
+  if(t.rep)h+='<div class="glab">Whose turn next</div><select data-g="alt" data-id="'+t.id+'"><option value="">The same person every time</option><option value="1"'+(t.alt?' selected':'')+'>Take turns: the next one goes to the other person</option></select>';
  }
  h+='<div class="gfoot"><button data-act="del" data-id="'+t.id+'">Delete</button><button class="on" data-act="gclose">Done</button></div>';
  return h+'</div></div>';
@@ -706,6 +728,7 @@ document.addEventListener('change',function(e){
  else if(k==='area'){t.area=el.value||'wild';kids(t.id).forEach(function(x){x.area=t.area;x.updated=now();});touch(t);}
  else if(k==='due')gset(t,'due',el.value);
  else if(k==='rep')gset(t,'rep',el.value);
+ else if(k==='alt')gset(t,'alt',el.value?true:'');
  else if(k==='lead')gset(t,'lead',el.value?+el.value:'');
  draw(true);
 });
@@ -914,7 +937,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.13';
+var APP_VERSION='H1.14';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -958,7 +981,17 @@ function example(){
  var base=Date.now();ex.forEach(function(x,i){D.tasks.push({id:id(),ex:true,text:x[0],size:x[1],area:x[2],tag:x[3],to:null,by:L.me,done:false,n:base-i,updated:now()});});
  L.welcomed=true;changed();
 }
-function addIdea(text,size){text=text.replace(/^[\s\-\*•\d\.\)]+/,'').trim();if(!text)return;var c=context(),nid=id();ui.fresh=nid;D.tasks.push({id:nid,text:text,size:size||ui.dsize,area:c.area,tag:c.tag,to:null,by:L.me,done:false,n:Date.now(),updated:now()});L.welcomed=true;}
+/* how often the cleaning starters usually come round (owner, 25 Nov: Lauren's cleaning idea); a job can be changed in the set-up panel */
+var OFTEN={'Do the washing-up or load the dishwasher':'day','Wipe the kitchen surfaces':'day','Quick tidy of the living room':'day','Empty the kitchen bin when full':'3d','Put things back where they live':'day',
+ 'Clean the hob':'week','Wipe the cupboard fronts':'month','Clean the microwave':'2w','Clean out the fridge':'week','Clean the oven':'3m','Descale the kettle':'3m','Mop the kitchen floor':'week',
+ 'Clean the toilets':'week','Clean the basins and taps':'week','Clean the bath and shower':'week','Wash the bathroom floor':'week','Change the towels':'week','Descale the shower head':'3m',
+ 'Change the beds':'2w','Dust the bedrooms':'2w','Hoover the bedrooms':'week','Turn the mattresses':'3m','Wash the pillows and duvets':'6m',
+ 'Dust the living room':'week','Hoover the sofa':'month','Wipe the light switches and door handles':'month','Clean the skirting boards':'3m',
+ 'Hoover downstairs':'week','Hoover upstairs and the stairs':'week','Mop the hard floors':'week','Shake out the doormats':'week',
+ 'Do a wash':'3d','Hang out or dry the washing':'3d','Fold and put away the washing':'3d','Do the ironing':'week','Wash the tea towels':'week',
+ 'Put the bins out':'week','Bring the bins back in':'week','Sort the recycling':'week','Wash out the bins':'3m',
+ 'Clean the windows inside':'3m','Clean the oven properly':'3m','Defrost the freezer':'6m','Clean the carpets':'6m','Wash the curtains':'6m','Clean behind the furniture':'6m'};
+function addIdea(text,size){text=text.replace(/^[\s\-\*•\d\.\)]+/,'').trim();if(!text)return;var c=context(),nid=id();ui.fresh=nid;D.tasks.push({id:nid,text:text,size:size||ui.dsize,area:c.area,tag:c.tag,to:null,by:L.me,done:false,n:Date.now(),updated:now()});var nt=D.tasks[D.tasks.length-1];if(c.area==='clean'&&OFTEN[text])nt.rep=OFTEN[text];L.welcomed=true;}
 function setOwner(t,v){t.to=v;kids(t.id).forEach(function(k){k.to=v;k.updated=now();});ui.fresh=t.id;touch(t);}
 /* Get a grip's rules (TASK-MODEL.md, adopted 24 Nov 2026): a job put under another becomes its LAST step and takes its area and
    owner (rule 4); size is never changed for you (rule 2); a job that has steps of its own hands them over instead, in order with
