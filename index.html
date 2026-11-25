@@ -70,6 +70,7 @@ a.homeb{display:inline-flex;gap:.3em;align-items:center;justify-content:center;t
 .gpanel input[type=text],.gpanel textarea,.gpanel select,.gpanel input[type=date]{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx)}
 .gpanel textarea{min-height:70px;resize:vertical}
 .gseg{display:flex;flex-wrap:wrap;gap:6px}.gseg button{min-height:40px}
+.sharebox{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}.sharebox .qr{width:160px;height:160px;background:#fff;border-radius:10px;padding:4px;flex:none}.sharebox .qr svg{width:100%;height:100%;display:block}.sharebox .sharetxt{flex:1;min-width:210px}.sharebox small{display:block;margin-top:8px;color:var(--mut)}
 .kindbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;border:1.5px solid var(--acc);border-radius:12px;padding:6px 10px;margin:6px 0;background:var(--card)}
 .kindbar .kt{display:flex;flex-direction:column;min-width:200px;flex:1}.kindbar .kt span{font-size:.8rem;color:var(--mut)}
 .kindbar .kb{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:flex-end}.kindbar .gseg button{min-height:36px;padding:4px 12px}
@@ -258,6 +259,7 @@ input[type=text]{min-height:44px;padding:6px 12px;border:2px solid var(--line);b
 </head>
 <body>
 <div id="app"></div>
+<script src="vendor/qrcode.js"></script>
 <script>
 (function(){
 var SERVER='https://household-store.dmhmca-apps.workers.dev';
@@ -329,6 +331,17 @@ function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.triage=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house',whoSet:false});
+/* LINK BY QR CODE OR LINK (owner, 25 Nov 2026, H1.35): scanning the QR code on a linked device (or opening the link it was sent as, by email or message) opens
+   this app with ?join=<household code> (or ?pjoin=<personal code>), and this device is linked at once. */
+var JOINMSG='';
+(function(){
+ try{
+  var q=new URLSearchParams(location.search),hc=(q.get('join')||'').toUpperCase().replace(/[^A-Z0-9]/g,''),pc=(q.get('pjoin')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(hc.length===12&&(!L.code||L.code===hc||confirm('This device is already linked to a household. Switch it to the one in this link?'))){L.code=hc;JOINMSG='Linked to your household. Your list will appear in a moment.';}
+  if(pc.length===16&&(!L.pcode||L.pcode===pc||confirm('Personal sync is already on for this device. Switch it to the code in this link?'))){L.pcode=pc;L.pjoin=true;JOINMSG='Personal sync joined. Open Getting a grip to bring your tasks across.';}
+  if(hc||pc){localStorage.setItem(LKEY,JSON.stringify(L));history.replaceState(null,'',location.pathname+location.hash);}
+ }catch(e){}
+})();
 /* always open at the start: Brainstorm, Warm up, first question (owner, 25 Nov 2026) */
 function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 /* where an address with a #hash points. Settings has sub-tabs (General, Link, This device, Reminders; Help and Privacy are their own pages). */
@@ -365,7 +378,7 @@ if(REDIR){
 window.addEventListener('hashchange',function(){var t=tabFromHash(location.hash);if(!t)return;if(t[0]==='pay'){L.tab='brain';L.stage='pay';}else{L.tab=t[0];if(t[0]==='set')L.stab=t[1];}persist();draw(true);});
 var RM={kitchen:'Kitchen',living:'Living room',bathroom:'Bathroom',bedrooms:'Bedrooms',hall:'Halls, stairs and corridors',loft:'Loft and storage',garage:'Annex'};D.tasks.forEach(function(t){if(RM[t.area]){t.tag=RM[t.area];t.area='house';}if(t.area==='family')t.area='kids';if(t.area==='pets'||t.area==='work')t.area=t.area==='work'?'business':'wild';});
 D.tasks.forEach(function(t){if(t.to===2){t.to=null;t.updated=new Date().toISOString();}});
-var ui={dsize:'small',status:'',syncing:false,open:{},defer:false,fresh:null,timer:0};
+var ui={dsize:'small',status:JOINMSG,syncing:false,open:{},defer:false,fresh:null,timer:0};
 function lo(k,def){try{var r=localStorage.getItem(k);if(r)return JSON.parse(r);}catch(e){}return def;}
 function persist(){try{localStorage.setItem(DKEY,JSON.stringify(D));localStorage.setItem(LKEY,JSON.stringify(L));}catch(e){}}
 if(!REDIR)persist();
@@ -414,6 +427,13 @@ function sync(){
 function status(){var el=document.getElementById('st');if(el)el.textContent=ui.status;}
 function newCode(){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='',r=new Uint8Array(12);crypto.getRandomValues(r);for(var i=0;i<12;i++)s+=a[r[i]%a.length];return s;}
 function showCode(c){return c.slice(0,4)+'-'+c.slice(4,8)+'-'+c.slice(8);}
+/* the link a QR code (or an email) carries: this app's own address plus the code */
+function joinLink(kind){var base=new URL('./',location.href).href;return base+(kind==='p'?'?pjoin='+L.pcode:'?join='+L.code);}
+function qrSvg(text){try{var q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:5,margin:3,scalable:true});}catch(e){return '';}}
+function shareBox(kind){
+ var link=joinLink(kind),what=kind==='p'?'your personal code':'the household code';
+ return '<div class="sharebox"><div class="qr" role="img" aria-label="QR code for linking another device">'+qrSvg(link)+'</div><div class="sharetxt"><b>Link another device</b><br>On a phone, point its camera at this QR code and open the link: the app opens and links itself. For a second computer, send yourself the link.<div class="srow"><button data-act="joinshare" data-k="'+kind+'">Share…</button><button data-act="joinmail" data-k="'+kind+'">Email the link</button><button data-act="joincopy" data-k="'+kind+'">Copy the link</button></div><small>The link contains '+what+', so send it only to the right person'+(kind==='p'?' (yourself)':'')+'.</small></div></div>';
+}
 
 
 /* ---- the brainstorm page ---- */
@@ -584,7 +604,7 @@ function personalBox(){
  if(L.pcode){
   var st=pstat();
   h+='Personal sync is <b>on</b> for '+esc(NAMES[L.me])+'. Your personal tasks (never the household jobs) are kept in step between your own devices, scrambled on the way: the store holds only unreadable data.<br>'+(st.err?'<b>'+esc(st.err)+'</b>':st.at?'Last synced '+esc(new Date(st.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}))+'.':'Waiting for the first sync: open Getting a grip.')+'<br>';
-  h+=(ui.pshow?'Your personal code is<div class="code">'+esc(pcodeShow(L.pcode))+'</div>To link your other phone or computer, choose “Join with a personal code” there and type this in. Keep it to yourself, and never use the household code here.<div class="srow"><button data-act="phide">Hide the code</button><button data-act="poff">Turn personal sync off</button></div>':'<div class="srow"><button data-act="pshow">Show my personal code</button><button data-act="poff">Turn personal sync off</button></div>');
+  h+=(ui.pshow?'Your personal code is<div class="code">'+esc(pcodeShow(L.pcode))+'</div>To link your other phone or computer, choose “Join with a personal code” there and type this in. Keep it to yourself, and never use the household code here.'+shareBox('p')+'<div class="srow"><button data-act="phide">Hide the code</button><button data-act="poff">Turn personal sync off</button></div>':'<div class="srow"><button data-act="pshow">Show my personal code</button><button data-act="poff">Turn personal sync off</button></div>');
   h+='</div>';return h;
  }
  h+='Your personal tasks live only on this device. To have them on your other phone or computer as well, make a <b>personal code</b> here and type it into your other device. It is your own code, separate from the household code, and it scrambles your tasks before they leave the device, so nobody else, including whoever runs the store, can read them. <b>Lose the code and the synced copy cannot be recovered</b> (the tasks on each device stay).<div class="srow"><button class="on" data-act="pcreate">Create a personal code</button></div>';
@@ -595,7 +615,7 @@ function linkTab(){
  var h='';
  h+='<div class="note2"><b>Link your devices</b><br>';
  if(L.code){
-  h+='This device is linked to your household list. Whatever either of you adds or ticks on a linked device shows up on the others.<br>The household code is<div class="code">'+showCode(L.code)+'</div>To link another device (Lauren’s phone, Josh’s phone, a computer you use together), open the app there, go to Settings, then Link, and type this code. You do it once per device. Keep the code between the two of you: anyone with it can see the household list.<div class="srow"><button data-act="syncnow">Sync now</button><button data-act="leave">Unlink this device</button></div></div>';
+  h+='This device is linked to your household list. Whatever either of you adds or ticks on a linked device shows up on the others.<br>The household code is<div class="code">'+showCode(L.code)+'</div>'+shareBox('h')+'To link another device (Lauren’s phone, Josh’s phone, a computer you use together), open the app there, go to Settings, then Link, and type this code. You do it once per device. Keep the code between the two of you: anyone with it can see the household list.<div class="srow"><button data-act="syncnow">Sync now</button><button data-act="leave">Unlink this device</button></div></div>';
  }else{
   h+='One household list is shared between your devices through a code. One of you creates the code once; every other device (each phone, a computer you use together) is linked by typing it in.<div class="srow"><button class="on" data-act="start">Create a household code</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Link this device</button></div><div class="srow"><button data-act="locally">Just try it on this device for now</button></div></div>';
  }
@@ -920,7 +940,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.34';
+var APP_VERSION='H1.35';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -1037,6 +1057,9 @@ document.addEventListener('click',function(e){
  else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
  else if(act==='kindset'){L.kind=b.getAttribute('data-v');}
  else if(act==='kindhdr'){L.kind=b.getAttribute('data-v');}
+ else if(act==='joincopy'){var jl=joinLink(b.getAttribute('data-k'));try{navigator.clipboard.writeText(jl).then(function(){ui.status='Link copied.';status();});}catch(e){prompt('Copy this link:',jl);}return;}
+ else if(act==='joinmail'){var jk=b.getAttribute('data-k');location.href='mailto:?subject='+encodeURIComponent(jk==='p'?'Link my personal tasks':'Join our household list')+'&body='+encodeURIComponent((jk==='p'?'Open this link on your other device to join your personal sync:\n\n':'Open this link on the device you want to link to the household list:\n\n')+joinLink(jk));return;}
+ else if(act==='joinshare'){var sk=b.getAttribute('data-k');if(navigator.share){navigator.share({title:'Get a Grip Household',text:sk==='p'?'Link my personal tasks':'Join our household list',url:joinLink(sk)}).catch(function(){});}else{try{navigator.clipboard.writeText(joinLink(sk));ui.status='Link copied (sharing is not available here).';status();}catch(e){prompt('Copy this link:',joinLink(sk));}}return;}
  else if(act==='pcreate'){L.pcode=pcodeNew();L.pjoin=false;ui.pshow=true;ui.perr='';}
  else if(act==='pshow'){ui.pshow=true;}
  else if(act==='phide'){ui.pshow=false;}

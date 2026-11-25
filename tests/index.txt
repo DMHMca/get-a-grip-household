@@ -28,3 +28,4 @@ side-and-lock:
 chores:
 personal-sync:
 owner-needed:
+qr-link:

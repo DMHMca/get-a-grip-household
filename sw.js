@@ -1,6 +1,6 @@
-const CACHE='gagh-v58';
+const CACHE='gagh-v59';
 const SCOPE=new URL(self.registration.scope).pathname;
-self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./manifest.webmanifest','./help.html']).catch(()=>{})));});
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./manifest.webmanifest','./help.html','./vendor/qrcode.js']).catch(()=>{})));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gagh-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
   const r=e.request,u=new URL(r.url);
