@@ -18,6 +18,9 @@ await p.goto(B+'?home=1');await p.waitForTimeout(500);console.log('3 Home link: 
 await p.click('nav.tabs >> text=2 · Share out');await p.click('.sidebtn');await p.waitForTimeout(900);
 console.log('4 the title switched to:',here(),'| side saved:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(900);console.log('5 reopened: lands on',here(),'(want tasks.html)');
+console.log('5b a computer is asked whose, here on Getting a grip:',await p.locator('[aria-label="Whose device is this"]').count(),'| none on the planning side');
+await p.locator('[aria-label="Whose device is this"] button',{hasText:'Josh'}).click();await p.waitForTimeout(600);
+console.log('   answered: bar gone',await p.locator('[aria-label="Whose device is this"]').count()===0,'| me:',(await L()).me,'| whoSet:',(await L()).whoSet,'| header:',(await p.locator('.apphead').textContent()).replace(/\s+/g,' '));
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(800);console.log('6 title back: ',here(),await tabOn(),'| side:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(500);console.log('7 reopened after planning: stays on',here());
 // ---- lock

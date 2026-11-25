@@ -17,7 +17,7 @@ await L.goto(B);await L.waitForTimeout(500);await L.click('[data-act=more]');awa
 const code=await L.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')).code);console.log('household started, code made:',!!code);
 await L.click('nav.tabs >> text=1 · Brainstorm');await L.fill('#qa','Service the boiler');await L.press('#qa','Enter');await L.waitForTimeout(300);
 await L.click('nav.tabs >> text=2 · Share out');await L.locator('article.card',{hasText:'Service the boiler'}).locator('[aria-label="Give to Josh"]').click();await L.waitForTimeout(2500);
-await J.goto(B);await J.waitForTimeout(400);await J.click('[data-act=me][data-i="1"]');await J.click('[data-act=more]');await J.click('[data-act=stab][data-v=link]');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
+await J.goto(B);await J.waitForTimeout(400);await J.click('[data-act=more]');await J.click('[data-act=stab][data-v=device]');await J.click('[data-act=whoset][data-v="1"]');await J.click('[data-act=stab][data-v=link]');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
 await J.goto(B+'tasks.html');await J.waitForTimeout(2000);
 console.log('Josh header:',await J.locator('.apphead').textContent());
 const has=await J.evaluate(()=>!!GAGH.S.tasks.find(t=>t.text==='Service the boiler'&&t.activityId==='hh'));console.log('Josh sees the job:',has);

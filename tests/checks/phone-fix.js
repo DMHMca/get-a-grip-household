@@ -7,9 +7,9 @@ const B='http://localhost:8765/get-a-grip-household/';
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 const here=()=>p.url().replace(B,'')||'(planning start)';
 await p.goto(B);await p.waitForTimeout(600);
-console.log('1 first open asks whose device:',await p.locator('.kindbar [data-act=whoset]').count()===2);
-await p.click('.kindbar [data-act=whoset][data-v="1"]');await p.waitForTimeout(200);
-await p.click('[data-act=kindfirst][data-v=phone]');await p.waitForTimeout(1200);
+console.log('1 first open asks the kind only (no chips in the header, no whose yet):',await p.locator('[data-act=kindfirst]').count()===2,await p.locator('[data-act=me]').count()===0);
+await p.click('[data-act=kindfirst][data-v=phone]');await p.waitForTimeout(300);
+await p.click('[data-act=whofirst][data-v="1"]');await p.waitForTimeout(1200);
 console.log('2 chose Josh and phone:',here(),'|',await p.locator('.apphead .brand').allTextContents());
 // the trap: a phone left in Household view with a PIN
 await p.goto(B+'?home=1');await p.waitForTimeout(300);

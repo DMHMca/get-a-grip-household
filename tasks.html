@@ -1053,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.19';
+var APP_VERSION='H1.20';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3170,9 +3170,16 @@ function checkForUpdateNow(){
 /* a phone opens on Today even before anything has been shared out: say why it is quiet */
 /* the card that said "No household jobs yet" was removed (owner, 25 Nov 2026, H1.17): an empty Household list is simply empty */
 function phoneNote(){return null;}
+/* whose device is this? Asked only here (a computer) or on the phone's set-up bar; Planning is always both of them (owner, 25 Nov 2026, H1.20) */
+function whoBar(){
+  var l=hhLoc();if(l.whoSet!==false)return null;
+  return h('div',{role:'group','aria-label':'Whose device is this',style:'margin:6px 16px 0;padding:8px 12px;border:1.5px solid var(--accent);border-radius:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px'},[
+    h('b',{text:'Whose '+(l.kind==='phone'?'phone':'computer')+' is this?'}),
+    h('span',{style:'display:flex;gap:8px'},[0,1].map(function(i){return h('button',{class:'btn',type:'button',onclick:function(){hhSetLoc({me:i,whoSet:true});if(hhPull())commit(true);render();}},[HH.NAMES[i]]);}))]);
+}
 function viewKids(){
   app.classList.toggle('wide',ui.view==='today');
-  return [appHeader(),scopeBar(),updateBanner(),phoneNote()].filter(Boolean).concat(viewBody());
+  return [appHeader(),whoBar(),scopeBar(),updateBanner(),phoneNote()].filter(Boolean).concat(viewBody());
 }
 function viewBody(){
   var v=ui.view;

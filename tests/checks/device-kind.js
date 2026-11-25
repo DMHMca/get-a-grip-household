@@ -9,7 +9,7 @@ const tabs=async()=>(await p.locator('nav.tabs button').allTextContents()).join(
 await p.goto(B);await p.waitForTimeout(600);
 console.log('1 first open: card shown:',await p.locator('[data-act=kindfirst]').count(),'| stays on planning:',here(),'| guess marked:',(await p.locator('[data-act=kindfirst].on').textContent()));
 await p.screenshot({path:'kind.png'});
-await p.click('[data-act=kindfirst][data-v=phone]');await p.waitForTimeout(1200);
+await p.click('[data-act=kindfirst][data-v=phone]');await p.waitForTimeout(300);console.log('  a phone then asks whose:',await p.locator('[data-act=whofirst]').count());await p.click('[data-act=whofirst][data-v="0"]');await p.waitForTimeout(1200);
 console.log('2 chose phone, lands on:',here(),'| header Home link:',await p.getByRole('link',{name:/Home/}).count(),'| name:',(await p.locator('.apphead .brand').allTextContents()).join(','));
 console.log('  quiet note:',(await p.locator('text=Nothing shared out yet').count()));
 await p.screenshot({path:'phone_day.png'});

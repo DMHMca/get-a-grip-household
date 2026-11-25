@@ -317,7 +317,7 @@ function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
 function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.triage=[];
-var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house'});
+var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house',whoSet:false});
 /* always open at the start: Brainstorm, Warm up, first question (owner, 25 Nov 2026) */
 function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 /* where an address with a #hash points. Settings has sub-tabs (General, Link, This device, Reminders; Help and Privacy are their own pages). */
@@ -331,11 +331,13 @@ var savedTab=L.tab;
 L.tab=HT?(HT[0]==='pay'?'brain':HT[0]):((!HOMEQ&&L.opened&&(savedTab==='brain'||savedTab==='alloc'))?savedTab:'brain');if(HT&&HT[0]==='set')L.stab=HT[1];if(HT&&HT[0]==='pay')L.stage='pay';
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 if(L.shared){L.shared=false;L.together=true;}
+/* WHOSE (owner, 25 Nov 2026, H1.20): Planning is always both of them, so whose device it is is asked only for a phone (once, at the start) and on a computer's Getting a grip side. L.whoSet: false = not yet answered; devices that already had a kind count as answered. */
+if(L.whoSet===undefined)L.whoSet=!!L.kind;
 /* DEVICE KIND (owner, 25 Nov 2026, H1.8): L.kind is 'phone' (for DOING: opens on Getting a grip, planning tucked behind "Planning")
    or 'computer' (for PLANNING TOGETHER: opens on Brainstorm). Asked once, on the first open (a card at the top), remembered, and
    changeable on Devices. A device with no answer yet behaves as a computer. Household view always opens on the planning pages.
    Never redirected: links with a #address, and Home (./?home=1). */
-function opensOnMyDay(){return L.kind==='phone';}
+function opensOnMyDay(){return L.kind==='phone'&&L.whoSet!==false;}
 /* a phone is one person's own device with its own lock: no Household view, no PIN (owner, 25 Nov 2026, H1.11) */
 if(L.kind==='phone'&&(L.together||L.shared)){L.together=false;L.shared=false;persist();}
 function guessKind(){try{return (matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<700)?'phone':'computer';}catch(e){return 'computer';}}
@@ -808,7 +810,7 @@ function tasksTab(){
 function pinHash(pin){var b=new TextEncoder().encode((L.pinSalt||'')+':'+pin);return crypto.subtle.digest('SHA-256',b).then(function(h){return Array.from(new Uint8Array(h)).map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
 function needPin(next){if(L.kind==='phone')return false;return !!L.pin&&(hhOnly()||(next.me!==undefined&&next.me!==L.me));}
 function applyMove(n){
- if(n.me!==undefined){L.shared=false;L.together=false;var old=L.me;L.me=n.me;if(old!==L.me&&L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
+ if(n.me!==undefined){L.whoSet=true;L.shared=false;L.together=false;var old=L.me;L.me=n.me;if(old!==L.me&&L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
  if(n.together!==undefined){L.together=n.together;if(!n.together)L.shared=false;}
  if(n.shared){L.shared=true;L.together=false;L.tview='both';}
  if(hhOnly()&&L.tab==='day')L.tab='alloc';
@@ -960,7 +962,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.19';
+var APP_VERSION='H1.20';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -968,17 +970,18 @@ var swReg=null;
 function checkUpdate(){if(swReg){try{swReg.update();}catch(e){}}}
 function updateBanner(){return ui.updateReady?'<div class="note2" role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1.5px solid var(--acc)"><b>A new version is ready</b><button class="on" data-act="mreload">Update now</button></div>':'';}
 function kindCard(){
- if(L.kind)return '';
+ var needKind=!L.kind,needWho=L.kind==='phone'&&L.whoSet===false;
+ if(!needKind&&!needWho)return '';
  var g=guessKind();
- /* one slim bar, asked once (owner, 25 Nov 2026): whose device and what kind, as a bank of buttons at the right; it goes as soon as you choose */
- return '<div class="kindbar" role="group" aria-label="Set up this device"><div class="kt"><b>Set up this device</b><span>Phone: for doing. Computer: for planning together. Change it later in Settings.</span></div><div class="kb">'+whoSeg2('whoset')+'<div class="gseg">'+[['phone','📱 Phone'],['computer','💻 Computer']].map(function(o){return '<button class="'+(g===o[0]?'on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" title="'+(g===o[0]?'This looks like a '+o[0]:'')+'">'+o[1]+'</button>';}).join('')+'</div></div></div>';
+ /* one slim bar, asked once. First the kind (phone or computer); a phone then also asks whose it is. A computer is asked whose on its Getting a grip side. */
+ if(needWho)return '<div class="kindbar" role="group" aria-label="Whose phone"><div class="kt"><b>Whose phone is this?</b><span>Its household jobs are the ones shared out to this person.</span></div><div class="kb"><div class="gseg">'+[0,1].map(function(i){return '<button data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</div></div></div>';
+ return '<div class="kindbar" role="group" aria-label="Set up this device"><div class="kt"><b>Set up this device</b><span>Phone: for doing. Computer: for planning together. Change it later in Settings.</span></div><div class="kb"><div class="gseg">'+[['phone','📱 Phone'],['computer','💻 Computer']].map(function(o){return '<button class="'+(g===o[0]?'on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" title="'+(g===o[0]?'This looks like a '+o[0]:'')+'">'+o[1]+'</button>';}).join('')+'</div></div></div>';
 }
 function head(){
  var ph=(L.kind==='phone');
  var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>'+(hhOnly()?'':'<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>')+'<div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>'+(ph?esc(NAMES[L.me])+'’s phone':'Work it out together. Do a little each day.')+'</div></div>';
  if(!ph&&L.kind){
-  h+='<div class="who"><span class="lbl">This device is</span>';
-  [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
+  h+='<div class="who">';
   h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button></div>';
  }
  h+='</header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · Getting a grip']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
@@ -1078,6 +1081,7 @@ document.addEventListener('click',function(e){
  else if(act==='poff'){if(confirm('Turn personal sync off on this device? Your tasks stay here. Your other devices keep their own copies.')){L.pcode='';L.pjoin=false;ui.pshow=false;try{localStorage.removeItem('household.pstat.v1');}catch(e){}}}
  else if(act==='pjoinok'){var pv=pcodeNorm((document.getElementById('pjoin')||{}).value);if(pv.length!==16||/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/.test(pv)){ui.perr='A personal code is 16 letters and numbers, like XXXX-XXXX-XXXX-XXXX.';}else if(L.code&&pv===L.code){ui.perr='That is the household code. Your personal code is a different one, made on your own device.';}else{L.pcode=pv;L.pjoin=true;ui.perr='';ui.pshow=false;try{localStorage.removeItem('household.pstat.v1');}catch(e){}ui.status='Joined. Open Getting a grip to bring your tasks across.';}}
  else if(act==='kindfirst'){L.kind=b.getAttribute('data-v');persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
+ else if(act==='whofirst'){L.me=+b.getAttribute('data-v');L.whoSet=true;persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
  else if(act==='pinreset'){pinReset();return;}

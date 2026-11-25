@@ -6,7 +6,7 @@ const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:1280,height:900}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
 const tabs=async()=>(await p.locator('nav.tabs button').allTextContents()).join(' | ');
 // an old shared-screen device turns into Household view
-await p.goto(B);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.shared=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.goto(B);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.shared=true;l.kind='computer';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.reload();await p.waitForTimeout(300);
 console.log('old shared device:',await tabs(),'| button:',await p.locator('[data-act=together]').textContent());
 console.log('device choices:',(await p.locator('.who button').allTextContents()).join(' | '));
