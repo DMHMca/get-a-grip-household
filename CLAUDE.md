@@ -1,6 +1,6 @@
 # Get a Grip Household: project brief for Claude Code
 
-## CURRENT STATE (H1.11, 25 November 2026): READ THIS FIRST
+## CURRENT STATE (H1.12, 25 November 2026): READ THIS FIRST
 
 Everything below this section is the DECISION LOG, written as the app grew. Where an older note below disagrees with this section, **this section wins**: several older notes describe screens that were later changed or removed (the Tasks tab, Shared screen, the Sharing tab, the 📬 From email tab, "the OLD household app", the `L.open` setting). Do not delete the log; it records why things are as they are. When you change the app, update THIS section as well as adding a dated note.
 
@@ -21,6 +21,8 @@ Everything below this section is the DECISION LOG, written as the app grew. Wher
 **Quiet due dates and reminders.** Due dates show only inside a job. A dated job with `lead` stays off the phone's lists until `lead` days before it is due, then comes in at the top; a phone reminder is sent a week and a day before; a job due within a week goes to the top of Today. Ticking a repeating job makes the next one. The Worker sends reminders daily at 08:07 UTC (cron `7 8 * * *`).
 
 **Shared store.** Cloudflare Worker `household-store` on the OWNER's Cloudflare account, `https://household-store.dmhmca-apps.workers.dev`, KV `household-demo` bound as `HOUSEHOLD`, secret `VAPID_PRIVATE` (never commit). Endpoints and deploy notes: see "Shared store" under "Where things are". The Cloudflare API token used to deploy expires 20 December 2026.
+
+**H1.12:** the phone's "No household jobs yet" card (`phoneNote`) shows only on the Household filter, never on Personal or Everything (owner was confused by it on Personal).
 
 **Help.** `help.html` is a static page linked from the ⋮ menu on both sides and from the Brainstorm welcome card (owner's spec, 25 Nov: not "dumb" help, because Lauren and Josh are quick studies). Part 1 is the idea in three short paragraphs (the Get a grip approach, the household bit, how they fit); part 2 is collapsible how-tos for the less obvious parts (planning rounds, the round 5 board, the set-up panel, sharing out, My day, quiet due dates and reminders, regular payments, what the household code is, device kind / Household view / PIN, where information is kept, troubleshooting); part 3 is "For Josh": how it is built, the Worker routes, how to FORK it (including the key-pair snippet), and a DESIGN SKETCH (not built, untested) for scrambling personal tasks if personal sync is added. It follows the app's appearance setting (`gagh.gag.theme`). **KEEP IT IN STEP: whenever you change a screen, a button name or a rule, update `help.html` in the same release**, as it quotes button names and describes the phone/computer and Household view behaviour as they are today (it will need revising when the phone redesign lands). Check: `tests/checks/help-page.js`.
 
