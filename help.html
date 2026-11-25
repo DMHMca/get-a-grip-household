@@ -52,7 +52,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <a class="back" href="./">← Back to the app</a>
 <nav class="stabs" aria-label="Settings"><a href="./#settings">General</a><a href="./#set-link">Link</a><a href="./#set-device">This device</a><a href="./#set-reminders">Reminders</a><a href="help.html" class="on" aria-current="page">Help</a><a href="privacy.html">Privacy</a></nav>
 <h1>Get a Grip Household: help</h1>
-<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026 (H1.15).</p>
+<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026 (H1.16).</p>
 
 <nav class="toc" aria-label="On this page">
 <b>On this page</b>
@@ -75,6 +75,42 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 
 <h2 id="howtos">How things work</h2>
 <p class="muted">Each of these opens and closes.</p>
+<p><b>Setting it up for the first time?</b> Start with <a href="#h-start">Getting set up: the main PC first, then each phone</a>.</p>
+
+<details id="h-start"><summary>Getting set up: the main PC first, then each phone</summary>
+<p>Do this once. Allow about twenty minutes. The PC is for planning together; each phone is for doing. Use Chrome on all of them. Nothing here needs an account or a password.</p>
+
+<h3>Part 1: the main PC</h3>
+<ol>
+<li>On the PC, open <a href="https://dmhmca.github.io/get-a-grip-household/">dmhmca.github.io/get-a-grip-household</a> in Chrome. Make it a bookmark. (To get it as an app: Chrome’s ⋮ menu, then “Cast, save and share”, then “Install page as app”.)</li>
+<li>A card at the top asks <b>What is this device?</b> Under “Whose is it?” choose whoever mainly uses this PC, then choose <b>A computer</b>. The app now opens on Brainstorm.</li>
+<li>Make the household code. Press the ⋮ button at the top left, then the <b>Link</b> tab, then <b>Create a household code</b>. A 12-character code appears.</li>
+<li><b>Write the code down</b> on paper, or send it to your own phone in a message. Both phones need it, and it is the key to your shared list, so keep it between the two of you.</li>
+<li>Optional: on the PC, open ⋮, Settings, This device, and set a <b>PIN</b>. It keeps personal tasks private when you use Household view on this PC. The PC then locks itself after five quiet minutes (you can change that there).</li>
+<li>Check it works: on the Brainstorm page, tap one of the starter suggestions. It appears as a note. You are ready for phones.</li>
+</ol>
+
+<h3>Part 2: each phone (do Lauren’s, then Josh’s)</h3>
+<ol>
+<li>On the phone, open the same address in Chrome. Use the phone of the person it belongs to.</li>
+<li>Answer the card at the top: under “Whose is it?” choose that person’s name, then choose <b>A phone</b>. The phone now opens on <b>Getting a grip</b>, the doing side.</li>
+<li>Link it to the household. Tap the ⋮ at the top right, choose <b>Settings</b>, open the <b>Link</b> tab, type the 12-character code, and press <b>Link this device</b>. (If the phone opens on the planning pages instead, press ⋮, Settings, This device, and tap “A phone”.)</li>
+<li>Put it on the home screen so it opens like an app: Chrome’s ⋮ menu, then <b>Add to Home screen</b> (or <b>Install app</b>).</li>
+<li>Turn on reminders on <b>your own</b> phone: ⋮, Settings, the <b>Reminders</b> tab, <b>Turn on reminders</b>, then allow notifications when Android asks. Press <b>Send a test reminder</b>. A notification should arrive within a minute.</li>
+<li>Optional: to have your personal tasks on a second device as well, see “Personal sync” below. Skip it on a first setup.</li>
+</ol>
+
+<h3>Part 3: check it all hangs together</h3>
+<ol>
+<li>On the PC, go to <b>2 · Share out</b> and give one note to Lauren and one to Josh.</li>
+<li>On each phone, open Getting a grip and tap the <b>Household</b> button. Each phone should show just their own job, within about twenty seconds.</li>
+<li>Tick one on a phone. On the PC it should show as done within about twenty seconds.</li>
+<li>If it does, delete those two test notes. You are set up.</li>
+</ol>
+
+<h3>If something goes wrong</h3>
+<p>A phone that opens on the planning pages: ⋮, Settings, This device, “A phone”. A phone that shows no jobs: check it has the same code as the PC (Settings, Link) and the right person under “Whose is it?”. A job that does not appear on the other device: wait twenty seconds, or switch away and back. The PC will not open Getting a grip: it has locked itself, so enter the PIN. See also “When something looks wrong” below.</p>
+</details>
 
 <details id="h-planning"><summary>Planning together: what each round is for</summary>
 <p>Do it together at one screen, ideally a laptop. One of you types, both of you call things out, and you don’t decide who does what yet. Every idea becomes a sticky note on the wall.</p>
@@ -249,7 +285,7 @@ console.log('VAPID_PUBLIC =', pub);                       // goes in the code
 console.log('VAPID_PRIVATE =', JSON.stringify({ kty: 'EC', crv: 'P-256', d: j.d, x: j.x, y: j.y })); // secret</code></pre>
 
 <h3>Scrambling personal tasks</h3>
-<p><b>This is now built (H1.15).</b> The list below is how it works. It has been tested against the real Worker code with a pretend database and two scripted browsers (<code>tests/checks/personal-sync.js</code>), but never against the live store from a real phone. The snippet after the list is the original sketch; the working code is the PERSONAL SYNC block in <code>tasks.html</code> (<code>pPrep</code>, <code>pEnc</code>, <code>pDec</code>, <code>pDoc</code>, <code>pApply</code>, <code>pCycle</code>) and the <code>/p/&lt;sha256 of code&gt;</code> route in <code>worker/worker.js</code>.</p>
+<p><b>This is now built (H1.16).</b> The list below is how it works. It has been tested against the real Worker code with a pretend database and two scripted browsers (<code>tests/checks/personal-sync.js</code>), but never against the live store from a real phone. The snippet after the list is the original sketch; the working code is the PERSONAL SYNC block in <code>tasks.html</code> (<code>pPrep</code>, <code>pEnc</code>, <code>pDec</code>, <code>pDoc</code>, <code>pApply</code>, <code>pCycle</code>) and the <code>/p/&lt;sha256 of code&gt;</code> route in <code>worker/worker.js</code>.</p>
 <p>Differences from the sketch: the code is 16 random characters from a 32-letter alphabet (80 bits), the drawer id is <code>SHA-256('gagh-personal-id:'+code)</code>, the key is PBKDF2 (150,000 rounds) of the code, today’s plans are not synced, and the household activities are kept out and put back in their old places after each merge.</p>
 <ul>
 <li><b>Separate drawer, separate code.</b> Each person gets a personal code that is never the household code. Add a second Worker route such as <code>/p/&lt;id&gt;</code> that copies the <code>/h</code> GET/PUT/409 logic with a larger size limit. The drawer id is a hash of the code, so the store never sees the code itself.</li>
