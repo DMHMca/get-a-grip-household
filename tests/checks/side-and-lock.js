@@ -1,6 +1,6 @@
 // CHECK: side-and-lock
-// H1.12/H1.13: the title that switches side, each computer remembering its last page and side, Home meaning "start of this side",
-// and the PIN timeout (a computer with a PIN locks itself into Household view after a quiet spell; a phone never does).
+// H1.12/H1.13: the title that switches side, each computer remembering its last page and side, Home meaning "start of this side".
+// (The PIN timeout part was removed with the PIN in H1.31.)
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:1000}});const p=await c.newPage();
@@ -23,14 +23,4 @@ await p.locator('[aria-label="Whose device is this"] button',{hasText:'Josh'}).c
 console.log('   answered: bar gone',await p.locator('[aria-label="Whose device is this"]').count()===0,'| me:',(await L()).me,'| whoSet:',(await L()).whoSet,'| header:',(await p.locator('.apphead').textContent()).replace(/\s+/g,' '));
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(800);console.log('6 title back: ',here(),await tabOn(),'| side:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(500);console.log('7 reopened after planning: stays on',here());
-// ---- lock
-await setL({pins:{0:{h:'x',s:'s'}},lockMin:2,me:0,kind:'computer',side:'grip'});
-await p.clock.install();await p.goto(B+'tasks.html');await p.waitForTimeout(500);
-await p.clock.runFor(60*1000);console.log('8 after 1 quiet minute, still on',here());
-await p.clock.runFor(90*1000);await p.waitForTimeout(800);
-console.log('9 after 2.5 quiet minutes: ',here(),'| together:',(await L()).together,'| tabs:',(await p.locator('.steps button').allTextContents()).join(' | '));
-await setL({together:false,lockMin:0});await p.goto(B+'tasks.html');await p.waitForTimeout(300);await p.clock.runFor(60*60*1000);
-console.log('10 "Never": still on',here());
-await setL({kind:'phone',lockMin:2,together:false});await p.goto(B+'tasks.html');await p.waitForTimeout(300);await p.clock.runFor(10*60*1000);
-console.log('11 a phone never locks:',here(),'| together:',(await L()).together);
 console.log('errors',errs);await b.close();})();
