@@ -539,7 +539,7 @@ function gcard(t,ix,n){
 }
 function groupBoard(){
  var h='<div class="wallhead"><h2>Big and small</h2><span class="sub">Most important at the top of each list</span></div><div class="gboard">';
- [['big','Big jobs','Need steps, or take a while'],['small','Small jobs','One go, done']].forEach(function(c){
+ [['big','Big tasks','Need steps, or take a while'],['small','Small tasks','One go, done']].forEach(function(c){
   var l=gList(c[0]);
   h+='<section class="gcol '+c[0]+'" data-size="'+c[0]+'"><div class="ch"><span class="pill '+c[0]+'">'+(c[0]==='big'?'Big':'Small')+'</span><div><h3>'+c[1]+'</h3><div class="cnt">'+(l.length?l.length+(l.length>1?' jobs':' job'):c[2])+'</div></div></div>';
   if(!l.length)h+='<div class="empty">Drag a job here.</div>';
@@ -752,9 +752,9 @@ function panel(){
  h+='<div class="glab">What it is</div><input type="text" data-g="text" data-id="'+t.id+'" value="'+esc(t.text)+'">';
  var bigs=live().filter(function(x){return x.size==='big'&&!x.done&&x.id!==t.id&&x.id!==(par&&par.id);});
  if(par||(t.size!=='big'&&!ks.length)){
-  h+='<div class="glab">Part of a big job</div><select data-g="partof" data-id="'+t.id+'"><option value="">None: a job on its own</option>'+(par?'<option value="'+par.id+'" selected>'+esc(par.text)+'</option>':'')+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">It becomes the last step of that job and takes its area.</div>';
+  h+='<div class="glab">Part of a big task</div><select data-g="partof" data-id="'+t.id+'"><option value="">None: a job on its own</option>'+(par?'<option value="'+par.id+'" selected>'+esc(par.text)+'</option>':'')+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">It becomes the last step of that job and takes its area.</div>';
  }else if(!par&&t.size!=='big'&&ks.length&&bigs.length){
-  h+='<div class="glab">Move its steps into a big job</div><select data-g="mergeinto" data-id="'+t.id+'"><option value="">Choose a big job…</option>'+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">All its steps move across in order, ticks kept. Its details are added to that job’s, and this one is removed.</div>';
+  h+='<div class="glab">Move its steps into a big task</div><select data-g="mergeinto" data-id="'+t.id+'"><option value="">Choose a big task…</option>'+bigs.map(function(x){return '<option value="'+x.id+'">'+esc(x.text)+'</option>';}).join('')+'</select><div class="gnote">All its steps move across in order, ticks kept. Its details are added to that job’s, and this one is removed.</div>';
  }
  if(!par){
   h+='<div class="glab">Size</div>'+seg('gsize',[['small','Small'],['big','Big']],t.size==='big'?'big':'small',t.id);
@@ -930,7 +930,7 @@ function mailTab(){
  var N=(D.triage||[]).filter(function(x){return x.st==='new';}).sort(function(a,b){return (a.due||'9')<(b.due||'9')?-1:1;});
  if(N.length){
   var allWho=N.every(function(x){return x.who===N[0].who;})?N[0].who:'mixed';
-  h+='<div class="note2"><b>3. Set them up</b><br>Whose job it is, small or big, and how long before it is due it should come into the list. Big jobs, such as changing insurer, can be broken into steps later.';
+  h+='<div class="note2"><b>3. Set them up</b><br>Whose job it is, small or big, and how long before it is due it should come into the list. Big tasks, such as changing insurer, can be broken into steps later.';
   h+='<div class="glab">Whose job, for all of them</div>'+whoSeg('twhoall','',allWho)+'<div class="srow"><button class="on" data-act="taddall">Add all as they are ('+N.length+')</button><span class="tm2">as set below</span></div>';
   N.forEach(function(it){
    var bits=[it.from,it.often,it.due?'due '+nice(it.due):'',it.amount].filter(Boolean);
@@ -955,7 +955,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.36';
+var APP_VERSION='H1.37';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();

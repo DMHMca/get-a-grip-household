@@ -8,7 +8,7 @@ It began as a sister project of [Get a grip](https://github.com/DMHMca/get-a-gri
 
 **Planning (on a computer).**
 
-1. **Brainstorm**, in seven short rounds: a warm-up; a walk through each area of life (the house, cleaning, garden, car and paperwork part by part; bills, money, the kids, health and trips month by month); **Business ventures** (Well Spent, Bot League, StoryBella and any you add, each walked part by part); the year ahead; **Regular payments**; and finally **Group, sort and add details**, where notes become jobs, big jobs get steps, and each of the two lists (Big and Small) is put in priority order by dragging.
+1. **Brainstorm**, in seven short rounds: a warm-up; a walk through each area of life (the house, cleaning, garden, car and paperwork part by part; bills, money, the kids, health and trips month by month); **Business ventures** (Well Spent, Bot League, StoryBella and any you add, each walked part by part); the year ahead; **Regular payments**; and finally **Group, sort and add details**, where notes become jobs, big tasks get steps, and each of the two lists (Big and Small) is put in priority order by dragging.
 2. **Regular payments** (round 5) gives you a prompt to paste into an AI that can read your Gmail. It finds everything that comes round again (car tax, insurance, the TV licence and so on), goes through the list with you, and returns a small Markdown file. You bring the file in, say whose job each item is and when it should come into the list, and each one carries how to renew it and who with.
 3. **Share out**: every job goes to one person, never both, who owns it from start to finish.
 
