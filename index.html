@@ -89,7 +89,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ctl .homeb,.ctl .sidebtn{margin-right:0}
 .kindsel{display:flex;gap:6px;align-items:center}.kindsel .lbl{color:var(--mut);font-size:.9rem}.kindsel .sel1{min-height:40px;padding:0 14px;border-radius:999px}
-.ctl .hv{margin-left:auto}
+.ctl .dots{margin-left:auto;font-size:1.9rem;line-height:1;font-weight:900;padding:0 16px;min-width:48px;min-height:44px}
 .logo{width:46px;height:46px;border-radius:14px;background:var(--acc);display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(3,9px);gap:5px;place-content:center;box-shadow:var(--shadow)}
 .logo i{background:var(--onacc);border-radius:50%}
 .brand h1{font:700 1.7rem/1.1 var(--head);margin:0;color:var(--acc)}
@@ -117,7 +117,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
  .top2{padding:6px 0 2px;gap:6px}
  .brand h1{font-size:1.15rem}
  .kindsel .sel1{min-height:34px;padding:0 10px}
- .ctl .hv{margin-left:0}
+ .ctl .dots{font-size:1.7rem;min-width:42px;min-height:38px;padding:0 12px}
  .lbl2{display:none}
  .homeb{min-height:34px;padding:0 12px;margin-right:0;font-size:1rem}
  .sidebtn{min-height:34px;padding:0 10px;margin-right:0;font-size:.95rem}
@@ -977,7 +977,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.27';
+var APP_VERSION='H1.29';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -989,14 +989,16 @@ function kindCard(){return '';}
 /* the Help button opens the Help section that matches where you are (owner, 25 Nov 2026) */
 function helpKey(){if(L.tab==='alloc')return 'h-share';if(L.tab==='set')return '';return {warm:'h-planning',areas:'h-planning',year:'h-planning',pay:'h-payments',group:'h-board'}[L.stage]||'h-planning';}
 function head(){
- var ph=(L.kind==='phone'),needKind=!L.kind,needWho=L.kind==='phone'&&L.whoSet===false,g=guessKind();
- /* one tidy header (owner, 25 Nov 2026, H1.21): the name at the top left; underneath, ONE row: Home, Settings, the Planning/Getting a grip switch,
-    and (only until answered) the phone/computer buttons, or Lauren/Josh for a phone's first run. the switch to Getting a grip asks for the PIN (or offers to set one) on a computer. */
+ var ph=(L.kind==='phone'),g=guessKind();
+ /* one tidy header (owner, 25 Nov 2026): the name at the top left; underneath ONE row: Home, Help, the Planning/Getting a grip switch, the phone/computer
+    toggle and (once a kind is chosen) the Lauren/Josh toggle, which STAY so you can see and change what this device is; ⋮ (Settings) at the far right, the
+    same place on both sides. The switch to Getting a grip asks for the PIN on a computer that has one. */
  var h='<header class="top2"><div class="brandrow"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1></div></div><div class="ctl">';
- h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button><a class="homeb" href="help.html'+(helpKey()?'#'+helpKey():'')+'" aria-label="Help" title="Help for this page">?<span class="lbl2"> Help</span></a>';
+ h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><a class="homeb" href="help.html'+(helpKey()?'#'+helpKey():'')+'" aria-label="Help" title="Help for this page">?<span class="lbl2"> Help</span></a>';
  h+='<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>';
- if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
- if(needWho)h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
+ h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1'+(L.kind===o[0]?' on':'')+'" data-act="'+(L.kind?'kindhdr':'kindfirst')+'" data-v="'+o[0]+'" aria-label="'+o[2]+'" aria-pressed="'+(L.kind===o[0])+'" title="'+(!L.kind&&g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
+ if(L.kind)h+='<span class="kindsel" role="group" aria-label="Whose device">'+[0,1].map(function(i){return '<button class="sel1'+(L.whoSet&&L.me===i?' on':'')+'" data-act="'+(L.whoSet?'whoset':'whofirst')+'" data-v="'+i+'" aria-pressed="'+(!!L.whoSet&&L.me===i)+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
+ h+='<button class="homeb dots" data-act="more" aria-label="Settings" title="Settings">⋮</button>';
  h+='</div></header>'+'<div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
@@ -1087,6 +1089,7 @@ document.addEventListener('click',function(e){
  else if(act==='mcheck'){if(!swReg){location.reload();return;}ui.updMsg='Checking…';draw(true);var fin=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready: tap Update now at the top.':'You have the newest version ('+APP_VERSION+').';draw(true);},2500);};try{swReg.update().then(fin,fin);}catch(x){fin();}return;}
  else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
  else if(act==='kindset'){L.kind=b.getAttribute('data-v');}
+ else if(act==='kindhdr'){L.kind=b.getAttribute('data-v');if(L.kind==='phone'){L.together=false;}}
  else if(act==='lockset'){L.lockMin=+b.getAttribute('data-v');}
  else if(act==='pcreate'){L.pcode=pcodeNew();L.pjoin=false;ui.pshow=true;ui.perr='';}
  else if(act==='pshow'){ui.pshow=true;}
@@ -1101,7 +1104,7 @@ document.addEventListener('click',function(e){
  else if(act==='pinreset'){pinReset();return;}
  else if(act==='pinset'||act==='pinchange'){if(act==='pinchange'&&L.pin){ui.pin={mode:'enter',then:null,err:''};ui.pinNext='set';}else ui.pin={mode:'set',then:null,err:''};}
  else if(act==='pinremove'){ui.pin={mode:'enter',then:'remove',err:''};}
- else if(act==='tab'){if(b.getAttribute('data-t')==='day'){if(L.kind!=='phone'&&L.kind){if(L.pin&&L.together){ui.pin={mode:'enter',then:{together:false,go:true},err:''};draw(true);return;}if(!L.pin&&!L.nopin){ui.pin={mode:'offer',then:null,err:''};draw(true);return;}}persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
+ else if(act==='tab'){if(b.getAttribute('data-t')==='day'){if(L.kind!=='phone'&&L.kind){if(L.pin&&L.together){ui.pin={mode:'enter',then:{together:false,go:true},err:''};draw(true);return;}}persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
  else if(act==='stage'){var sk=b.getAttribute('data-k');if(sk==='share'){L.tab='alloc';}else{L.tab='brain';L.stage=sk;if(sk==='areas')L.walkOpen=false;}scrollTo(0,0);}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
  else if(act==='previ'){var pk=b.getAttribute('data-k'),pn=pk==='warm'?WARM.length:12;L.idx[pk]=Math.max(0,(idx(pk)%pn)-1);}

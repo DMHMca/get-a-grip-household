@@ -63,7 +63,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .apphead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 8px 0 16px;min-height:52px}
 .apphead + .topbar{padding-top:2px}
 .brand{flex:1;min-width:0;margin:0;font-size:14px;line-height:1.2;font-weight:700;letter-spacing:.02em;color:var(--accent)}
-.menubtn{flex:none;width:48px;height:48px;border:0;background:none;padding:0;color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:12px}
+.menubtn{flex:none;width:48px;height:44px;border:1.5px solid var(--accent);background:var(--card);padding:0;color:var(--accent);display:flex;align-items:center;justify-content:center;border-radius:999px}
+.menubtn svg{stroke-width:3;width:28px;height:28px}
 .addwrap{padding:8px 16px 0}
 .addbox{display:flex;align-items:center;min-height:56px;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:0 6px 0 16px;gap:8px}
 .addbox input,.addbox textarea{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:inherit;font-size:17px;color:var(--text);height:48px}
@@ -806,15 +807,17 @@ function lastAct(){
 
 function appHeader(){
   var isPhone=hhLoc().kind==='phone',nm=(hhLoc().me===1?HH.NAMES[1]:HH.NAMES[0]);
-  var pillCss='text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap;background:transparent;font:inherit;cursor:pointer;min-height:0';
+  var pillCss='text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap;background:transparent;font:inherit;cursor:pointer;min-height:0;margin-right:8px';
   var kids=[];
   if(isPhone){kids.push(h('p',{class:'brand',style:'margin:0 auto 0 12px',text:'Getting a grip · '+nm}));}
   else{
     /* a computer: Home = the start of THIS side (Today); the title says which side you are on and switches to Planning */
     kids.push(h('button',{class:'brand',type:'button','aria-label':'Home: back to Today',style:pillCss,onclick:function(){go('today');}},['⌂ Home']));
+    /* the same Home / Settings / Help buttons as the Planning side (owner, 25 Nov 2026, H1.28); a phone keeps its compact ⋮ menu */
+    kids.push(h('a',{class:'brand',href:'help.html#h-day','aria-label':'Help',style:pillCss},['? Help']));
     kids.push(h('a',{class:'brand',href:'./?side=plan',onclick:function(){hhLockIfPin();},'aria-label':'Switch to Planning',title:'Switch to Planning',style:'margin:0 8px 0 auto;padding-left:12px;text-decoration:none;color:inherit;white-space:nowrap'},[h('b',{style:'color:var(--accent)',text:'Getting a grip · '+nm}),' ⇄ Planning']));
   }
-  kids.push(h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
+  kids.push(h('button',{class:'menubtn','aria-label':isPhone?'More: Archive and Settings':'More: Archive and backup',onclick:function(){ui.sheet={type:'menu'};render();}},
       [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)]));
   return h('div',{class:'apphead'},kids);
 }
@@ -1053,7 +1056,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.27';
+var APP_VERSION='H1.29';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}

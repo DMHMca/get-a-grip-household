@@ -1,5 +1,5 @@
 // CHECK: household-view (now: the PIN gate on Getting a grip)
-// H1.27: on a computer the Planning ⇄ Getting a grip switch is the doorway to personal tasks. No PIN yet: it OFFERS to set one (or "No PIN on this computer").
+// H1.27: on a computer the Planning ⇄ Getting a grip switch is the doorway to personal tasks. No PIN by default (easier to demonstrate): it goes straight in; a PIN is set in Settings only if wanted.
 // With a PIN: leaving Getting a grip locks it, and the next press of the switch asks for the PIN. A phone is never asked. There is no Household view button.
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
@@ -9,16 +9,14 @@ const L=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')
 await p.goto(B);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.reload();await p.waitForTimeout(300);
 console.log('1 no Household view or Lock button in the header:',await p.locator('[data-act=together]').count()===0);
-await p.click('.sidebtn');await p.waitForTimeout(300);
-console.log('2 first press offers a PIN:',await p.locator('.gpanel h3').textContent(),'| buttons:',(await p.locator('.gpanel button').allTextContents()).join(' / '));
-await p.click('[data-act=pinoffer][data-v=skip]');await p.waitForTimeout(900);
-console.log('3 "No PIN on this computer" goes in:',here(),'| nopin:',(await L()).nopin);
+await p.click('.sidebtn');await p.waitForTimeout(900);
+console.log('2 no PIN by default: the first press goes straight in, no question:',here(),'| panel shown:',await p.locator('.gpanel').count());
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(700);await p.click('.sidebtn');await p.waitForTimeout(800);
-console.log('4 not asked again:',here());
+console.log('3 and again:',here());
 // set a PIN in Settings, then the doorway asks
 await p.goto(B+'?side=plan');await p.waitForTimeout(400);await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=pinset]');await p.waitForTimeout(200);
 await p.fill('#pin1','1357');await p.fill('#pin2','1357');await p.click('[data-act=pinok]');await p.waitForTimeout(300);
-console.log('5 PIN set; nopin cleared:',(await L()).nopin===false);
+console.log('5 PIN set in Settings:',!!(await L()).pin);
 await p.click('[data-act=home]');await p.click('.sidebtn');await p.waitForTimeout(800);console.log('6 right after setting it you are let in:',here());
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(800);
 console.log('7 leaving Getting a grip locked it:',(await L()).together);

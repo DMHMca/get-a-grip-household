@@ -15,7 +15,7 @@ console.log('1 first open: tab',await tabOn(),'| side pill:',await p.locator('.s
 await p.click('[data-act=stage][data-k=share]');await p.waitForTimeout(200);
 await p.goto(B);await p.waitForTimeout(500);console.log('2 reopened: remembers',await tabOn(),'(want 2 · Share out)');
 await p.goto(B+'?home=1');await p.waitForTimeout(500);console.log('3 Home link: goes to',await tabOn(),'| url',here());
-await p.click('[data-act=stage][data-k=share]');await p.click('.sidebtn');await p.waitForTimeout(300);await p.click('[data-act=pinoffer][data-v=skip]');await p.waitForTimeout(900);
+await p.click('[data-act=stage][data-k=share]');await p.click('.sidebtn');await p.waitForTimeout(900);
 console.log('4 the title switched to:',here(),'| side saved:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(900);console.log('5 reopened: lands on',here(),'(want tasks.html)');
 console.log('5b a computer is asked whose, here on Getting a grip:',await p.locator('[aria-label="Whose device is this"]').count(),'| none on the planning side');
