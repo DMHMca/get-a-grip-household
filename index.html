@@ -205,11 +205,13 @@ textarea{width:100%;min-height:120px;padding:10px;border:2px solid var(--line);b
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .day{max-width:640px;margin:auto}.day h2{font:700 1.5rem var(--head)}
 input[type=text]{min-height:44px;padding:6px 12px;border:2px solid var(--line);border-radius:12px;background:var(--card)}
-.steps{list-style:none;display:flex;gap:8px;flex-wrap:wrap;padding:0;margin:0 0 16px;counter-reset:s}
-.steps button{display:flex;align-items:center;gap:8px;border-radius:999px;padding:6px 16px 6px 6px}
-.steps .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--bg2);font-weight:700}
+.steps{list-style:none;display:flex;gap:5px;flex-wrap:nowrap;padding:0;margin:0 0 16px;counter-reset:s}
+.steps li{flex:1 1 0;min-width:0;display:flex}
+.steps button{display:flex;align-items:center;gap:6px;border-radius:16px;padding:4px 8px 4px 4px;flex:1;min-width:0;min-height:44px;font-size:.78rem;line-height:1.15;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.steps .num{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg2);font-weight:700;font-size:.75rem}
 .steps button.on .num{background:var(--onacc);color:var(--acc)}
 .steps button.past{color:var(--mut)}
+@media (max-width:600px){.steps{overflow-x:auto;padding-bottom:4px}.steps li{flex:0 0 112px}}
 .welcome{background:linear-gradient(135deg,var(--card),var(--bigbg));border:1px solid var(--line);border-radius:24px;padding:22px 26px;margin:0 0 18px;box-shadow:var(--shadow)}
 .welcome h2{font:700 1.6rem var(--head);margin:0 0 8px;color:var(--acc)}
 .welcome p{max-width:70ch;margin:0 0 10px}
@@ -307,7 +309,7 @@ var AREAS=[
   {n:'Coolant level',q:['When were the coolant, oil and screenwash last checked?','Ready for winter: antifreeze strong enough?'],s:['Check the coolant level','Top up the screenwash','Check the oil level','Get the antifreeze checked']}]},
  {k:'kids',n:'Kids',e:'🧒',c:'#F3D6CC',d:'#4A2E26',y:'What is happening for the kids in {M}: term dates, trips, clubs, birthdays?',mh:{8:['Back to school: uniform, shoes, kit'],6:['Summer holidays: childcare and camps'],9:['October half-term'],1:['February half-term'],11:['Christmas shows and parties']},s:['Sign the school trip form','Book holiday childcare','Buy new school shoes','Book swimming lessons','Sort the birthday party','Label the school uniform']},
  {k:'health',n:'Health',e:'🩺',c:'#D8E6EE',d:'#22394A',y:'Any appointments, check-ups, jabs or repeats due in {M}?',mh:{9:['Flu jabs are offered from the autumn']},s:['Book the dentist','Book eye tests','Order the repeat prescription','Book the flu jabs','Book a health check','Restock the first-aid kit']},
- {k:'business',n:'Business ventures',e:'🚀',c:'#CFDDE8',d:'#1F3447',y:'What needs doing for the ventures by {M}: launches, accounts, renewals, deadlines?',mh:{0:['Company and personal tax deadlines'],3:['New financial year planning']},s:['Finish the website SEO','Get the first app version working','Write the app store listing','Do the company accounts','Set up the business bank account','Register the domain','Get business insurance']},
+ {k:'business',notile:true,n:'Business ventures',e:'🚀',c:'#CFDDE8',d:'#1F3447',y:'What needs doing for the ventures by {M}: launches, accounts, renewals, deadlines?',mh:{0:['Company and personal tax deadlines'],3:['New financial year planning']},s:['Finish the website SEO','Get the first app version working','Write the app store listing','Do the company accounts','Set up the business bank account','Register the domain','Get business insurance']},
  {k:'trips',n:'Trips & fun',e:'✈️',c:'#EBDDF0',d:'#3F2B4A',y:'Any trips, days out, events or bookings for {M}?',mh:{0:['Book the summer holiday early'],1:['Check passports well before summer']},s:['Plan the summer holiday','Book a weekend away','Plan a day out','Check passport expiry dates','Buy travel insurance','Book the theatre tickets']},
  {k:'paper',n:'Paperwork',e:'📄',c:'#E5E0D6',d:'#3B372E',gq:'Anything missing, out of date or hard to find?',note:'Write down where things are kept, never the numbers or passwords themselves.',parts:[
   {n:'Identity documents',q:['Do you know where every passport, driving licence and certificate is?','Is anything expiring or lost?'],s:['Check passport expiry dates','Renew the driving licence photo','Find the birth certificates','Find the marriage certificate','Order replacement certificates']},
@@ -338,7 +340,7 @@ var VENTURES=[
  {k:'botleague',n:'Bot League',e:'🤖',c:'#D6E2F3',d:'#1E3248',v:true,parts:ventParts('Bot League')},
  {k:'storybella',n:'StoryBella',e:'📖',c:'#EBDDF0',d:'#3F2B4A',v:true,parts:ventParts('StoryBella')}];
 function allAreas(){return AREAS.concat(VENTURES).concat((D.cats||[]).filter(function(c){return !c.gone;}).map(function(c){return c.v?{k:c.k,n:c.n,e:'🚀',c:'#E5E0D6',d:'#3B372E',v:true,parts:ventParts(c.n),s:[],custom:true}:{k:c.k,n:c.n,e:'📌',c:'#E5E0D6',d:'#3B372E',y:'What needs doing for '+c.n+' in {M}?',s:[],custom:true};}));}
-function tilesList(v){return allAreas().filter(function(a){return !a.hidden&&!!a.v===!!v;});}
+function tilesList(v){return allAreas().filter(function(a){return !a.hidden&&!a.notile&&!!a.v===!!v;});}
 function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
 function nextArea(a){var l=tilesList(a.v),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
@@ -955,7 +957,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.37';
+var APP_VERSION='H1.38';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
