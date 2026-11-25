@@ -2,6 +2,7 @@
 // The basic flow: add a note on the wall, share it out to Lauren, find it in Getting a grip, set it up, give it to Josh, delete a step; nothing personal reaches the shared list.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:390,height:844}});const p=await c.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));

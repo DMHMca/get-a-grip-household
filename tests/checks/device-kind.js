@@ -30,7 +30,7 @@ await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]')
 await p.goto(B+'?home=1');await p.waitForTimeout(400);
 console.log('9 phone: Household view button:',await p.locator('[data-act=together]').count(),'| person chips:',await p.locator('.who').count(),'| tabs:',await tabs());
 // a phone that was left in Household view with a PIN is not trapped: it opens on Getting a grip with no PIN prompt
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.together=true;l.pin='abc';l.pinSalt='1';l.pinWho=0;l.kind='phone';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.together=true;l.pin='abc';l.pinSalt='1';l.pinWho=0;l.kind='phone';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.goto(B);await p.waitForTimeout(1500);console.log('9b stuck-in-Household-view phone opens:',here(),'| PIN panel shown:',await p.locator('#pin1').count());
 // phone with a job shared out: no quiet note
 await p.goto(B+'?home=1');await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=computer]');await p.waitForTimeout(200);

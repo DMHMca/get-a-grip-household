@@ -18,6 +18,6 @@ await p.click('[data-act=home]');await p.click('.sidebtn');await p.waitForTimeou
 console.log('4 the switch just goes in:',here(),'| PIN panel:',await p.locator('#pin1').count());
 await p.goto(B+'tasks.html');await p.waitForTimeout(500);console.log('5 the Getting a grip address is not bounced:',here());
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(700);console.log('6 and back to Planning:',here());
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.goto(B+'tasks.html');await p.waitForTimeout(600);console.log('7 a phone opens on Getting a grip:',here());
 console.log('errors',errs);await b.close();})();

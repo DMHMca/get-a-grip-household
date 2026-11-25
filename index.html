@@ -639,6 +639,7 @@ function kindRow(){
 }
 function reminders(){
  var h='<div class="note2"><b>Phone reminders</b><br>';
+ if(L.whoSet===false)return h+'Reminders go to the owner of this device, who has not been named yet. Choose the owner first: on a phone, tap Phone and then the name in the top row; on a computer, open Getting a grip.</div>';
  if(L.shared)return h+'A shared screen does not get reminders. Each of you turns them on on your own phone.</div>';
  if(!pushOk())return h+'This browser cannot show reminders. On Android, open the app in Chrome.</div>';
  if(L.push&&Notification.permission==='granted')return h+'On for '+esc(NAMES[L.me])+'’s jobs. A reminder comes a week before and the day before anything with a due date.<div class="srow"><button data-act="pushtest">Send a test reminder</button><button data-act="pushoff">Turn reminders off</button></div></div>';
@@ -919,7 +920,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.33';
+var APP_VERSION='H1.34';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();

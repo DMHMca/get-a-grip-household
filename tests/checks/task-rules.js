@@ -2,11 +2,12 @@
 // The adopted Get a grip task rules: nesting, merging steps, Part of a big job, a small job finishing itself, and the same-side rule on the phone.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:1300}});const p=await c.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
 const doc=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.doc.v2')));
-await p.goto(B+'?home=1');await p.waitForTimeout(300);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.goto(B+'?home=1');await p.waitForTimeout(300);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.evaluate(()=>{const T=(id,text,o)=>Object.assign({id,text,size:'small',area:'wild',to:0,done:false,n:1,updated:'2026-11-24T09:00:00Z'},o);
  localStorage.setItem('household.doc.v2',JSON.stringify({tasks:[
   T('big1','Redo the bathroom',{size:'big',area:'house',n:5,notes:'Budget £4k'}),

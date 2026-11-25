@@ -1055,7 +1055,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.33';
+var APP_VERSION='H1.34';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3337,7 +3337,10 @@ function hhEnsureAct(){
   return true;
 }
 /* shared document -> this app */
+/* a device with no named owner yet (whoSet false) takes and sends no household jobs: they go to the person whose device it is (owner, 25 Nov 2026, H1.34) */
+function hhNoOwner(){return hhLoc().whoSet===false;}
 function hhPull(){
+  if(hhNoOwner())return false;
   var d=hhDoc(),mine=hhMine(d),changed=hhEnsureAct(),mirror=hhMirror(),inMirror={};
   mirror.forEach(function(id){inMirror[id]=1;});
   var ids=Object.keys(mine);
@@ -3380,6 +3383,7 @@ function hhPull(){
 }
 /* this app -> shared document. Only Household tasks are looked at. */
 function hhPush(){
+  if(hhNoOwner())return;
   var d=hhDoc(),me=hhMe(),byId={},gone={},changed=false,mirror=hhMirror();
   d.tasks.forEach(function(t){byId[t.id]=t;});d.gone.forEach(function(g){gone[g.id]=1;});
   var here={};
@@ -3458,6 +3462,7 @@ function hhSync(){
   return round(2).catch(function(){}).then(function(){HH.busy=false;if(hhPull()|hhSurface())commit(true);});
 }
 function hhSurface(){
+  if(hhNoOwner())return false;
   var seen;try{seen=JSON.parse(LS.getItem('hh.surfaced')||'{}');}catch(e){seen={};}
   var due=S.tasks.filter(function(f){return isHH(f)&&!f.parent&&f.lead&&f.due&&!f.done&&!notYet(f)&&!seen[f.id+'@'+f.due];});
   if(!due.length)return false;

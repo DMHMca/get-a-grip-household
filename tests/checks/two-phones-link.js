@@ -2,6 +2,7 @@
 // Two phones linking through a pretend store: jobs, steps and sizes go both ways and a private task never reaches the store.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 const store={};
 async function mock(ctx){await ctx.route('https://household-store.dmhmca-apps.workers.dev/**',async r=>{

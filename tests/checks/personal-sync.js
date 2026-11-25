@@ -20,7 +20,7 @@ const B='http://localhost:8765/get-a-grip-household/';
   const b=await chromium.launch();
   const mk=async(me)=>{const c=await b.newContext({viewport:{width:1280,height:1300}});await wire(c);const p=await c.newPage();p.on('dialog',d=>d.accept());p.errs=[];p.on('pageerror',e=>p.errs.push(e.message));
     await p.goto(B+'?home=1');await p.waitForTimeout(300);
-    await p.evaluate(m=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.me=m;localStorage.setItem('household.local.v2',JSON.stringify(l));},me);return p;};
+    await p.evaluate(m=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.whoSet=true;l.me=m;localStorage.setItem('household.local.v2',JSON.stringify(l));},me);return p;};
   const A=await mk(0),B2=await mk(0);
   // A: make a personal code in Settings, Link
   await A.goto(B+'#set-link');await A.waitForTimeout(500);

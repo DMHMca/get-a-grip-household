@@ -2,6 +2,7 @@
 // The phone's Comes-into-the-list choice saves to the shared list and a job not yet due stays hidden.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(B);await p.waitForTimeout(200);

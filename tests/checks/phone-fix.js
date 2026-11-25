@@ -13,7 +13,7 @@ await p.click('[data-act=whofirst][data-v="1"]');await p.waitForTimeout(1200);
 console.log('2 chose Josh and phone:',here(),'|',await p.locator('.apphead .brand').allTextContents());
 // the trap: a phone left in Household view with a PIN
 await p.goto(B+'?home=1');await p.waitForTimeout(300);
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.together=true;l.pin='abc';l.pinSalt='1';l.pinWho=0;l.me=0;localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.whoSet=true;l.together=true;l.pin='abc';l.pinSalt='1';l.pinWho=0;l.me=0;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.goto(B);await p.waitForTimeout(1500);
 console.log('3 stuck phone opens on:',here(),'| PIN panel:',await p.locator('#pin1').count(),'| Household view still on:',await p.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')).together));
 // the planning header on a phone

@@ -6,7 +6,7 @@ const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:390,height:844}});const p=await c.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(B);await p.waitForTimeout(400);
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.reload();await p.waitForTimeout(300);
 console.log('Help button beside Settings:',await p.locator('header .ctl a[aria-label=Help]').count(),'| opens the section for this round:',await p.locator('header .ctl a[aria-label=Help]').getAttribute('href'));
 await p.click('[data-act=stage][data-k=group]');console.log('on round 5 it points at:',await p.locator('header .ctl a[aria-label=Help]').getAttribute('href'));

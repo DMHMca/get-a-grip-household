@@ -3,6 +3,7 @@
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 // Data file: tests/data/recurring.md (made fresh, with dates relative to today, by tests/data/make.js)
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 const store={};
 async function mock(ctx){await ctx.route('https://household-store.dmhmca-apps.workers.dev/**',async r=>{

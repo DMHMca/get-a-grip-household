@@ -3,13 +3,14 @@
 // back, counted from today, quiet until shortly before it is wanted, going to the other person when "take turns" is on; a bill with a due date keeps
 // counting from its due date; the phone sets and ticks a chore the same way; no due date means no reminder.
 const {chromium}=require('playwright');
+require('../lib/owner-named')(require('playwright').chromium);
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:1400}});const p=await c.newPage();
 const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());
 const doc=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('household.doc.v2')));
 const ymd=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);};
 await p.goto(B+'?home=1');await p.waitForTimeout(300);
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='computer';l.whoSet=true;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.reload();await p.waitForTimeout(400);
 await p.click('[data-act=stage][data-k=areas]');await p.waitForTimeout(200);
 await p.click('[data-act=area][data-k=clean]');await p.waitForTimeout(300);
@@ -35,7 +36,7 @@ await p.locator('article.card',{hasText:'Put things back where they live'}).loca
 if(!(await p.locator('.gpanel').count())){await p.click('[data-act=stage][data-k=warm]');}
 console.log('6 panel open:',await p.locator('.gpanel').count());
 // phone
-await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.me=1;localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.kind='phone';l.whoSet=true;l.me=1;localStorage.setItem('household.local.v2',JSON.stringify(l));});
 await p.goto(B+'tasks.html');await p.waitForTimeout(1200);
 const nm=await p.evaluate(()=>GAGH.S.tasks.filter(t=>t.text==='Hoover downstairs').map(t=>({w:t.wait,done:!!t.done})));
 console.log('7 phone (Josh) sees the new Hoover job:',JSON.stringify(nm));
