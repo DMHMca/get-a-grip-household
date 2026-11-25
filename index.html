@@ -35,6 +35,7 @@ button:hover{box-shadow:var(--shadow)}button:active{transform:scale(.98)}
 button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
 .sidebtn{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--tx);flex:none;margin-right:10px}
 .sidebtn b{color:var(--acc)}
+a.homeb{display:inline-flex;gap:.3em;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box}
 .homeb{font-weight:700;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--acc);color:var(--acc);background:var(--card);margin-right:10px;flex:none}
 .trow{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:10px;margin:6px 0;box-shadow:var(--shadow);color:var(--tx)}
 .trow .tb2{flex:1;min-width:0}.trow .tt2{font-weight:600}.trow .tm2{font-size:.8rem;color:var(--mut)}.trow.tdone{opacity:.7}
@@ -459,10 +460,8 @@ function stepper(){
  var all=STAGES.concat([{k:'share',n:'Share out'}]);
  return '<ol class="steps">'+all.map(function(s,i){var on=s.k==='share'?onShare:(!onShare&&s.k===L.stage);return '<li><button class="'+(on?'on':i<ci?'past':'')+'" data-act="stage" data-k="'+s.k+'"><span class="num">'+(i+1)+'</span>'+s.n+'</button></li>';}).join('')+'</ol>';
 }
-function welcome(){
- if(L.welcomed&&D.tasks.length)return '';
- return '<div class="welcome"><h2>Let’s get it all out of your heads</h2><p>Sit down together with this screen, for about half an hour. One of you types; both of you call things out. <b>Don’t decide who does what yet</b>, and don’t worry about wording. Every idea becomes a note on the wall below.</p><p>Six short rounds walk you through it: a warm-up, a walk through each area of your life (the house, cleaning, the garden and the car part by part; bills, the kids and the rest month by month through the coming year), the year ahead month by month, the regular payments (an AI can find them in your email), then grouping, sorting and adding details, with the most important at the top, and finally sharing the jobs out between you. Skip any round you like. <a href="help.html">New here? Read the short help.</a></p><div class="srow"><button class="on" data-act="begin">Start with the warm-up</button>'+(D.tasks.length?'':'<button data-act="example">Show me an example wall</button>')+'</div></div>';
-}
+/* the "Let's get it all out of your heads" card was removed (owner, 25 Nov 2026, H1.24): it is all in Help, which has its own button beside Settings */
+function welcome(){return '';}
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
  var h='<div class="note '+t.size+(ui.fresh===t.id?' fresh':'')+'"'+(L.stage==='group'?' draggable="true"':'')+' data-id="'+t.id+'" style="--ac:'+a.c+';--acd:'+a.d+';">';
@@ -474,7 +473,7 @@ function note(t,i){
  return h;
 }
 function wall(){
- var ts=live(),exn=exList().length,h='<div class="wallhead"><h2>The wall</h2><span class="sub">'+ts.length+(ts.length===1?' note':' notes')+(ts.length?' · '+ts.filter(function(t){return t.size==='big';}).length+' big':'')+'</span><span class="wallact">'+(exn?'<button class="mini" data-act="clearex">Remove the example notes ('+exn+')</button>':'')+'</span></div>';
+ var ts=live(),exn=exList().length,h='<div class="wallhead"><h2>The wall</h2><span class="sub">'+ts.length+(ts.length===1?' note':' notes')+(ts.length?' · '+ts.filter(function(t){return t.size==='big';}).length+' big':'')+'</span><span class="wallact">'+(!D.tasks.length?'<button class="mini" data-act="example">Show me an example wall</button>':'')+(exn?'<button class="mini" data-act="clearex">Remove the example notes ('+exn+')</button>':'')+'</span></div>';
  if(!ts.length)h+='<div class="empty">Notes will appear here as you call them out.</div>';
  var n=0;
  tilesList().concat([area('wild')]).forEach(function(a){var g=ts.filter(function(t){return (area(t.area)?t.area:'wild')===a.k;});if(!g.length)return;
@@ -974,7 +973,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.23';
+var APP_VERSION='H1.24';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -983,12 +982,14 @@ function checkUpdate(){if(swReg){try{swReg.update();}catch(e){}}}
 function updateBanner(){return ui.updateReady?'<div class="note2" role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1.5px solid var(--acc)"><b>A new version is ready</b><button class="on" data-act="mreload">Update now</button></div>':'';}
 /* the phone/computer and whose-phone questions now live in the header row (head()), so there is no separate card */
 function kindCard(){return '';}
+/* the Help button opens the Help section that matches where you are (owner, 25 Nov 2026) */
+function helpKey(){if(L.tab==='alloc')return 'h-share';if(L.tab==='set')return '';return {warm:'h-planning',areas:'h-planning',year:'h-planning',pay:'h-payments',group:'h-board'}[L.stage]||'h-planning';}
 function head(){
  var ph=(L.kind==='phone'),needKind=!L.kind,needWho=L.kind==='phone'&&L.whoSet===false,g=guessKind();
  /* one tidy header (owner, 25 Nov 2026, H1.21): the name at the top left; underneath, ONE row: Home, Settings, the Planning/Getting a grip switch,
     and (only until answered) the phone/computer buttons, or Lauren/Josh for a phone's first run. Household view sits at the far right. */
  var h='<header class="top2"><div class="brandrow"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1></div></div><div class="ctl">';
- h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>';
+ h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button><a class="homeb" href="help.html'+(helpKey()?'#'+helpKey():'')+'" aria-label="Help" title="Help for this page">?<span class="lbl2"> Help</span></a>';
  if(!hhOnly())h+='<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>';
  if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1'+(g===o[0]?' on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
  if(needWho)h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
