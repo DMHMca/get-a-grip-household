@@ -4,7 +4,7 @@
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const c=await b.newContext({viewport:{width:1280,height:1000}});await c.addInitScript(()=>{Object.defineProperty(Notification,'permission',{get:()=>'default'});});const p=await c.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
-await p.goto(B);await p.waitForTimeout(300);await p.click('nav.tabs >> text=Devices');await p.waitForTimeout(200);
+await p.goto(B);await p.waitForTimeout(300);await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=link]');await p.waitForTimeout(200);
 await p.locator('.day').screenshot({path:'dev1.png'});
 await p.click('[data-act=start]');await p.waitForTimeout(1500);
 await p.locator('.day').screenshot({path:'dev2.png'});

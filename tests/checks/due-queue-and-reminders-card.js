@@ -19,7 +19,7 @@ await p.getByRole('button',{name:'Automatic',exact:true}).click();await p.waitFo
 console.log('Today (automatic):',await p.evaluate(()=>{var pl=GAGH.S.plans[GAGH.S.plans.length-1];return pl.items.map(i=>GAGH.S.tasks.find(t=>t.id===i.tid).text).join(' | ');}));
 await p.screenshot({path:'today3.png'});
 await p.goto(B+'?home=1');await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2'));l.code='ABCDEFGH2345';localStorage.setItem('household.local.v2',JSON.stringify(l));});
-await p.reload();await p.waitForTimeout(400);await p.click('nav.tabs >> text=Devices');await p.waitForTimeout(300);
+await p.reload();await p.waitForTimeout(400);await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=link]');await p.waitForTimeout(300);
 await p.locator('.day').screenshot({path:'sharing2.png'});
 console.log('card:',(await p.locator('.day .note2').first().textContent()));
 console.log('errors',errs);await b.close();})();

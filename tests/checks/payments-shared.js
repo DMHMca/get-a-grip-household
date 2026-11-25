@@ -13,10 +13,10 @@ async function mock(ctx){await ctx.route('https://household-store.dmhmca-apps.wo
 (async()=>{const b=await chromium.launch();const errs=[];
 const cL=await b.newContext({viewport:{width:390,height:844}}),cJ=await b.newContext({viewport:{width:390,height:844}});await mock(cL);await mock(cJ);
 const L=await cL.newPage(),J=await cJ.newPage();[L,J].forEach(p=>{p.on('pageerror',e=>errs.push(e.message));p.on('dialog',d=>d.accept());});
-await L.goto(B+'?home=1');await L.waitForTimeout(400);await L.click('nav.tabs >> text=Devices');await L.click('[data-act=start]');await L.waitForTimeout(1200);
+await L.goto(B+'?home=1');await L.waitForTimeout(400);await L.click('[data-act=more]');await L.click('[data-act=stab][data-v=link]');await L.click('[data-act=start]');await L.waitForTimeout(1200);
 const code=await L.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')).code);
 await L.click('nav.tabs >> text=1 · Brainstorm');await L.click('[data-act=stage][data-k=pay]');await L.setInputFiles('#tfile',process.argv[2]);await L.waitForTimeout(2500);
-await J.goto(B+'?home=1');await J.waitForTimeout(300);await J.click('[data-act=me][data-i="1"]');await J.click('nav.tabs >> text=Devices');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
+await J.goto(B+'?home=1');await J.waitForTimeout(300);await J.click('[data-act=me][data-i="1"]');await J.click('[data-act=more]');await J.click('[data-act=stab][data-v=link]');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
 await J.click('nav.tabs >> text=1 · Brainstorm');await J.click('[data-act=stage][data-k=pay]');await J.waitForTimeout(300);
 console.log('Josh sees triage rows:',await J.locator('.trow').count());
 await J.locator('.trow',{hasText:'TV licence'}).locator('[data-act=tadd]').click();await J.waitForTimeout(2500);

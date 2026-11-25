@@ -13,11 +13,11 @@ async function mock(ctx){await ctx.route('https://household-store.dmhmca-apps.wo
 (async()=>{const b=await chromium.launch();const errs=[];
 const cL=await b.newContext({viewport:{width:390,height:844}}),cJ=await b.newContext({viewport:{width:390,height:844}});await mock(cL);await mock(cJ);
 const L=await cL.newPage(),J=await cJ.newPage();[L,J].forEach(p=>p.on('pageerror',e=>errs.push(e.message)));
-await L.goto(B);await L.waitForTimeout(500);await L.click('nav.tabs >> text=Devices');await L.click('[data-act=start]');await L.waitForTimeout(1500);
+await L.goto(B);await L.waitForTimeout(500);await L.click('[data-act=more]');await L.click('[data-act=stab][data-v=link]');await L.click('[data-act=start]');await L.waitForTimeout(1500);
 const code=await L.evaluate(()=>JSON.parse(localStorage.getItem('household.local.v2')).code);console.log('household started, code made:',!!code);
 await L.click('nav.tabs >> text=1 · Brainstorm');await L.fill('#qa','Service the boiler');await L.press('#qa','Enter');await L.waitForTimeout(300);
 await L.click('nav.tabs >> text=2 · Share out');await L.locator('article.card',{hasText:'Service the boiler'}).locator('[aria-label="Give to Josh"]').click();await L.waitForTimeout(2500);
-await J.goto(B);await J.waitForTimeout(400);await J.click('[data-act=me][data-i="1"]');await J.click('nav.tabs >> text=Devices');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
+await J.goto(B);await J.waitForTimeout(400);await J.click('[data-act=me][data-i="1"]');await J.click('[data-act=more]');await J.click('[data-act=stab][data-v=link]');await J.fill('#jc',code);await J.click('[data-act=join]');await J.waitForTimeout(1500);
 await J.goto(B+'tasks.html');await J.waitForTimeout(2000);
 console.log('Josh header:',await J.locator('.apphead').textContent());
 const has=await J.evaluate(()=>!!GAGH.S.tasks.find(t=>t.text==='Service the boiler'&&t.activityId==='hh'));console.log('Josh sees the job:',has);

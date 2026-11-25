@@ -42,13 +42,17 @@ th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertic
 th{white-space:nowrap}
 .note{background:var(--tint);border-radius:10px;padding:8px 12px;margin:12px 0}
 hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+.stabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0 12px;padding-bottom:4px}
+.stabs a{flex:none;display:inline-flex;align-items:center;min-height:38px;padding:4px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);text-decoration:none;font-size:.95rem}
+.stabs a.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 </style>
 </head>
 <body>
 <main>
-<a class="back" href="./" data-back>← Back to the app</a>
+<a class="back" href="./">← Back to the app</a>
+<nav class="stabs" aria-label="Settings"><a href="./#settings">General</a><a href="./#set-link">Link</a><a href="./#set-device">This device</a><a href="./#set-reminders">Reminders</a><a href="help.html" class="on" aria-current="page">Help</a><a href="privacy.html">Privacy</a></nav>
 <h1>Get a Grip Household: help</h1>
-<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026.</p>
+<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026 (H1.11).</p>
 
 <nav class="toc" aria-label="On this page">
 <b>On this page</b>
@@ -127,7 +131,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <li><b>Due within a week</b> and the job goes to the top of what Automatic picks for Today.</li>
 <li><b>Repeats.</b> Every week, month, 3 months, 6 months, year or 2 years. When you tick a repeating job the next one appears with its date moved on.</li>
 </ul>
-<p><b>To turn reminders on</b> (Android): on the Devices page, with the phone linked to the household, tap “Turn on reminders”, then Allow when Chrome asks, then “Send a test reminder”. A notification should appear within a few seconds. Do this on each person’s own phone.</p>
+<p><b>To turn reminders on</b> (Android): in Settings, open the Reminders tab (the phone must be linked to the household first), tap “Turn on reminders”, then Allow when Chrome asks, then “Send a test reminder”. A notification should appear within a few seconds. Do this on each person’s own phone.</p>
 </details>
 
 <details id="h-payments"><summary>Regular payments from your email</summary>
@@ -145,29 +149,30 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <details id="h-code"><summary>Linking devices: what the household code is</summary>
 <p>The household code is a key to one drawer in the shared store: a block of 12 random letters and numbers, such as K7QD-4XMB-92TH. There are no accounts and no passwords.</p>
 <ol>
-<li><b>Creating it.</b> On the Devices page tap “Create a household code”. Your browser makes the code and puts your list in a new drawer labelled with it.</li>
-<li><b>Linking another device.</b> On the other device, open Devices, type the code and tap “Link this device”. It fetches the drawer, merges it with anything it already has, and is linked.</li>
+<li><b>Creating it.</b> In Settings, open the Link tab and tap “Create a household code”. Your browser makes the code and puts your list in a new drawer labelled with it.</li>
+<li><b>Linking another device.</b> On the other device, open Settings, then the Link tab, type the code and tap “Link this device”. It fetches the drawer, merges it with anything it already has, and is linked.</li>
 <li><b>Staying in step.</b> Every device keeps a full copy. It checks the drawer when you open the app, when you come back to it, a second after any change, and every 20 seconds while it is open. Changes are merged job by job (the newest edit wins, and deletions are remembered), so two people can work at once.</li>
 </ol>
-<p>The code is <b>not a login</b>. Anyone who has it can read and change the list, so keep it between the two of you. Any linked device shows the code on its Devices page, so you only need to find it again if all of them are gone. “Unlink this device” stops that device syncing but leaves its copy. The only way to cancel a code is to start a new household.</p>
+<p>The code is <b>not a login</b>. Anyone who has it can read and change the list, so keep it between the two of you. Any linked device shows the code on its Link tab, so you only need to find it again if all of them are gone. “Unlink this device” stops that device syncing but leaves its copy. The only way to cancel a code is to start a new household.</p>
 </details>
 
 <details id="h-device"><summary>Phone or computer, Household view and the PIN</summary>
-<p>Each device says whose it is (Lauren or Josh) and, from its first opening, whether it is a <b>phone</b> or a <b>computer</b>. A phone is for doing: it opens on Getting a grip and keeps the planning pages behind “Planning” in its ⋮ menu. A computer is for planning together: it opens on Brainstorm. You can change it on the Devices page.</p>
+<p>Each device says whose it is (Lauren or Josh) and, from its first opening, whether it is a <b>phone</b> or a <b>computer</b>. A phone is for doing: it opens on Getting a grip and keeps the planning pages behind “Planning” in its ⋮ menu. A computer is for planning together: it opens on Brainstorm. You can change it in Settings, on the This device tab.</p>
+<p><b>A phone</b> is one person’s own device with its own lock, so it never shows Household view and never asks for a PIN: it just opens on Getting a grip. The rest of this section is about a computer.</p>
 <p><b>Household view</b> hides the Getting a grip side and every personal task, for when you look at the household together on one person’s own computer. The first time you use it you set a <b>PIN</b>, and you need that PIN to leave Household view. The PIN is stored on that device only. Five wrong tries means a 30-second wait. If you forget it, “Reset this device” removes the PIN <i>and the personal tasks kept on that device</i>, so a forgotten PIN never exposes anything. Household jobs come back from the shared list.</p>
 <p class="note">A PIN is a curtain, not a lock. It stops a casual look, but the tasks are still held in the browser on that device, so keep the device itself private.</p>
 </details>
 
 <details id="h-where"><summary>Where your information is kept</summary>
 <p><b>Personal tasks</b> are kept only in the browser on the device you typed them on. They are never part of the shared list and never sent anywhere. <b>The household list</b> is kept on each linked device and in one shared copy in a small store on Cloudflare, under your household code. The store belongs to the app’s owner, who could in principle read it, so don’t put passwords, card numbers or bank details in it. Supplier references for renewals are fine. The <a href="privacy.html">privacy page</a> says all this in plain English.</p>
-<p><b>Backups.</b> The ⋮ menu on the planning pages has “Download a backup” of the household list. The ⋮ menu on the Getting a grip side has backup and restore for the tasks on that device. There is no restore button for the household list yet.</p>
+<p><b>Backups.</b> Settings, General, has “Download a backup” of the household list. The ⋮ menu on the Getting a grip side has backup and restore for the tasks on that device. There is no restore button for the household list yet.</p>
 </details>
 
 <details id="h-trouble"><summary>When something looks wrong</summary>
-<p><b>A job isn’t on my phone.</b> Check the phone is linked (Devices shows the code), that the job has been shared out to you, and the Everything / Household / Personal buttons. A dated job may not be due to come in yet. The Activities page shows everything. “Sync now” on Devices forces a check.</p>
-<p><b>We see different lists.</b> Both devices must be linked with the same code. Give it 20 seconds, or tap “Sync now”.</p>
-<p><b>The app looks out of date.</b> ⋮ More, then “Check for a new version”, then “Update now” when it appears. The version number is at the foot of the page.</p>
-<p><b>Reminders don’t arrive.</b> They are set up for Chrome on Android, on a phone linked to the household, with notifications allowed for the site. Use “Send a test reminder” on Devices. They are only sent for jobs with a due date that belong to you.</p>
+<p><b>A job isn’t on my phone.</b> Check the phone is linked (Settings, Link tab shows the code), that the job has been shared out to you, and the Everything / Household / Personal buttons. A dated job may not be due to come in yet. The Activities page shows everything. “Sync now” on the Link tab forces a check.</p>
+<p><b>We see different lists.</b> Both devices must be linked with the same code. Give it 20 seconds, or tap “Sync now” on the Link tab.</p>
+<p><b>The app looks out of date.</b> ⋮ Settings, General, then “Check for a new version”, then “Update now” when it appears. The version number is at the foot of the page.</p>
+<p><b>Reminders don’t arrive.</b> They are set up for Chrome on Android, on a phone linked to the household, with notifications allowed for the site. Use “Send a test reminder” on the Reminders tab. They are only sent for jobs with a due date that belong to you.</p>
 <p><b>I forgot my PIN, or lost the code.</b> See “Phone or computer, Household view and the PIN” and “Linking devices”.</p>
 </details>
 
@@ -180,7 +185,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <p>No libraries and no build step: two static HTML files with inline CSS and vanilla JavaScript, one service worker, and one Cloudflare Worker. Hosting is GitHub Pages (branch <code>main</code>, root). The app shares the origin <code>dmhmca.github.io</code> with the owner’s personal Get a grip, so every storage key and cache name is prefixed to keep the two apart.</p>
 <div class="scroll"><table>
 <tr><th>File</th><th>What it is</th></tr>
-<tr><td><code>index.html</code></td><td>The planning side: Brainstorm, Share out, Devices, the ⋮ More panel, the detail panel, the PIN.</td></tr>
+<tr><td><code>index.html</code></td><td>The planning side: Brainstorm, Share out, the Settings page with its tabs, the detail panel, the PIN.</td></tr>
 <tr><td><code>tasks.html</code></td><td>The Getting a grip side: a fork of Get a grip (Today, Big, Small, Master, Activities and every edit screen) plus the household link that brings a person’s household jobs in and sends changes back.</td></tr>
 <tr><td><code>sw.js</code></td><td>Service worker. Pages are fetched network-first with <code>cache:'no-cache'</code> so a release shows at the next open. It also handles push and notification clicks.</td></tr>
 <tr><td><code>worker/worker.js</code></td><td>The Cloudflare Worker: the shared store, the reminder sign-ups, and the daily reminder job.</td></tr>
@@ -220,7 +225,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <li>Generate a VAPID key pair (below). Store the private half as a Worker <b>secret</b> named <code>VAPID_PRIVATE</code>, and never commit it. Put the public half in <code>worker/worker.js</code> (<code>VAPID_PUBLIC</code>) and in <code>index.html</code> (<code>VAPID_PUBLIC</code>).</li>
 <li>In <code>worker/worker.js</code> set <code>ORIGINS</code> to your Pages origin (CORS). In <code>index.html</code> set <code>SERVER</code>, and in <code>tasks.html</code> set <code>HH.SERVER</code>, to your Worker’s address.</li>
 <li>Change <code>VAPID_SUBJECT</code> in the Worker to your own site, and update the privacy page and the About links.</li>
-<li>Open the site, create a household code on Devices, link a second device with it, and check a note travels. Then turn on reminders and use “Send a test reminder”.</li>
+<li>Open the site, create a household code in Settings (the Link tab), link a second device with it, and check a note travels. Then turn on reminders and use “Send a test reminder”.</li>
 </ol>
 <p>I deployed the Worker through the Cloudflare API (a multipart upload with <code>main_module</code> and the <code>HOUSEHOLD</code> and <code>VAPID_PRIVATE</code> bindings, then a schedules call). The dashboard route above is the usual alternative, but I haven’t tried it.</p>
 <pre><code>// make the reminder keys (Node)
@@ -268,7 +273,7 @@ async function unseal(code, blob) {
 <p class="note">The household list cannot be scrambled the same way without losing reminders. The Worker has to read the due dates and owners to send them. Scrambling it would mean dropping server-side reminders, or sending the Worker a separate small reminders index.</p>
 
 <hr>
-<p><a class="back" href="./" data-back>← Back to the app</a></p>
+<p><a class="back" href="./">← Back to the app</a></p>
 </main>
 <script>
 (function(){
@@ -280,9 +285,6 @@ async function unseal(code, blob) {
     target.scrollIntoView();
   }
   window.addEventListener('hashchange',openFor);openFor();
-  Array.prototype.forEach.call(document.querySelectorAll('[data-back]'),function(a){
-    a.addEventListener('click',function(e){if(history.length>1&&document.referrer){e.preventDefault();history.back();}});
-  });
 })();
 </script>
 </body>

@@ -41,7 +41,7 @@ console.log('due field on personal task:',await p.locator('input[type=date]').co
 // Sharing tab reminders card
 await c.grantPermissions(['notifications']);
 await p.goto(B+'?home=1');await p.waitForTimeout(400);await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2'));l.code='ABCDEFGH2345';localStorage.setItem('household.local.v2',JSON.stringify(l));});
-await p.reload();await p.waitForTimeout(500);await p.click('nav.tabs >> text=Devices');await p.waitForTimeout(300);
+await p.reload();await p.waitForTimeout(500);await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=link]');await p.waitForTimeout(300);
 console.log('reminders card:',(await p.locator('.day').textContent()).includes('Turn on reminders'));
 await p.locator('.day').screenshot({path:'sharing.png'});
 console.log('errors',errs.filter(e=>!/Failed to fetch|NetworkError/.test(e)));await b.close();})();

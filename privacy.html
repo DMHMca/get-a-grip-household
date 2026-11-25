@@ -15,11 +15,15 @@ p,li{margin:8px 0}
 .muted{color:var(--muted);font-size:15px}
 a{color:var(--accent)}
 hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.stabs{display:flex;gap:6px;overflow-x:auto;margin:8px 0 12px;padding-bottom:4px}
+.stabs a{flex:none;display:inline-flex;align-items:center;min-height:38px;padding:4px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);text-decoration:none;font-size:.95rem}
+.stabs a.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 </style>
 </head>
 <body>
 <main>
 <p><a href="./">← Back to the app</a></p>
+<nav class="stabs" aria-label="Settings"><a href="./#settings">General</a><a href="./#set-link">Link</a><a href="./#set-device">This device</a><a href="./#set-reminders">Reminders</a><a href="help.html">Help</a><a href="privacy.html" class="on" aria-current="page">Privacy</a></nav>
 <h1>Get a Grip Household: privacy</h1>
 <p class="muted">Last updated 25 November 2026</p>
 
@@ -32,7 +36,7 @@ hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 <p>The jobs you plan together (the wall of notes, who each job is for, their steps, details and due dates, and the regular payments you bring in) make up the household list. A copy is kept on each linked device, and one shared copy is kept in a small store run on Cloudflare, under a random household code. <b>Anyone who has the household code can read and change the list</b>, so share it only with the person you live with. The store belongs to the app’s owner, who can technically see what it holds. Please do not put passwords, PINs, payment card numbers or bank account details in it. Supplier references such as a policy or customer number are fine if you choose to add them, because renewing usually needs them.</p>
 
 <h2>Reminders</h2>
-<p>If you turn on reminders on a phone, the notification address that your phone’s browser gives the app is stored in the same shared store, together with whether it belongs to Lauren or Josh. It is used only to send the reminders you asked for, a week and a day before a job’s due date. Turn reminders off on the Devices page, or unlink the device, and it is removed.</p>
+<p>If you turn on reminders on a phone, the notification address that your phone’s browser gives the app is stored in the same shared store, together with whether it belongs to Lauren or Josh. It is used only to send the reminders you asked for, a week and a day before a job’s due date. Turn reminders off in Settings (the Reminders tab), or unlink the device, and it is removed.</p>
 
 <h2>Regular payments and your email</h2>
 <p>The app never reads your email. The Regular payments step only gives you a prompt that you can paste into an AI of your own choosing that can read your Gmail. You check the list it produces and bring a file back into the app. What you give the AI, and what it keeps, is between you and that service.</p>
@@ -42,7 +46,7 @@ hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 
 <h2>Removing things</h2>
 <ul>
-<li>Unlink a device on the Devices page and it stops sharing. Its own copy stays until you clear the site’s data in the browser.</li>
+<li>Unlink a device in Settings (the Link tab) and it stops sharing. Its own copy stays until you clear the site’s data in the browser.</li>
 <li>“Reset this device” (offered if you forget the PIN) removes the PIN and the personal tasks kept on that device.</li>
 <li>To have the shared household list deleted from the store, ask the app’s owner.</li>
 </ul>

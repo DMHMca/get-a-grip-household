@@ -14,11 +14,12 @@ payments-shared:recurring
 payments-setup:agreed
 lead-on-phone:
 opening:
-more-menu:
+settings-tabs:
 renew-details:renew
 whose-job:agreed
 round-4-payments:agreed
 devices-page:
+phone-fix:
 household-view:
 device-kind:
 help-page:

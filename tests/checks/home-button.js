@@ -6,7 +6,7 @@ const B='http://localhost:8765/get-a-grip-household/';
 (async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
 const on=async()=>(await p.locator('nav.tabs button.on').textContent());
 await p.goto(B);await p.waitForTimeout(300);
-await p.click('nav.tabs >> text=Devices');await p.click('[data-act=home]');await p.waitForTimeout(200);console.log('from Sharing:',await on());
+await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=link]');await p.click('[data-act=home]');await p.waitForTimeout(200);console.log('from Sharing:',await on());
 await p.click('nav.tabs >> text=2 · Share out');await p.click('[data-act=home]');await p.waitForTimeout(200);console.log('from Share out:',await on());
 await p.click('nav.tabs >> text=3 · Getting a grip');await p.waitForTimeout(900);await p.screenshot({path:'home_myday.png'});
 await p.getByRole('button',{name:'Big',exact:true}).last().click();await p.waitForTimeout(200);

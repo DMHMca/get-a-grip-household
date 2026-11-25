@@ -19,19 +19,24 @@ await p.locator('span.l',{hasText:/^Planning$/}).click();await p.waitForTimeout(
 await p.click('[data-act=home]');await p.waitForTimeout(1200);console.log('4 Home on a phone goes to:',here());
 await p.goto(B);await p.waitForTimeout(1200);console.log('5 reopening the app:',here());
 await p.goto(B+'#share');await p.waitForTimeout(600);console.log('6 #share link not redirected:',here());
-await p.goto(B+'?home=1');await p.click('nav.tabs >> text=Devices');await p.waitForTimeout(200);
-console.log('7 Devices choice:',(await p.locator('[data-act=kindset].on').textContent()));
+await p.goto(B+'?home=1');await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.waitForTimeout(200);
+console.log('7 Settings, This device tab, choice:',(await p.locator('[data-act=kindset].on').textContent()));
 await p.screenshot({path:'dev_kind.png',fullPage:true});
 await p.click('[data-act=kindset][data-v=computer]');await p.waitForTimeout(200);
 await p.goto(B);await p.waitForTimeout(800);console.log('8 as a computer, opens on:',here(),'| round:',(await p.locator('.steps button.on').textContent()).trim());
 await p.click('[data-act=home]');await p.waitForTimeout(300);console.log('  Home on a computer stays:',here());
-// phone + Household view opens planning
-await p.click('nav.tabs >> text=Devices');await p.click('[data-act=kindset][data-v=phone]');await p.waitForTimeout(200);
-await p.click('[data-act=together]');await p.waitForTimeout(300);await p.fill('#pin1','1357');await p.fill('#pin2','1357');await p.click('[data-act=pinok]');await p.waitForTimeout(300);
-await p.goto(B);await p.waitForTimeout(800);console.log('9 phone in Household view opens:',here());
+// a phone has no Household view, no person chips and no PIN
+await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=phone]');await p.waitForTimeout(200);
+await p.goto(B+'?home=1');await p.waitForTimeout(400);
+console.log('9 phone: Household view button:',await p.locator('[data-act=together]').count(),'| person chips:',await p.locator('.who').count(),'| tabs:',await tabs());
+// a phone that was left in Household view with a PIN is not trapped: it opens on Getting a grip with no PIN prompt
+await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2')||'{}');l.together=true;l.pin='abc';l.pinSalt='1';l.pinWho=0;l.kind='phone';localStorage.setItem('household.local.v2',JSON.stringify(l));});
+await p.goto(B);await p.waitForTimeout(1500);console.log('9b stuck-in-Household-view phone opens:',here(),'| PIN panel shown:',await p.locator('#pin1').count());
 // phone with a job shared out: no quiet note
-await p.goto(B+'?home=1');await p.click('[data-act=together]');await p.fill('#pin1','1357');await p.press('#pin1','Enter');await p.waitForTimeout(300);
+await p.goto(B+'?home=1');await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=computer]');await p.waitForTimeout(200);
+await p.click('[data-act=home]');await p.waitForTimeout(200);
 await p.fill('#qa','Redo the bathroom');await p.press('#qa','Enter');await p.waitForTimeout(150);
 await p.click('nav.tabs >> text=2 · Share out');await p.locator('article.card',{hasText:'Redo the bathroom'}).locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(200);
+await p.click('[data-act=more]');await p.click('[data-act=stab][data-v=device]');await p.click('[data-act=kindset][data-v=phone]');await p.waitForTimeout(200);
 await p.goto(B);await p.waitForTimeout(1500);console.log('10 job shared out, phone opens:',here(),'| quiet note gone:',(await p.locator('text=Nothing shared out yet').count())===0);
 console.log('errors',errs);await b.close();})();

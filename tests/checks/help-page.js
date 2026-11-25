@@ -10,8 +10,8 @@ await p.evaluate(()=>{var l=JSON.parse(localStorage.getItem('household.local.v2'
 await p.reload();await p.waitForTimeout(300);
 console.log('welcome card link:',await p.locator('.welcome a[href="help.html"]').count());
 await p.click('[data-act=more]');await p.waitForTimeout(200);
-console.log('More panel link:',await p.locator('.gpanel a[href="help.html"]').count());
-await p.click('.gpanel a[href="help.html"]');await p.waitForTimeout(500);
+console.log('Settings tab row has Help:',await p.locator('.stabs a[href="help.html"]').count());
+await p.click('.stabs a[href="help.html"]');await p.waitForTimeout(500);
 console.log('opens Help:',await p.locator('h1').textContent());
 console.log("headings:",(await p.locator("h2").allTextContents()).join(" | "));
 console.log('essence paragraphs:',await p.locator('.essence h3').allTextContents());
@@ -30,7 +30,8 @@ await p.screenshot({path:'help_dark.png'});
 await p.evaluate(()=>localStorage.removeItem('gagh.gag.theme'));
 // from My day
 await p.goto(B+'tasks.html');await p.waitForTimeout(900);await p.locator('.menubtn').click();await p.waitForTimeout(300);
-console.log('My day menu link:',await p.locator('a[href="help.html"]').count());
-await p.locator('a[href="help.html"]').click();await p.waitForTimeout(500);
-await p.locator('.back').first().click();await p.waitForTimeout(700);console.log('Back returns to:',p.url().replace(B,'')||'(planning)');
+console.log('Getting a grip menu has Settings:',await p.locator('span.l',{hasText:/^Settings$/}).count());
+await p.locator('span.l',{hasText:/^Settings$/}).click();await p.waitForTimeout(700);
+await p.locator('.stabs a[href="help.html"]').first().click();await p.waitForTimeout(500);
+await p.locator('.back').first().click();await p.waitForTimeout(900);console.log('Back returns to the app:',p.url().replace(B,'')||'(planning)');
 console.log('errors',errs);await b.close();})();
