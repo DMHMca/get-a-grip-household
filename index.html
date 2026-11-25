@@ -221,8 +221,8 @@ input[type=text]{min-height:44px;padding:6px 12px;border:2px solid var(--line);b
 .wallhead{display:flex;align-items:baseline;gap:12px;margin:0 0 6px}.wallhead h2{font:700 1.4rem var(--head);margin:0}
 .grp{margin:0 0 18px}.grp h3{font:700 1.05rem var(--head);margin:0 0 8px}.grp .cnt{color:var(--mut);font:400 .85rem "Atkinson Hyperlegible",sans-serif}
 .notes{display:flex;flex-wrap:wrap;gap:12px}
-.note{position:relative;width:210px;min-height:120px;padding:10px 12px 8px;border-radius:4px 4px 16px 4px;background:var(--ac);color:#1F1B24;box-shadow:0 2px 3px rgba(40,20,60,.12),0 8px 18px rgba(40,20,60,.1);transform:rotate(var(--rot,0deg));cursor:grab;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
-.note:hover{transform:rotate(0) translateY(-2px)}
+.note{position:relative;width:210px;min-height:120px;padding:10px 12px 8px;border-radius:4px 4px 16px 4px;background:var(--ac);color:#1F1B24;box-shadow:0 2px 3px rgba(40,20,60,.12),0 8px 18px rgba(40,20,60,.1);cursor:grab;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
+.note:hover{transform:translateY(-2px)}
 .note.big{border-top:5px solid var(--big);width:240px}
 .note.small{border-top:5px solid var(--small)}
 .note.over{outline:3px dashed var(--acc);outline-offset:3px;transform:scale(1.03)}
@@ -452,7 +452,7 @@ function welcome(){
 }
 function note(t,i){
  var a=area(t.area)||area('wild'),ks=kids(t.id);
- var h='<div class="note '+t.size+(ui.fresh===t.id?' fresh':'')+'"'+(L.stage==='group'?' draggable="true"':'')+' data-id="'+t.id+'" style="--ac:'+a.c+';--acd:'+a.d+';--rot:'+((i%3)-1)*0.8+'deg">';
+ var h='<div class="note '+t.size+(ui.fresh===t.id?' fresh':'')+'"'+(L.stage==='group'?' draggable="true"':'')+' data-id="'+t.id+'" style="--ac:'+a.c+';--acd:'+a.d+';">';
  h+='<div class="ntop"><button class="pill '+t.size+'" data-act="size" data-id="'+t.id+'">'+(t.size==='big'?'Big':'Small')+'</button>'+(t.tag?'<span class="ntag">'+esc(t.tag)+'</span>':'')+'<button class="x" data-act="del" data-id="'+t.id+'" aria-label="Delete">×</button></div>';
  h+='<div class="ctext" data-act="edit" data-id="'+t.id+'">'+esc(t.text)+'</div>';
  if(ks.length)h+='<div class="nsubs">'+ks.map(function(k){return '<div class="ns">• <span data-act="gopen" data-id="'+k.id+'" style="cursor:pointer">'+esc(k.text)+'</span><button data-act="unlink" data-id="'+k.id+'" title="Take it out of this task" aria-label="Take out">↥</button></div>';}).join('')+'</div>';
@@ -960,7 +960,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.18';
+var APP_VERSION='H1.19';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
