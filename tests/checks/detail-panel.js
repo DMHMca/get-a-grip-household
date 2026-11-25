@@ -26,6 +26,6 @@ console.log('panel closed:',await p.locator('.gpanel').count()===0);
 let d=await doc();const j=d.tasks.find(t=>t.text==='Redo the bathroom'),st=d.tasks.filter(t=>t.parent===j.id);
 console.log('job:',j.size,j.dur,j.dev,j.notes,'to',j.to,' steps:',st.map(s=>s.text+'/'+(s.dur||'-')+'/'+(s.dev||'-')).join(', '));
 // My day shows the same
-await p.click('nav.tabs >> text=3 · Getting a grip');await p.waitForTimeout(1000);
+await p.click('.sidebtn');await p.waitForTimeout(1000);
 console.log('My day sees:',await p.evaluate(()=>{var S=GAGH.S,t=S.tasks.find(x=>x.text==='Redo the bathroom');var k=S.tasks.filter(x=>x.parent===t.id);return t.size+' '+t.dur+' '+t.notes+' | '+k.map(x=>x.text+':'+x.dur+':'+x.dev).join(', ');}));
 console.log('errors',errs);await b.close();})();

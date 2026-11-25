@@ -83,6 +83,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* header */
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 0 8px}
+.top2{display:flex;flex-direction:column;gap:8px;padding:14px 0 6px}
+.brandrow{display:flex;align-items:center;gap:12px}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctl .homeb,.ctl .sidebtn{margin-right:0}
+.kindsel{display:flex;gap:6px;align-items:center}.kindsel .lbl{color:var(--mut);font-size:.9rem}.kindsel .sel1{min-height:40px;padding:0 14px;border-radius:999px}
+.ctl .hv{margin-left:auto}
 .logo{width:46px;height:46px;border-radius:14px;background:var(--acc);display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(3,9px);gap:5px;place-content:center;box-shadow:var(--shadow)}
 .logo i{background:var(--onacc);border-radius:50%}
 .brand h1{font:700 1.7rem/1.1 var(--head);margin:0;color:var(--acc)}
@@ -107,11 +113,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
  body{font-size:14.5px;padding:0 12px 40px}
  button{min-height:38px;padding:6px 12px;border-radius:10px}
  .top{gap:8px;padding:8px 0 4px;flex-wrap:nowrap;align-items:center}
+ .top2{padding:6px 0 2px;gap:6px}
+ .brand h1{font-size:1.15rem}
+ .kindsel .sel1{min-height:34px;padding:0 10px}
+ .ctl .hv{margin-left:0}
  .lbl2{display:none}
  .homeb{min-height:34px;padding:0 12px;margin-right:0;font-size:1rem}
  .sidebtn{min-height:34px;padding:0 10px;margin-right:0;font-size:.95rem}
- .logo{width:32px;height:32px;border-radius:9px;grid-template-columns:repeat(2,6px);grid-template-rows:repeat(3,6px);gap:3px;margin-left:auto}
- .brand{display:none}
+ .logo{width:32px;height:32px;border-radius:9px;grid-template-columns:repeat(2,6px);grid-template-rows:repeat(3,6px);gap:3px}
  .who{margin-left:0;width:100%;gap:6px}
  .who .lbl{font-size:.8rem}
  .av{width:22px;height:22px;font-size:.75rem}
@@ -962,29 +971,26 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.20';
+var APP_VERSION='H1.22';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
 var swReg=null;
 function checkUpdate(){if(swReg){try{swReg.update();}catch(e){}}}
 function updateBanner(){return ui.updateReady?'<div class="note2" role="status" style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1.5px solid var(--acc)"><b>A new version is ready</b><button class="on" data-act="mreload">Update now</button></div>':'';}
-function kindCard(){
- var needKind=!L.kind,needWho=L.kind==='phone'&&L.whoSet===false;
- if(!needKind&&!needWho)return '';
- var g=guessKind();
- /* one slim bar, asked once. First the kind (phone or computer); a phone then also asks whose it is. A computer is asked whose on its Getting a grip side. */
- if(needWho)return '<div class="kindbar" role="group" aria-label="Whose phone"><div class="kt"><b>Whose phone is this?</b><span>Its household jobs are the ones shared out to this person.</span></div><div class="kb"><div class="gseg">'+[0,1].map(function(i){return '<button data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</div></div></div>';
- return '<div class="kindbar" role="group" aria-label="Set up this device"><div class="kt"><b>Set up this device</b><span>Phone: for doing. Computer: for planning together. Change it later in Settings.</span></div><div class="kb"><div class="gseg">'+[['phone','📱 Phone'],['computer','💻 Computer']].map(function(o){return '<button class="'+(g===o[0]?'on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" title="'+(g===o[0]?'This looks like a '+o[0]:'')+'">'+o[1]+'</button>';}).join('')+'</div></div></div>';
-}
+/* the phone/computer and whose-phone questions now live in the header row (head()), so there is no separate card */
+function kindCard(){return '';}
 function head(){
- var ph=(L.kind==='phone');
- var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>'+(hhOnly()?'':'<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>')+'<div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>'+(ph?esc(NAMES[L.me])+'’s phone':'Work it out together. Do a little each day.')+'</div></div>';
- if(!ph&&L.kind){
-  h+='<div class="who">';
-  h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button></div>';
- }
- h+='</header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · Getting a grip']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
+ var ph=(L.kind==='phone'),needKind=!L.kind,needWho=L.kind==='phone'&&L.whoSet===false,g=guessKind();
+ /* one tidy header (owner, 25 Nov 2026, H1.21): the name at the top left; underneath, ONE row: Home, Settings, the Planning/Getting a grip switch,
+    and (only until answered) the phone/computer buttons, or Lauren/Josh for a phone's first run. Household view sits at the far right. */
+ var h='<header class="top2"><div class="brandrow"><div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1></div></div><div class="ctl">';
+ h+='<button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>';
+ if(!hhOnly())h+='<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>';
+ if(needKind)h+='<span class="kindsel" role="group" aria-label="Phone or computer">'+[['phone','📱','Phone'],['computer','💻','Computer']].map(function(o){return '<button class="sel1'+(g===o[0]?' on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" aria-label="'+o[2]+'" title="'+(g===o[0]?'This looks like a '+o[0]:o[2])+'">'+o[1]+'<span class="lbl2"> '+o[2]+'</span></button>';}).join('')+'</span>';
+ if(needWho)h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
+ if(!ph&&L.kind)h+='<button class="pick hv'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button>';
+ h+='</div></header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out']].map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
 function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pjoin'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}

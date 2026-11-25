@@ -13,7 +13,7 @@ await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(300);
 console.log('Both column?', (await p.locator('.col h3',{hasText:'Both'}).count())>0);
 await p.screenshot({path:'share.png',fullPage:true});
 const card=p.locator('article.card',{hasText:'Fix the gutter'});await card.locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(300);
-await p.click('nav.tabs >> text=3 · Getting a grip');await p.waitForTimeout(1200);
+await p.click('.sidebtn');await p.waitForTimeout(1200);
 console.log('url:', p.url().replace(B,''));
 await p.screenshot({path:'myday.png'});
 await p.getByRole('button',{name:'Small',exact:true}).last().click();await p.waitForTimeout(300);
