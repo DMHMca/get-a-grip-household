@@ -18,7 +18,7 @@ Each device says once whether it is a **phone** (opens on Getting a grip) or a *
 
 ## Privacy by design
 
-- **Personal tasks never leave the device they were typed on.** They are not part of the household list and are never sent to the store.
+- **Personal tasks are never part of the household list.** They stay on the device they were typed on, unless that person turns on personal sync: then they are scrambled (encrypted) on the device and kept in step between their own devices under a personal code, and the store only holds unreadable data.
 - **The household list is shared** through a small store, keyed by a random 12-character household code. Anyone with the code can read and change the list, so keep it between the two of you.
 - Write down where things are and supplier references needed to renew, never passwords, card numbers or bank details.
 - See [privacy.html](privacy.html) for the plain-English version.
@@ -29,7 +29,7 @@ No libraries and no build step: static files on GitHub Pages (branch `main`, roo
 
 | File | What it is |
 |---|---|
-| `index.html` | The planning side: Brainstorm, Share out, Devices, the More menu. |
+| `index.html` | The planning side: Brainstorm, Share out, and the Settings page (tabs: General, Link, This device, Reminders). |
 | `tasks.html` | The Getting a grip side: Get a grip's code (Today, Big, Small, Master, Activities, every edit screen) plus the household link that brings a person's household jobs in and sends changes back. |
 | `sw.js` | Service worker: keeps the app installable and always fetches the newest page, and shows reminder notifications. |
 | `worker/worker.js` | The Cloudflare Worker: one JSON document per household code in KV (with a version check so two devices cannot overwrite each other), the reminder sign-ups, and a daily check that sends the reminders. |

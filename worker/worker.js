@@ -6,6 +6,7 @@
 // POST /unsub/<code> {endpoint}  -> stop reminders on that phone
 // POST /test/<code> {endpoint}   -> send that phone a test reminder now
 // POST /msg {endpoint}           -> the service worker collects the waiting reminder text (then it is deleted)
+// GET/PUT /p/<64 hex>            -> a person's ENCRYPTED personal-task blob {iv,ct}, same version check as /h (H1.15)
 //
 // REMINDERS. Once a day (cron, see `scheduled`) every household that has a phone signed up is checked. A job that
 // is not done and has a due date (`due`, YYYY-MM-DD) gets a reminder 7 days before and 1 day before, sent only to
@@ -14,7 +15,7 @@
 // That keeps the code small (no payload encryption). Pushes are signed with VAPID: the public key is VAPID_PUBLIC
 // below; the private key is the Worker secret VAPID_PRIVATE (a JWK), never in the repository.
 //
-// KV keys: h:<code> document; subs:<code> [{who,endpoint,at}]; msg:<hash> [{title,body}]; sent:<code>:<id>:<due>:<n> dedupe.
+// KV keys: p:<hash> encrypted personal blob; h:<code> document; subs:<code> [{who,endpoint,at}]; msg:<hash> [{title,body}]; sent:<code>:<id>:<due>:<n> dedupe.
 
 const ORIGINS = ['https://dmhmca.github.io'];
 const VAPID_PUBLIC = 'BIF4lUPSMG6iEYUr3hlgk-zocDazdFyzXfnTCgFRZzJyPhcbwqdD4SEBRVHIGPbxGVOYWaeIQCMeuhh3RWC_wM0';
@@ -49,6 +50,26 @@ export default {
         const have = cur ? cur.v : 0;
         if ((b.base || 0) !== have) return j(cur, 409);
         const next = { v: have + 1, doc: b.doc };
+        await env.HOUSEHOLD.put(key, JSON.stringify(next));
+        return j({ v: next.v });
+      }
+      return j({ error: 'method' }, 405);
+    }
+    // PERSONAL STORE (H1.15): one ENCRYPTED blob per person, found by the SHA-256 of their personal code. The browser encrypts
+    // (AES-GCM, key derived from the code) before sending, so this Worker only ever holds ciphertext and never learns the code.
+    m = path.match(/^\/p\/([0-9a-f]{64})$/);
+    if (m) {
+      const key = 'p:' + m[1];
+      const cur = await env.HOUSEHOLD.get(key, 'json');
+      if (req.method === 'GET') return cur ? j(cur) : j({ error: 'none' }, 404);
+      if (req.method === 'PUT') {
+        const text = await req.text();
+        if (text.length > 1500000) return j({ error: 'too big' }, 413);
+        let b; try { b = JSON.parse(text); } catch (e) { return j({ error: 'bad json' }, 400); }
+        if (!b || !b.doc || typeof b.doc.iv !== 'string' || typeof b.doc.ct !== 'string') return j({ error: 'bad body' }, 400);
+        const have = cur ? cur.v : 0;
+        if ((b.base || 0) !== have) return j(cur, 409);
+        const next = { v: have + 1, doc: { iv: b.doc.iv, ct: b.doc.ct } };
         await env.HOUSEHOLD.put(key, JSON.stringify(next));
         return j({ v: next.v });
       }

@@ -65,6 +65,14 @@ const fs = require('fs'), os = require('os'), path = require('path'), crypto = r
   check('the push signature verifies', sigOk);
   check('the test reminder text is queued', (await (await call('/msg', { endpoint: epL })).json())[0]?.body === 'Reminders are working on this phone.');
 
+  // personal store (H1.15)
+  const pid = 'a'.repeat(64), pcall = (m, body, id) => worker.fetch(new Request('https://x/p/' + (id || pid), { method: m, headers: { Origin: 'https://dmhmca.github.io' }, body: body ? JSON.stringify(body) : undefined }), env);
+  check('an unknown personal blob is 404', (await pcall('GET')).status === 404);
+  check('a personal blob must look encrypted', (await pcall('PUT', { base: 0, doc: { tasks: [] } })).status === 400);
+  check('the first save works', (await (await pcall('PUT', { base: 0, doc: { iv: 'aa', ct: 'bb' } })).json()).v === 1);
+  check('a stale save gets 409 with the current copy', (await pcall('PUT', { base: 0, doc: { iv: 'cc', ct: 'dd' } })).status === 409);
+  check('it reads back what was saved', (await (await pcall('GET')).json()).doc.ct === 'bb');
+  check('a bad id is refused', (await pcall('GET', null, 'xyz')).status === 404);
   console.log(failures.length ? '\n' + failures.length + ' failed' : '\nall passed');
   process.exit(failures.length ? 1 : 0);
 })();

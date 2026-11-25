@@ -26,3 +26,4 @@ help-page:
 worker-logic:
 side-and-lock:
 chores:
+personal-sync:

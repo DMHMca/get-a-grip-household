@@ -52,7 +52,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <a class="back" href="./">← Back to the app</a>
 <nav class="stabs" aria-label="Settings"><a href="./#settings">General</a><a href="./#set-link">Link</a><a href="./#set-device">This device</a><a href="./#set-reminders">Reminders</a><a href="help.html" class="on" aria-current="page">Help</a><a href="privacy.html">Privacy</a></nav>
 <h1>Get a Grip Household: help</h1>
-<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026 (H1.14).</p>
+<p class="muted">Short on purpose. Read the first part, dip into the rest when you need it. Last updated 25 November 2026 (H1.15).</p>
 
 <nav class="toc" aria-label="On this page">
 <b>On this page</b>
@@ -169,8 +169,13 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <p class="note">A PIN is a curtain, not a lock. It stops a casual look, but the tasks are still held in the browser on that device, so keep the device itself private.</p>
 </details>
 
+<details id="h-psync"><summary>Personal sync: your own tasks on your other devices</summary>
+<p>Your personal tasks live on the device where you typed them. If you also use a laptop, or have a second phone, you can keep your personal tasks in step between your own devices. It is separate from the household list and from the household code.</p>
+<p>On one device open Settings, then Link, and choose <b>Create a personal code</b>. It is 16 letters and numbers. Write it down somewhere only you can see. On your other device, open the same place, type the code in and choose <b>Join with a personal code</b>, then open Getting a grip: your personal tasks arrive. After that the two keep each other up to date by themselves, and Settings inside Getting a grip shows when it last synced. Today’s menu is not synced: each device builds its own day.</p>
+<p>Your tasks are scrambled on the device before they are sent, so the store, and the person who runs it, cannot read them. That also means <b>if you lose the code, the synced copy cannot be recovered</b>. Do not use the household code here, and do not share your personal code with anyone, including your partner.</p>
+</details>
 <details id="h-where"><summary>Where your information is kept</summary>
-<p><b>Personal tasks</b> are kept only in the browser on the device you typed them on. They are never part of the shared list and never sent anywhere. <b>The household list</b> is kept on each linked device and in one shared copy in a small store on Cloudflare, under your household code. The store belongs to the app’s owner, who could in principle read it, so don’t put passwords, card numbers or bank details in it. Supplier references for renewals are fine. The <a href="privacy.html">privacy page</a> says all this in plain English.</p>
+<p><b>Personal tasks</b> are kept in the browser on the device you typed them on, and are never part of the shared household list. If you turn on <b>personal sync</b> (Settings, Link: make a personal code on one device, join with it on your other devices), your personal tasks are also kept in step between <i>your own</i> devices. They are scrambled on the device first, so the store holds only unreadable data and does not know your code. Lose the code and the synced copy cannot be recovered (each device still has its own). <b>The household list</b> is kept on each linked device and in one shared copy in a small store on Cloudflare, under your household code. That copy is readable by the app’s owner, who could in principle read it, so don’t put passwords, card numbers or bank details in it. Supplier references for renewals are fine. The <a href="privacy.html">privacy page</a> says all this in plain English.</p>
 <p><b>Backups.</b> Settings, General, has “Download a backup” of the household list. The ⋮ menu on the Getting a grip side has backup and restore for the tasks on that device. There is no restore button for the household list yet.</p>
 </details>
 
@@ -244,7 +249,8 @@ console.log('VAPID_PUBLIC =', pub);                       // goes in the code
 console.log('VAPID_PRIVATE =', JSON.stringify({ kty: 'EC', crv: 'P-256', d: j.d, x: j.x, y: j.y })); // secret</code></pre>
 
 <h3>Scrambling personal tasks</h3>
-<p><b>Today there is nothing to scramble:</b> personal tasks never leave the device. Personal sync between a person’s own devices is <b>not built</b>. The design below is what I would do, and none of it is tested.</p>
+<p><b>This is now built (H1.15).</b> The list below is how it works. It has been tested against the real Worker code with a pretend database and two scripted browsers (<code>tests/checks/personal-sync.js</code>), but never against the live store from a real phone. The snippet after the list is the original sketch; the working code is the PERSONAL SYNC block in <code>tasks.html</code> (<code>pPrep</code>, <code>pEnc</code>, <code>pDec</code>, <code>pDoc</code>, <code>pApply</code>, <code>pCycle</code>) and the <code>/p/&lt;sha256 of code&gt;</code> route in <code>worker/worker.js</code>.</p>
+<p>Differences from the sketch: the code is 16 random characters from a 32-letter alphabet (80 bits), the drawer id is <code>SHA-256('gagh-personal-id:'+code)</code>, the key is PBKDF2 (150,000 rounds) of the code, today’s plans are not synced, and the household activities are kept out and put back in their old places after each merge.</p>
 <ul>
 <li><b>Separate drawer, separate code.</b> Each person gets a personal code that is never the household code. Add a second Worker route such as <code>/p/&lt;id&gt;</code> that copies the <code>/h</code> GET/PUT/409 logic with a larger size limit. The drawer id is a hash of the code, so the store never sees the code itself.</li>
 <li><b>Encrypt on the device.</b> Derive an AES-GCM key from the code, encrypt the personal data with a fresh random IV, and upload only <code>{iv, ct}</code>. The store, and anyone with the Cloudflare login, then holds only ciphertext.</li>

@@ -556,6 +556,26 @@ function day(){
 }
 /* DEVICES page (was "Sharing"; reworded 25 Nov 2026 because the owner found it confusing): 1 linking devices with the household code,
    2 privacy (PIN), 3 phone reminders. Each section says plainly what it is for. */
+/* PERSONAL SYNC (H1.15): this person's own personal tasks, kept in step between their own devices through the Cloudflare store, encrypted,
+   under a personal code that is NOT the household code. The syncing itself runs on the Getting a grip side (tasks.html); this is where
+   the code is made or typed in. */
+var PCH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function pcodeNew(){var r=new Uint8Array(16),o='';crypto.getRandomValues(r);for(var i=0;i<16;i++)o+=PCH[r[i]%32];return o;}
+function pcodeShow(c){return c.replace(/(.{4})(?=.)/g,'$1-');}
+function pcodeNorm(v){return (v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function pstat(){try{return JSON.parse(localStorage.getItem('household.pstat.v1')||'{}');}catch(e){return {};}}
+function personalBox(){
+ var h='<div class="note2"><b>Your personal tasks, on your own devices</b><br>';
+ if(L.pcode){
+  var st=pstat();
+  h+='Personal sync is <b>on</b> for '+esc(NAMES[L.me])+'. Your personal tasks (never the household jobs) are kept in step between your own devices, scrambled on the way: the store holds only unreadable data.<br>'+(st.err?'<b>'+esc(st.err)+'</b>':st.at?'Last synced '+esc(new Date(st.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}))+'.':'Waiting for the first sync: open Getting a grip.')+'<br>';
+  h+=(ui.pshow?'Your personal code is<div class="code">'+esc(pcodeShow(L.pcode))+'</div>To link your other phone or computer, choose “Join with a personal code” there and type this in. Keep it to yourself, and never use the household code here.<div class="srow"><button data-act="phide">Hide the code</button><button data-act="poff">Turn personal sync off</button></div>':'<div class="srow"><button data-act="pshow">Show my personal code</button><button data-act="poff">Turn personal sync off</button></div>');
+  h+='</div>';return h;
+ }
+ h+='Your personal tasks live only on this device. To have them on your other phone or computer as well, make a <b>personal code</b> here and type it into your other device. It is your own code, separate from the household code, and it scrambles your tasks before they leave the device, so nobody else, including whoever runs the store, can read them. <b>Lose the code and the synced copy cannot be recovered</b> (the tasks on each device stay).<div class="srow"><button class="on" data-act="pcreate">Create a personal code</button></div>';
+ h+='<div class="glab" style="margin-top:12px">Already have one? Join with it</div><div class="srow"><input type="text" id="pjoin" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" style="min-width:230px;text-transform:uppercase"><button data-act="pjoinok">Join with a personal code</button></div>'+(ui.perr?'<p class="gnote" style="font-weight:700">'+esc(ui.perr)+'</p>':'')+'</div>';
+ return h;
+}
 function linkTab(){
  var h='';
  h+='<div class="note2"><b>Link your devices</b><br>';
@@ -564,7 +584,7 @@ function linkTab(){
  }else{
   h+='One household list is shared between your devices through a code. One of you creates the code once; every other device (each phone, a computer you use together) is linked by typing it in.<div class="srow"><button class="on" data-act="start">Create a household code</button></div><div class="srow"><input type="text" id="jc" placeholder="Code, for example K7QD-4XMB-92TH" autocapitalize="characters" size="26"><button data-act="join">Link this device</button></div><div class="srow"><button data-act="locally">Just try it on this device for now</button></div></div>';
  }
- return h;
+ return h+personalBox();
 }
 /* SETTINGS (owner, 25 Nov 2026, H1.11): the ⋮ button opens one Settings page with TABS instead of headings down a page:
    General (version, appearance, backup), Link (the household code), This device (whose, phone or computer, PIN), Reminders;
@@ -937,7 +957,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.14';
+var APP_VERSION='H1.15';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -960,7 +980,7 @@ function head(){
  h+='</header><nav class="tabs">'+[['brain','1 · Brainstorm'],['alloc','2 · Share out'],['day','3 · Getting a grip']].filter(function(x){return !(x[0]==='day'&&hhOnly());}).map(function(x){return '<button class="'+(L.tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</nav><div class="status" id="st">'+esc(ui.status)+'</div>';
  return h;
 }
-function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
+function typing(){var a=document.activeElement;return a&&(a.id==='qa'||a.id==='pjoin'||a.id==='tpaste'||a.id==='pin1'||a.id==='pin2'||a.hasAttribute('data-brk')||a.hasAttribute('data-addfor')||a.isContentEditable||!!(a.closest&&a.closest('.gpanel')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)));}
 function draw(force){
  if(!force&&typing()){ui.defer=true;return;}
  ui.defer=false;
@@ -1048,6 +1068,11 @@ document.addEventListener('click',function(e){
  else if(act==='mbackup'){var blob=new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),u=URL.createObjectURL(blob),an=document.createElement('a');an.href=u;an.download='household-backup-'+today()+'.json';document.body.appendChild(an);an.click();setTimeout(function(){URL.revokeObjectURL(u);an.remove();},500);return;}
  else if(act==='kindset'){L.kind=b.getAttribute('data-v');}
  else if(act==='lockset'){L.lockMin=+b.getAttribute('data-v');}
+ else if(act==='pcreate'){L.pcode=pcodeNew();L.pjoin=false;ui.pshow=true;ui.perr='';}
+ else if(act==='pshow'){ui.pshow=true;}
+ else if(act==='phide'){ui.pshow=false;}
+ else if(act==='poff'){if(confirm('Turn personal sync off on this device? Your tasks stay here. Your other devices keep their own copies.')){L.pcode='';L.pjoin=false;ui.pshow=false;try{localStorage.removeItem('household.pstat.v1');}catch(e){}}}
+ else if(act==='pjoinok'){var pv=pcodeNorm((document.getElementById('pjoin')||{}).value);if(pv.length!==16||/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/.test(pv)){ui.perr='A personal code is 16 letters and numbers, like XXXX-XXXX-XXXX-XXXX.';}else if(L.code&&pv===L.code){ui.perr='That is the household code. Your personal code is a different one, made on your own device.';}else{L.pcode=pv;L.pjoin=true;ui.perr='';ui.pshow=false;try{localStorage.removeItem('household.pstat.v1');}catch(e){}ui.status='Joined. Open Getting a grip to bring your tasks across.';}}
  else if(act==='kindfirst'){L.kind=b.getAttribute('data-v');persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}

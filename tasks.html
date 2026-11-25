@@ -330,7 +330,7 @@ function commit(fromSync){
   var ok=true;
   try{LS.setItem(KEY,JSON.stringify(S));}catch(e){ok=false;}
   ui.status=ok?'device':'failed';
-  if(fromSync===true){softRender();}else{render();scheduleSync();}
+  if(fromSync===true){softRender();}else{render();scheduleSync();pSchedule();}
 }
 if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist();}catch(e){}}
 
@@ -1053,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.14';
+var APP_VERSION='H1.15';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -2605,6 +2605,7 @@ function viewSettings(){
   })));
   parts.push(h('h3',{class:'sect',text:'Your tasks'}));
   parts.push(row('Archive',arch===1?'1 archived activity':arch+' archived activities',function(){goSub('archive');}));
+  parts.push(row('Personal sync',pSummary(),function(){if(hhLoc().pcode){pSync();}else location.href='./#set-link';}));
   parts.push(row('Sync',syncSummary(),openSync));
   parts.push(h('h3',{class:'sect',text:'Backup'}));
   parts.push(h('p',{class:'note',text:ui.status==='failed'?'Could not save. Your device storage may be full or blocked.':'Saved on this device only unless you turn on Sync.'}));
@@ -3470,9 +3471,97 @@ function hhStart(){
   /* the planning page open in another tab changed the shared document */
   window.addEventListener('storage',function(e){if(e.key===HH.DKEY||e.key===HH.LKEY){if(hhPull())commit(true);}});
 }
+
+/* =================== PERSONAL SYNC (H1.15) ===================
+   A person's PERSONAL tasks, kept in step between their own devices (their phone and their laptop) through the Cloudflare store, under a
+   separate PERSONAL CODE (never the household code). Household jobs (activities 'hh…') are left out: they travel by the household list.
+   The browser encrypts everything (AES-GCM, key derived from the code with PBKDF2) before sending, so the store only ever holds scrambled
+   data and never learns the code (it finds the blob by the SHA-256 of the code). Merged with the same rules as the old Drive sync (mergeDocs).
+   Today's plans are not synced: each device builds its own day. The code is set up in Settings, Link (index.html). */
+var PS={key:null,code:'',id:'',busy:false,again:false,t:0};
+function pHex(buf){return Array.prototype.map.call(new Uint8Array(buf),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
+function pB64(buf){var b=new Uint8Array(buf),s2='';for(var i=0;i<b.length;i++)s2+=String.fromCharCode(b[i]);return btoa(s2);}
+function pUn64(x){var b=atob(x),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+function pPrep(code){
+  if(PS.code===code&&PS.key)return Promise.resolve();
+  var en=new TextEncoder();
+  return crypto.subtle.digest('SHA-256',en.encode('gagh-personal-id:'+code)).then(function(hh){
+    PS.id=pHex(hh);
+    return crypto.subtle.importKey('raw',en.encode(code),'PBKDF2',false,['deriveKey']);
+  }).then(function(km){
+    return crypto.subtle.deriveKey({name:'PBKDF2',salt:en.encode('gagh-personal-key'),iterations:150000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  }).then(function(k){PS.key=k;PS.code=code;});
+}
+function pEnc(obj){
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  return crypto.subtle.encrypt({name:'AES-GCM',iv:iv},PS.key,new TextEncoder().encode(JSON.stringify(obj))).then(function(ct){return {iv:pB64(iv),ct:pB64(ct)};});
+}
+function pDec(doc){
+  return crypto.subtle.decrypt({name:'AES-GCM',iv:pUn64(doc.iv)},PS.key,pUn64(doc.ct)).then(function(b){return JSON.parse(new TextDecoder().decode(b));});
+}
+function pDoc(){
+  return JSON.parse(JSON.stringify({v:2,activities:S.activities.filter(function(a){return String(a.id).indexOf('hh')!==0;}),
+    tasks:S.tasks.filter(function(t){return !isHH(t);}).map(stripGs),gone:S.gone||[],ord:S.ord||{t:'',a:''},plans:[]}));
+}
+/* put the merged personal part back, leaving the household activities and jobs exactly as they are, in their old places */
+function pApply(m){
+  if(stable(pDoc())===stable(Object.assign({},m,{plans:[]})))return false;
+  var hhActs=S.activities.filter(function(a){return String(a.id).indexOf('hh')===0;});
+  var keepHH=[];S.tasks.forEach(function(t,i){if(isHH(t))keepHH.push({t:t,i:i});});
+  var gs={};S.tasks.forEach(function(t){if(t.gs)gs[t.id]=t.gs;});
+  var tasks=m.tasks.map(function(t){if(!t.gs&&gs[t.id])t.gs=gs[t.id];return t;});
+  keepHH.forEach(function(x){tasks.splice(Math.min(x.i,tasks.length),0,x.t);});
+  S.activities=m.activities.concat(hhActs);S.tasks=tasks;S.gone=m.gone;S.ord=m.ord;
+  migrateParts();
+  return true;
+}
+function pStat(o){try{localStorage.setItem('household.pstat.v1',JSON.stringify(o));}catch(e){}}
+function pReq(method,body){
+  return fetch(HH.SERVER+'/p/'+PS.id,{method:method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+}
+function pCycle(n){
+  return pReq('GET').then(function(r){return r.status===404?{v:0,doc:null}:r.json();}).then(function(rem){
+    if(rem&&rem.error)throw new Error('The store said '+rem.error);
+    var base=rem.v||0;
+    return (rem.doc?pDec(rem.doc).catch(function(){throw new Error('That personal code does not open this list. Check it, character by character.');}):Promise.resolve(null)).then(function(remote){
+      if(!remote&&hhLoc().pjoin)throw new Error('No personal list was found with that code. Check it, character by character.');
+      var local=pDoc(),merged=remote?mergeDocs(local,remote):local;
+      var changedHere=remote?pApply(merged):false;
+      if(changedHere)commit(true);
+      hhSetLoc({pjoin:false});
+      if(remote&&stable(merged)===stable(Object.assign({},remote,{plans:[]}))){return;}
+      return pEnc(merged).then(function(en){return pReq('PUT',{base:base,doc:en});}).then(function(r){
+        if(r.status===409&&n<3)return pCycle(n+1);
+        if(!r.ok)throw new Error('The store said '+r.status+'.');
+      });
+    });
+  });
+}
+function pSync(){
+  var code=hhLoc().pcode;
+  if(!code||!window.crypto||!crypto.subtle)return Promise.resolve();
+  if(PS.busy){PS.again=true;return Promise.resolve();}
+  PS.busy=true;
+  return pPrep(code).then(function(){return pCycle(0);}).then(function(){pStat({at:new Date().toISOString(),err:''});}).catch(function(e){
+    pStat({at:(function(){try{return (JSON.parse(localStorage.getItem('household.pstat.v1')||'{}')).at||'';}catch(x){return '';}})(),err:(e instanceof TypeError)?'Could not reach the store. It will try again.':(e&&e.message)||'Something went wrong.'});
+  }).then(function(){PS.busy=false;if(PS.again){PS.again=false;setTimeout(pSync,800);}if(ui.view==='settings')softRender();});
+}
+function pSchedule(){if(!hhLoc().pcode)return;clearTimeout(PS.t);PS.t=setTimeout(pSync,2500);}
+function pStart(){
+  setTimeout(pSync,1500);
+  setInterval(function(){if(document.visibilityState==='visible')pSync();},30000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')pSync();});
+}
+function pSummary(){
+  if(!hhLoc().pcode)return 'Off: personal tasks stay on this device';
+  var st={};try{st=JSON.parse(localStorage.getItem('household.pstat.v1')||'{}');}catch(e){}
+  if(st.err)return st.err;
+  return st.at?'On. Last synced '+new Date(st.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'On. Waiting for the first sync';
+}
 /* =================== END HOUSEHOLD LINK =================== */
 if(migrateParts()){try{LS.setItem(KEY,JSON.stringify(S));}catch(e){}}
 hhStart();
+pStart();
 /* remember that this device was last on Getting a grip, and lock after a quiet spell (computers with a PIN) */
 (function(){
   hhSetLoc({side:'grip'});
