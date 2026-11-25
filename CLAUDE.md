@@ -36,6 +36,8 @@ Everything below this section is the DECISION LOG, written as the app grew. Wher
 
 **Tests.** `tests/` holds the scripted-browser checks (`tests/run.sh`, `tests/README.md`). They print what they saw; read the lines as well as the pass or fail.
 
+**Owner's thought, parked (25 Nov 2026, not critical):** he may later switch from his old personal Get a grip to the personal side of this app (the Gmail regular-payments scan is the draw). No separate Cloudflare instance is needed: personal sync already gives him a private encrypted drawer on the same Worker. If he goes ahead: a SOLO setting (header says "Getting a grip", no Lauren/Josh name, no Planning or Household view), and check that a backup file from the old app restores here. Run both side by side for a week first.
+
 **Not built (all need the owner's decision before building).** Routine chores with "how often" (Lauren's input, below: may a chore alternate? a daily cap?); (personal sync is now BUILT, see H1.15); a compulsory daily household slot; the "house file"; a wall display; accountability helpers; Stage 5 hand-over items (the repository is on the owner's GitHub account and the store on his Cloudflare account; Josh would want his own of each).
 
 
