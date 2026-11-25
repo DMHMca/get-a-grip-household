@@ -14,7 +14,7 @@ It began as a sister project of [Get a grip](https://github.com/DMHMca/get-a-gri
 
 **Getting a grip (on a phone).** Each person's phone opens on **Getting a grip**, which is [Get a grip](https://github.com/DMHMca/get-a-grip)'s Today screen: one big step and a few small things, never the whole mountain. The household jobs shared out to that person sit alongside their own personal tasks, with a Household / Personal / Everything switch. The planning pages are tucked behind "Planning" in the ⋮ menu. A dated job can stay out of sight until a chosen time before it is due (four weeks is the default for regular payments), then it arrives at the top of the list, and a phone reminder comes a week and a day before.
 
-Each device says once whether it is a **phone** (opens on Getting a grip) or a **computer** (opens on Brainstorm), and whose it is (Lauren or Josh); both can be changed in Settings. On a computer, the Planning ⇄ Getting a grip button is the doorway to personal tasks: it offers to set a PIN, and once one is set it asks for it each time (and after a quiet spell). A phone never has a PIN.
+Each device says once whether it is a **phone** (opens on Getting a grip) or a **computer** (opens on Brainstorm), and whose it is (Lauren or Josh); both can be changed in Settings. On a computer, the Planning ⇄ Getting a grip button is the doorway to personal tasks. There is no PIN by default; Settings, Security has one section each for Lauren and Josh, and once a PIN is set it is asked each time (and after a quiet spell). A phone never has a PIN.
 
 ## Privacy by design
 

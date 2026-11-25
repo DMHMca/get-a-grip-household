@@ -24,7 +24,7 @@ console.log('   answered: bar gone',await p.locator('[aria-label="Whose device i
 await p.getByRole('link',{name:/Switch to Planning/}).click();await p.waitForTimeout(800);console.log('6 title back: ',here(),await tabOn(),'| side:',(await L()).side);
 await p.goto(B);await p.waitForTimeout(500);console.log('7 reopened after planning: stays on',here());
 // ---- lock
-await setL({pin:'x',pinSalt:'s',pinWho:0,lockMin:2,me:0,kind:'computer',side:'grip'});
+await setL({pins:{0:{h:'x',s:'s'}},lockMin:2,me:0,kind:'computer',side:'grip'});
 await p.clock.install();await p.goto(B+'tasks.html');await p.waitForTimeout(500);
 await p.clock.runFor(60*1000);console.log('8 after 1 quiet minute, still on',here());
 await p.clock.runFor(90*1000);await p.waitForTimeout(800);

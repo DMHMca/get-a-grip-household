@@ -331,7 +331,7 @@ var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house',whoSet:false});
 /* always open at the start: Brainstorm, Warm up, first question (owner, 25 Nov 2026) */
 function toStart(){L.tab='brain';L.stage='warm';L.idx.warm=0;L.walkOpen=false;}
 /* where an address with a #hash points. Settings has sub-tabs (General, Link, This device, Reminders; Help and Privacy are their own pages). */
-function tabFromHash(h){return {'#share':['alloc'],'#tasks':['alloc'],'#sharing':['set','link'],'#devices':['set','link'],'#settings':['set','general'],'#set-general':['set','general'],'#set-link':['set','link'],'#set-device':['set','device'],'#set-reminders':['set','reminders'],'#email':['pay'],'#payments':['pay']}[h]||null;}
+function tabFromHash(h){return {'#share':['alloc'],'#tasks':['alloc'],'#sharing':['set','link'],'#devices':['set','link'],'#settings':['set','general'],'#set-general':['set','general'],'#set-link':['set','link'],'#set-device':['set','device'],'#set-security':['set','security'],'#set-reminders':['set','reminders'],'#email':['pay'],'#payments':['pay']}[h]||null;}
 var HT=tabFromHash(location.hash);
 /* REMEMBER THE LAST PAGE (owner, 25 Nov 2026, H1.12): the very first open lands on Warm up; after that a computer comes back to the planning page
    (Brainstorm round, or Share out) it was last on, and to the side it was last on. Home (?home=1) goes to the start of Brainstorm again;
@@ -342,9 +342,12 @@ L.tab=HT?(HT[0]==='pay'?'brain':HT[0]):((!HOMEQ&&L.opened&&(savedTab==='brain'||
 if(!L.stage)L.stage='warm';if(L.stage==='rooms')L.stage='areas';if(!L.idx)L.idx={};if(!L.part)L.part={};
 if(L.shared){L.shared=false;L.together=true;}
 /* with no PIN there is nothing to unlock with, so a device can never be left locked (H1.26) */
-if(L.together&&!L.pin)L.together=false;
+if(L.together&&!(L.pins&&L.pins[L.me===1?1:0]))L.together=false;
 /* WHOSE (owner, 25 Nov 2026, H1.20): Planning is always both of them, so whose device it is is asked only for a phone (once, at the start) and on a computer's Getting a grip side. L.whoSet: false = not yet answered; devices that already had a kind count as answered. */
 if(L.whoSet===undefined)L.whoSet=!!L.kind;
+/* one PIN per person (H1.30): move the old single PIN across */
+if(L.pin&&!L.pins){L.pins={};L.pins[L.pinWho===1?1:0]={h:L.pin,s:L.pinSalt||''};}
+delete L.pin;delete L.pinSalt;delete L.pinWho;if(!L.pins)L.pins={};
 /* DEVICE KIND (owner, 25 Nov 2026, H1.8): L.kind is 'phone' (for DOING: opens on Getting a grip, planning tucked behind "Planning")
    or 'computer' (for PLANNING TOGETHER: opens on Brainstorm). Asked once, on the first open (a card at the top), remembered, and
    changeable on Devices. A device with no answer yet behaves as a computer. Household view always opens on the planning pages.
@@ -354,7 +357,7 @@ function opensOnMyDay(){return L.kind==='phone'&&L.whoSet!==false;}
 if(L.kind==='phone'&&(L.together||L.shared)){L.together=false;L.shared=false;persist();}
 function guessKind(){try{return (matchMedia('(pointer:coarse)').matches&&Math.min(screen.width,screen.height)<700)?'phone':'computer';}catch(e){return 'computer';}}
 /* a computer that was last on Getting a grip opens there again (Household view always opens on planning) */
-function opensOnGrip(){return L.kind==='computer'&&L.side==='grip'&&!L.pin&&!L.together&&!L.shared;}
+function opensOnGrip(){return L.kind==='computer'&&L.side==='grip'&&!(L.pins&&L.pins[L.me===1?1:0])&&!L.together&&!L.shared;}
 var REDIR=!location.hash&&!HOMEQ&&!SIDEQ&&(opensOnMyDay()||opensOnGrip());
 if(REDIR){
   document.documentElement.style.visibility='hidden';
@@ -606,7 +609,7 @@ function linkTab(){
 /* SETTINGS (owner, 25 Nov 2026, H1.11): the ⋮ button opens one Settings page with TABS instead of headings down a page:
    General (version, appearance, backup), Link (the household code), This device (whose, phone or computer, PIN), Reminders;
    Help and Privacy are their own pages with the same row of tabs on them. */
-var STABS=[['general','General'],['link','Link'],['device','This device'],['reminders','Reminders']];
+var STABS=[['general','General'],['link','Link'],['device','This device'],['security','Security'],['reminders','Reminders']];
 function generalTab(){
  var th=getTheme();
  var h='<div class="note2"><b>Version</b><br>This is version <b>'+APP_VERSION+'</b>.<div class="srow"><button data-act="mcheck">Check for a new version</button></div>'+(ui.updMsg?'<div class="gnote">'+esc(ui.updMsg)+'</div>':'')+'</div>';
@@ -621,7 +624,7 @@ function deviceTab(){
  var h='<div class="note2"><b>Whose device is this?</b><br>'+whoSeg2('whoset')+'</div>';
  h+=kindRow();
  if(L.kind==='phone')h+='<div class="note2"><b>PIN</b><br>A phone does not need one: it has its own lock. A PIN is for a laptop that the two of you sit at together.</div>';
- else{h+=pinRow();if(L.pin)h+=lockRow();}
+ else h+='<div class="note2"><b>PINs</b><br>PINs are on the <button class="lnk" data-act="stab" data-v="security">Security tab</button>.</div>';
  return h;
 }
 function settingsView(){
@@ -630,6 +633,7 @@ function settingsView(){
  if(st==='general')h+=generalTab();
  else if(st==='link')h+=linkTab();
  else if(st==='device')h+=deviceTab();
+ else if(st==='security')h+=securityTab();
  else h+=L.code?reminders():'<div class="note2"><b>Phone reminders</b><br>Reminders need this phone to be linked to the household first. Open the Link tab.</div>';
  return h+'</div>';
 }
@@ -815,13 +819,18 @@ function tasksTab(){
  if(un)h+='<p class="sub">'+un+' job'+(un>1?'s are':' is')+' still to share out. <button class="lnk" data-act="tab" data-t="alloc">Go to Share out</button></p>';
  return h+'</div>';
 }
-/* ---- DEVICE PIN (owner, 22 Nov 2026). Personal tasks belong to the DEVICE (they are kept in this browser), so once the device's
-   owner sets a PIN, it is asked for whenever personal things would come into view: leaving "Household view",
-   or switching the device to the other person. Stored only on this device as a salted SHA-256 hash (L.pin, L.pinSalt, L.pinWho).
-   A curtain against a casual tap, not strong security (the data is still in the browser). Forgotten PIN: "Reset" removes the PIN AND
-   this device's personal tasks, so nothing private is exposed. ---- */
-function pinHash(pin){var b=new TextEncoder().encode((L.pinSalt||'')+':'+pin);return crypto.subtle.digest('SHA-256',b).then(function(h){return Array.from(new Uint8Array(h)).map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
-function needPin(next){if(L.kind==='phone')return false;return !!L.pin&&(hhOnly()||(next.me!==undefined&&next.me!==L.me));}
+/* ---- PINs (owner, 25 Nov 2026, H1.30): one PIN each for Lauren and Josh, set on the Settings Security tab, kept on THIS device only as a salted
+   SHA-256 hash (L.pins[0|1]={h,s}). A PIN guards that person's way into Getting a grip on a computer: the Planning ⇄ Getting a grip switch asks for
+   the PIN of the person this device is set to, and switching the device to a person who has a PIN asks for THEIR PIN. Leaving Getting a grip, or a quiet
+   spell, locks it again. A curtain against a casual tap, not strong security: the personal tasks are still held in this browser, one set per device
+   (so on a computer shared by both, both PINs guard the same set; separate personal tasks need separate devices). Forgotten PIN: "Reset this device"
+   removes all PINs AND this device's personal tasks, so nothing private is exposed. ---- */
+function pinOf(i){return (L.pins&&L.pins[i])||null;}
+function curPin(){return pinOf(L.me===1?1:0);}
+function anyPin(){return !!(pinOf(0)||pinOf(1));}
+function pinHash(pin,salt){var b=new TextEncoder().encode((salt||'')+':'+pin);return crypto.subtle.digest('SHA-256',b).then(function(h){return Array.from(new Uint8Array(h)).map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function needPin(next){if(L.kind==='phone')return false;if(next.me!==undefined&&next.me!==L.me)return !!pinOf(next.me);if(next.together===false)return !!curPin();return false;}
+function pinWhoFor(n){return n&&n.me!==undefined?n.me:L.me;}
 function applyMove(n){
  if(n.me!==undefined){L.whoSet=true;L.shared=false;L.together=false;var old=L.me;L.me=n.me;if(old!==L.me&&L.push&&L.code)navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription();}).then(function(sub){if(sub)pushSend('/sub/',{who:L.me,sub:sub.toJSON()});}).catch(function(){});}
  if(n.together!==undefined){L.together=n.together;if(!n.together)L.shared=false;}
@@ -830,46 +839,50 @@ function applyMove(n){
  persist();
  if(n.go){location.href='tasks.html';}
 }
-function askMove(n){if(needPin(n)){ui.pin={mode:'enter',then:n,err:''};}else applyMove(n);}
+function askMove(n){if(needPin(n)){ui.pin={mode:'enter',then:n,err:'',who:pinWhoFor(n)};}else applyMove(n);}
 function pinPanel(){
- var P=ui.pin,who=NAMES[L.pinWho===1?1:0];
+ var P=ui.pin,wi=P.who===1?1:0,who=NAMES[wi];
  var h='<div class="gsheet"><div class="gpanel" role="dialog" aria-modal="true" aria-label="PIN" style="max-width:420px">';
- if(P.mode==='offer')return h+'<h3>Protect '+esc(NAMES[L.me])+'’s personal tasks?</h3><p class="gnote">Getting a grip shows '+esc(NAMES[L.me])+'’s personal tasks and household jobs. If other people can use this computer, set a PIN: it will be asked each time you open Getting a grip from here. A phone doesn’t need one.</p><div class="gfoot"><button data-act="pinoffer" data-v="skip">No PIN on this computer</button><button class="on" data-act="pinoffer" data-v="set">Set a PIN</button></div><div class="gfoot"><button data-act="pincancel">Cancel</button></div></div></div>';
  if(P.mode==='set'){
-  h+='<h3>Set a PIN for this device</h3><p class="gnote">It belongs to '+esc(NAMES[L.me])+', whose personal tasks are kept on this device. It will be asked each time you open Getting a grip from the Planning side of this computer, and after a quiet spell, or before switching to the other person. Four to eight numbers.</p>';
+  h+='<h3>Set '+esc(who)+'’s PIN</h3><p class="gnote">It is asked when '+esc(who)+' opens Getting a grip on this computer, and after a quiet spell. Four to eight numbers. It stays on this device only.</p>';
   h+='<input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="New PIN" maxlength="8"><input type="password" inputmode="numeric" autocomplete="off" id="pin2" placeholder="The same PIN again" maxlength="8" style="margin-top:8px">';
  }else{
-  h+='<h3>'+esc(who)+'’s PIN</h3><p class="gnote">This device holds '+esc(who)+'’s personal tasks. Enter the PIN to carry on.</p><input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="PIN" maxlength="8">';
+  h+='<h3>'+esc(who)+'’s PIN</h3><p class="gnote">Enter '+esc(who)+'’s PIN to carry on.</p><input type="password" inputmode="numeric" autocomplete="off" id="pin1" placeholder="PIN" maxlength="8">';
  }
  if(P.err)h+='<p class="gnote" style="color:var(--small);font-weight:700">'+esc(P.err)+'</p>';
  h+='<div class="gfoot"><button data-act="pincancel">Cancel</button><button class="on" data-act="pinok">'+(P.mode==='set'?'Set PIN':'OK')+'</button></div>';
- if(P.mode==='enter')h+='<p class="gnote" style="margin-top:14px">Forgotten it? <button class="lnk" data-act="pinreset">Reset this device</button>: this removes the PIN and the personal tasks kept on this device, so nothing private can be seen.</p>';
+ if(P.mode==='enter')h+='<p class="gnote" style="margin-top:14px">Forgotten it? <button class="lnk" data-act="pinreset">Reset this device</button>: this removes every PIN and the personal tasks kept on this device, so nothing private can be seen.</p>';
  return h+'</div></div>';
 }
 function pinOk(){
- var P=ui.pin,a=(document.getElementById('pin1')||{}).value||'',b=(document.getElementById('pin2')||{}).value||'';
+ var P=ui.pin,wi=P.who===1?1:0,a=(document.getElementById('pin1')||{}).value||'',b=(document.getElementById('pin2')||{}).value||'';
  if(P.mode==='set'){
   if(!/^\d{4,8}$/.test(a)){P.err='Use four to eight numbers.';draw(true);return;}
   if(a!==b){P.err='The two PINs are not the same.';draw(true);return;}
-  var r=new Uint8Array(8);crypto.getRandomValues(r);L.pinSalt=Array.from(r).join('.');L.pinWho=L.me;
-  pinHash(a).then(function(hh){L.pin=hh;L.nopin=false;var n=P.then;ui.pin=null;if(n)applyMove(n);persist();ui.status='PIN set for this device.';draw(true);});
+  var r=new Uint8Array(8);crypto.getRandomValues(r);var salt=Array.from(r).join('.');
+  pinHash(a,salt).then(function(hh){L.pins=L.pins||{};L.pins[wi]={h:hh,s:salt};var n=P.then;ui.pin=null;if(n)applyMove(n);persist();ui.status=NAMES[wi]+'’s PIN is set.';draw(true);});
   return;
  }
  if(Date.now()<(ui.pinWait||0)){P.err='Too many tries. Wait a moment, then try again.';draw(true);return;}
- pinHash(a).then(function(hh){
-  if(hh===L.pin){ui.pinBad=0;var n=P.then;ui.pin=null;if(ui.pinNext==='set'){ui.pinNext=null;ui.pin={mode:'set',then:null,err:''};draw(true);return;}if(n==='remove'){L.pin='';L.pinSalt='';persist();ui.status='PIN removed.';}else applyMove(n);draw(true);}
+ var cur=pinOf(wi)||{h:'',s:''};
+ pinHash(a,cur.s).then(function(hh){
+  if(hh===cur.h&&cur.h){ui.pinBad=0;var n=P.then;ui.pin=null;if(ui.pinNext==='set'){ui.pinNext=null;ui.pin={mode:'set',then:null,err:'',who:wi};draw(true);return;}if(n==='remove'){if(L.pins)delete L.pins[wi];persist();ui.status=NAMES[wi]+'’s PIN removed.';}else applyMove(n);draw(true);}
   else{ui.pinBad=(ui.pinBad||0)+1;if(ui.pinBad>=5){ui.pinWait=Date.now()+30000;ui.pinBad=0;}P.err='That PIN is not right.';draw(true);}
  });
 }
 function pinReset(){
- if(!confirm('Reset this device? The PIN and ALL the personal tasks kept on this device will be removed. Household jobs are not affected.'))return;
+ if(!confirm('Reset this device? Every PIN and ALL the personal tasks kept on this device will be removed. Household jobs are not affected.'))return;
  var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('gagh.')===0)ks.push(k);}
  ks.forEach(function(k){localStorage.removeItem(k);});
- L.pin='';L.pinSalt='';var n=ui.pin&&ui.pin.then;ui.pin=null;if(n&&n!=='remove')applyMove(n);persist();ui.status='This device was reset: no PIN, no personal tasks.';draw(true);
+ L.pins={};L.together=false;var n=ui.pin&&ui.pin.then;ui.pin=null;if(n&&n!=='remove')applyMove(n);persist();ui.status='This device was reset: no PINs, no personal tasks.';draw(true);
 }
-function pinRow(){
- if(L.shared)return '';
- return '<div class="note2"><b>PIN</b><br>'+(L.pin?'A PIN keeps '+esc(NAMES[L.pinWho===1?1:0])+'’s personal tasks private on this device. It is asked each time you open Getting a grip from Planning, and after a quiet spell.<div class="srow"><button data-act="pinchange">Change the PIN</button><button data-act="pinremove">Remove the PIN</button></div>':'Set a PIN to keep personal tasks private on this device. It is then asked each time Getting a grip is opened from the Planning side of this computer.<div class="srow"><button class="on" data-act="pinset">Set a PIN</button></div>')+'</div>';
+function pinSection(i){
+ var has=!!pinOf(i),nm=esc(NAMES[i]);
+ return '<div class="note2"><b>'+nm+'’s PIN</b><br>'+(has?nm+' has a PIN. It is asked when '+nm+' opens Getting a grip on this computer, and when someone switches this computer to '+nm+'.<div class="srow"><button data-act="pinchange" data-who="'+i+'">Change '+nm+'’s PIN</button><button data-act="pinremove" data-who="'+i+'">Remove it</button></div>':'No PIN yet. Set one to keep '+nm+'’s Getting a grip private on this computer.<div class="srow"><button class="on" data-act="pinset" data-who="'+i+'">Set '+nm+'’s PIN</button></div>')+'</div>';
+}
+function securityTab(){
+ if(L.kind==='phone')return '<div class="note2"><b>PINs</b><br>A phone does not need one: it has its own lock. PINs are for a computer that other people can use. Switch this device to “Computer” on the This device tab to set them.</div>';
+ return '<div class="note2"><b>Security</b><br>Everything here is optional. A PIN is asked each time Getting a grip is opened from the Planning side of this computer, after a quiet spell, and when the computer is switched to that person. Planning itself never shows personal tasks. It is a curtain against a casual look, not strong security, and the PIN stays on this device only. Personal tasks are kept once per device, so if you share a computer and want fully separate personal tasks, use your own devices.</div>'+pinSection(0)+pinSection(1)+(anyPin()?lockRow():'');
 }
 /* ---- 📬 FROM EMAIL (owner, 24 Nov 2026): a prompt for any AI that can read Gmail, the .md file it returns, and a shared triage
    list (D.triage) of recurring payments and jobs to Add (as a household job in Still to share out, with due date and repeat) or Skip.
@@ -977,7 +990,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.29';
+var APP_VERSION='H1.30';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -1077,7 +1090,7 @@ document.addEventListener('click',function(e){
  var b=e.target.closest('[data-act]');if(!b||b.tagName==='INPUT')return;var act=b.getAttribute('data-act'),t=byId(b.getAttribute('data-id'));
  if(act==='edit'||act==='gopen'){ui.sheet=b.getAttribute('data-id');draw(true);return;}
  if(act==='gclose'){if(e.target!==b&&b.classList.contains('gsheet'))return;ui.sheet=null;draw(true);return;}
- if(act==='together'){if(L.together)askMove({together:false});else if(!L.pin){ui.pin={mode:'set',then:{together:true},err:''};}else applyMove({together:true});}
+ if(act==='together'){/* the Household view button no longer exists */}
  else if(act==='me'&&b.getAttribute('data-i')==='2'){applyMove({shared:true});}
  else if(act==='me'){var wi2=+b.getAttribute('data-i');if(!(wi2===L.me&&!hhOnly()))askMove({me:wi2});}
  else if(act==='home'){if(opensOnMyDay()){persist();location.href='tasks.html';return;}toStart();ui.sheet=null;ui.pin=null;scrollTo(0,0);}
@@ -1100,11 +1113,10 @@ document.addEventListener('click',function(e){
  else if(act==='whofirst'){L.me=+b.getAttribute('data-v');L.whoSet=true;persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='pinok'){pinOk();return;}
  else if(act==='pincancel'){ui.pin=null;}
- else if(act==='pinoffer'){var pv=b.getAttribute('data-v');if(pv==='set'){ui.pin={mode:'set',then:{go:true},err:''};}else{L.nopin=true;ui.pin=null;persist();location.href='tasks.html';return;}}
  else if(act==='pinreset'){pinReset();return;}
- else if(act==='pinset'||act==='pinchange'){if(act==='pinchange'&&L.pin){ui.pin={mode:'enter',then:null,err:''};ui.pinNext='set';}else ui.pin={mode:'set',then:null,err:''};}
- else if(act==='pinremove'){ui.pin={mode:'enter',then:'remove',err:''};}
- else if(act==='tab'){if(b.getAttribute('data-t')==='day'){if(L.kind!=='phone'&&L.kind){if(L.pin&&L.together){ui.pin={mode:'enter',then:{together:false,go:true},err:''};draw(true);return;}}persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
+ else if(act==='pinset'||act==='pinchange'){var pw=+b.getAttribute('data-who')===1?1:0;if(act==='pinchange'&&pinOf(pw)){ui.pin={mode:'enter',then:null,err:'',who:pw};ui.pinNext='set';}else ui.pin={mode:'set',then:null,err:'',who:pw};}
+ else if(act==='pinremove'){ui.pin={mode:'enter',then:'remove',err:'',who:+b.getAttribute('data-who')===1?1:0};}
+ else if(act==='tab'){if(b.getAttribute('data-t')==='day'){if(L.kind!=='phone'&&L.kind){if(curPin()&&L.together){ui.pin={mode:'enter',then:{together:false,go:true},err:'',who:L.me};draw(true);return;}}persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
  else if(act==='stage'){var sk=b.getAttribute('data-k');if(sk==='share'){L.tab='alloc';}else{L.tab='brain';L.stage=sk;if(sk==='areas')L.walkOpen=false;}scrollTo(0,0);}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
  else if(act==='previ'){var pk=b.getAttribute('data-k'),pn=pk==='warm'?WARM.length:12;L.idx[pk]=Math.max(0,(idx(pk)%pn)-1);}
@@ -1180,7 +1192,7 @@ document.addEventListener('drop',function(e){var c=target(e);if(!c)return;e.prev
 var lastTap=Date.now();
 ['pointerdown','keydown','touchstart','wheel'].forEach(function(ev){document.addEventListener(ev,function(){lastTap=Date.now();},{passive:true,capture:true});});
 function lockCheck(){
- if(L.kind==='phone'||!L.pin||hhOnly()||!lockMins()||ui.pin)return;
+ if(L.kind==='phone'||!curPin()||hhOnly()||!lockMins()||ui.pin)return;
  if(Date.now()-lastTap>=lockMins()*60000){L.together=true;L.shared=false;if(L.tab==='day')L.tab='alloc';ui.status='Locked after a quiet spell. Getting a grip needs the PIN.';persist();draw(true);}
 }
 setInterval(lockCheck,10000);

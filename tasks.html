@@ -1056,7 +1056,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.29';
+var APP_VERSION='H1.30';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3306,7 +3306,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    activity are ever written to the shared document: personal tasks never leave this device. */
 /* H1.12: remember which side this device was last on, and lock after a quiet spell (computers with a PIN) */
 /* leaving Getting a grip on a computer with a PIN locks it again, so the next person to press the switch is asked for the PIN (H1.27) */
-function hhLockIfPin(){var l=hhLoc();if(l.kind!=='phone'&&l.pin)hhSetLoc({together:true});}
+function hhPinSet(l){var i=l.me===1?1:0;return !!((l.pins&&l.pins[i])||l.pin);}
+function hhLockIfPin(){var l=hhLoc();if(l.kind!=='phone'&&hhPinSet(l))hhSetLoc({together:true});}
 function hhSetLoc(patch){try{var l=hhLoc();for(var k in patch)l[k]=patch[k];localStorage.setItem(HH.LKEY,JSON.stringify(l));}catch(e){}}
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
   NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead','alt'],busy:false,t:0,on:false};
@@ -3576,7 +3577,7 @@ pStart();
   ['pointerdown','keydown','touchstart','wheel'].forEach(function(ev){document.addEventListener(ev,function(){last=Date.now();},{passive:true,capture:true});});
   function check(){
     var l=hhLoc(),m=l.lockMin===undefined?5:l.lockMin;
-    if(l.kind==='phone'||!l.pin||l.together||!m)return;
+    if(l.kind==='phone'||!hhPinSet(l)||l.together||!m)return;
     if(Date.now()-last>=m*60000){hhSetLoc({together:true});location.replace('./?side=plan');}
   }
   setInterval(check,10000);
