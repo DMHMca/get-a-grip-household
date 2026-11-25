@@ -812,7 +812,7 @@ function appHeader(){
   else{
     /* a computer: Home = the start of THIS side (Today); the title says which side you are on and switches to Planning */
     kids.push(h('button',{class:'brand',type:'button','aria-label':'Home: back to Today',style:pillCss,onclick:function(){go('today');}},['⌂ Home']));
-    kids.push(h('a',{class:'brand',href:'./?side=plan','aria-label':'Switch to Planning',title:'Switch to Planning',style:'margin:0 8px 0 auto;padding-left:12px;text-decoration:none;color:inherit;white-space:nowrap'},[h('b',{style:'color:var(--accent)',text:'Getting a grip · '+nm}),' ⇄ Planning']));
+    kids.push(h('a',{class:'brand',href:'./?side=plan',onclick:function(){hhLockIfPin();},'aria-label':'Switch to Planning',title:'Switch to Planning',style:'margin:0 8px 0 auto;padding-left:12px;text-decoration:none;color:inherit;white-space:nowrap'},[h('b',{style:'color:var(--accent)',text:'Getting a grip · '+nm}),' ⇄ Planning']));
   }
   kids.push(h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
       [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)]));
@@ -1053,7 +1053,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.25';
+var APP_VERSION='H1.27';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -2916,7 +2916,7 @@ function sheetEl(){
     }
     var restoreIn=h('input',{type:'file',accept:'application/json,.json',id:'restorefile',style:'display:none',onchange:function(e){var f=e.target.files&&e.target.files[0];ui.sheet=null;restoreFile(f);e.target.value='';}});
     inner.push(h('h2',{text:'More'}));
-    inner.push(line(svg(ICON.right),'Planning','Brainstorm, regular payments, share out',function(){location.href='./?home=1';}));
+    inner.push(line(svg(ICON.right),'Planning','Brainstorm, regular payments, share out',function(){hhLockIfPin();location.href='./?home=1';}));
     inner.push(line(svg(ICON.check),'Tag tasks',nTag?nTag+' waiting':'none waiting',function(){ui.tag={ids:untaggedLeaves().map(function(x){return x.id;}),i:0};ui.sheet={type:'tagall'};render();}));
     inner.push(line(svg(ICON.box),'Archive',archived().length+' archived',function(){goSub('archive');}));
     /* Google Drive sync is hidden in the household app (owner, 21 Nov 2026: it asks to sign in too often). Personal sync will move to the Cloudflare store instead. */
@@ -3302,6 +3302,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&ui.sheet)cl
    of Get a grip works on it. Changes to those tasks go back into the shared document. Only tasks in the Household
    activity are ever written to the shared document: personal tasks never leave this device. */
 /* H1.12: remember which side this device was last on, and lock after a quiet spell (computers with a PIN) */
+/* leaving Getting a grip on a computer with a PIN locks it again, so the next person to press the switch is asked for the PIN (H1.27) */
+function hhLockIfPin(){var l=hhLoc();if(l.kind!=='phone'&&l.pin)hhSetLoc({together:true});}
 function hhSetLoc(patch){try{var l=hhLoc();for(var k in patch)l[k]=patch[k];localStorage.setItem(HH.LKEY,JSON.stringify(l));}catch(e){}}
 var HH={SERVER:'https://household-store.dmhmca-apps.workers.dev',DKEY:'household.doc.v2',LKEY:'household.local.v2',ACT:'hh',
   NAMES:['Lauren','Josh'],FIELDS:['wait','wf','wh','dur','dev','notes','nm','ad','due','rep','lead','alt'],busy:false,t:0,on:false};
