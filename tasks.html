@@ -307,7 +307,7 @@ function scopeBar(){
   var v=ui.view;if(v!=='today'&&v!=='big'&&v!=='small'&&v!=='master')return null;
   var sc=getScope();
   return h('div',{class:'sorts',role:'group','aria-label':'Which tasks to show',style:'padding:2px 16px 6px'},
-    [['all','Everything'],['hh','Household'],['me','Personal']].map(function(x){
+    [['hh','Household'],['me','Personal'],['all','Everything']].map(function(x){
       return h('button',{class:'btn','aria-pressed':sc===x[0]?'true':'false',onclick:function(){setScope(x[0]);}},[x[1]]);}));
 }
 /* ---------- DUE DATES (household app, owner 22 Nov 2026) ----------
@@ -806,7 +806,7 @@ function lastAct(){
 
 function appHeader(){
   var isPhone=hhLoc().kind==='phone';
-  return h('div',{class:'apphead'},[isPhone?null:h('a',{class:'brand',href:'./?home=1','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:isPhone?'margin:0 auto 0 12px':'margin:0 8px 0 auto;padding-left:12px',text:hhLoc().me===1?HH.NAMES[1]+'’s day':HH.NAMES[0]+'’s day'}),
+  return h('div',{class:'apphead'},[isPhone?null:h('a',{class:'brand',href:'./?home=1','aria-label':'Home: back to the start of Brainstorm',style:'text-decoration:none;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;flex:none;width:auto;white-space:nowrap'},['⌂ Home']),h('p',{class:'brand',style:isPhone?'margin:0 auto 0 12px':'margin:0 8px 0 auto;padding-left:12px',text:'Getting a grip · '+(hhLoc().me===1?HH.NAMES[1]:HH.NAMES[0])}),
     h('button',{class:'menubtn','aria-label':'More: Archive and Settings',onclick:function(){ui.sheet={type:'menu'};render();}},
       [svg('<circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>',26)])].filter(function(x){return x!==null;}));
 }
@@ -1045,7 +1045,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.9';
+var APP_VERSION='H1.10';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -2907,7 +2907,7 @@ function sheetEl(){
     }
     var restoreIn=h('input',{type:'file',accept:'application/json,.json',id:'restorefile',style:'display:none',onchange:function(e){var f=e.target.files&&e.target.files[0];ui.sheet=null;restoreFile(f);e.target.value='';}});
     inner.push(h('h2',{text:'More'}));
-    inner.push(line(svg(ICON.right),'Plan together','Brainstorm, regular payments, share out',function(){location.href='./?home=1';}));
+    inner.push(line(svg(ICON.right),'Planning','Brainstorm, regular payments, share out',function(){location.href='./?home=1';}));
     inner.push(line(svg(ICON.check),'Tag tasks',nTag?nTag+' waiting':'none waiting',function(){ui.tag={ids:untaggedLeaves().map(function(x){return x.id;}),i:0};ui.sheet={type:'tagall'};render();}));
     inner.push(line(svg(ICON.box),'Archive',archived().length+' archived',function(){goSub('archive');}));
     /* Google Drive sync is hidden in the household app (owner, 21 Nov 2026: it asks to sign in too often). Personal sync will move to the Cloudflare store instead. */

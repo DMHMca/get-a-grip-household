@@ -113,10 +113,10 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <p>Every job goes to one person, never both, because two people who each own a job each assume the other will do it. Drag a card to Lauren’s or Josh’s column, or tap the round L or J on the card. The strip at the top shows how many big and small jobs each of you holds. It is there for a quick look together, not as a score. You can reassign a job whenever you like, and its steps travel with it.</p>
 </details>
 
-<details id="h-day"><summary>Your day on the phone (My day)</summary>
-<p>My day is Get a grip itself. <b>Today</b> builds a short menu: how many big tasks (none to three), how many steps of each, how many small ones. <b>Automatic</b> takes the first big job in your Big list and the first small ones from your Small list. <b>Custom</b> lets you choose. <b>Slot</b> asks how long you have and what you have with you, then offers things that fit. Once a day is built, <b>Refresh</b> rebuilds it from your lists as they are now, <b>Finish</b> closes the day with an optional note, and <b>Redo</b> clears it so you can start again.</p>
+<details id="h-day"><summary>Getting a grip: your day on the phone</summary>
+<p>The Getting a grip side is Get a grip itself. <b>Today</b> builds a short menu: how many big tasks (none to three), how many steps of each, how many small ones. <b>Automatic</b> takes the first big job in your Big list and the first small ones from your Small list. <b>Custom</b> lets you choose. <b>Slot</b> asks how long you have and what you have with you, then offers things that fit. Once a day is built, <b>Refresh</b> rebuilds it from your lists as they are now, <b>Finish</b> closes the day with an optional note, and <b>Redo</b> clears it so you can start again.</p>
 <p>The lists behind it: <b>Big</b> and <b>Small</b> are in your own order (drag to change; the first big job is what Automatic picks), <b>Master</b> is a read-only list of what you could do next, and <b>Activities</b> are your areas of life. Household jobs sit in an activity named after their area, next to your personal ones.</p>
-<p>The buttons at the top, <b>Everything</b>, <b>Household</b> and <b>Personal</b>, filter the lists and also what Automatic and Slot pick from. Choose Household to work only on the shared jobs, Personal for only your own, or Everything for the lot. The choice is remembered on that device. The ⋮ menu holds the housekeeping: Tag tasks, Archive, backup and restore, appearance, the Today layout, and “Plan together” to get back to the planning pages.</p>
+<p>The buttons at the top, <b>Household</b>, <b>Personal</b> and <b>Everything</b>, filter the lists and also what Automatic and Slot pick from. Choose Household to see only the shared jobs, Personal for only your own, or Everything for the lot. The choice is remembered on that device. The ⋮ menu holds the housekeeping: Tag tasks, Archive, backup and restore, appearance, the Today layout, and “Planning” to get back to the planning pages.</p>
 </details>
 
 <details id="h-quiet"><summary>Due dates, reminders and repeats (the quiet way)</summary>
@@ -153,14 +153,14 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 </details>
 
 <details id="h-device"><summary>Phone or computer, Household view and the PIN</summary>
-<p>Each device says whose it is (Lauren or Josh) and, from its first opening, whether it is a <b>phone</b> or a <b>computer</b>. A phone is for doing: it opens on My day and keeps the planning pages behind “Plan together” in its ⋮ menu. A computer is for planning together: it opens on Brainstorm. You can change it on the Devices page.</p>
-<p><b>Household view</b> hides My day and every personal task, for when you look at the household together on one person’s own computer. The first time you use it you set a <b>PIN</b>, and you need that PIN to leave Household view. The PIN is stored on that device only. Five wrong tries means a 30-second wait. If you forget it, “Reset this device” removes the PIN <i>and the personal tasks kept on that device</i>, so a forgotten PIN never exposes anything. Household jobs come back from the shared list.</p>
+<p>Each device says whose it is (Lauren or Josh) and, from its first opening, whether it is a <b>phone</b> or a <b>computer</b>. A phone is for doing: it opens on Getting a grip and keeps the planning pages behind “Planning” in its ⋮ menu. A computer is for planning together: it opens on Brainstorm. You can change it on the Devices page.</p>
+<p><b>Household view</b> hides the Getting a grip side and every personal task, for when you look at the household together on one person’s own computer. The first time you use it you set a <b>PIN</b>, and you need that PIN to leave Household view. The PIN is stored on that device only. Five wrong tries means a 30-second wait. If you forget it, “Reset this device” removes the PIN <i>and the personal tasks kept on that device</i>, so a forgotten PIN never exposes anything. Household jobs come back from the shared list.</p>
 <p class="note">A PIN is a curtain, not a lock. It stops a casual look, but the tasks are still held in the browser on that device, so keep the device itself private.</p>
 </details>
 
 <details id="h-where"><summary>Where your information is kept</summary>
 <p><b>Personal tasks</b> are kept only in the browser on the device you typed them on. They are never part of the shared list and never sent anywhere. <b>The household list</b> is kept on each linked device and in one shared copy in a small store on Cloudflare, under your household code. The store belongs to the app’s owner, who could in principle read it, so don’t put passwords, card numbers or bank details in it. Supplier references for renewals are fine. The <a href="privacy.html">privacy page</a> says all this in plain English.</p>
-<p><b>Backups.</b> The ⋮ menu on the planning pages has “Download a backup” of the household list. My day’s menu has backup and restore for the tasks on that device. There is no restore button for the household list yet.</p>
+<p><b>Backups.</b> The ⋮ menu on the planning pages has “Download a backup” of the household list. The ⋮ menu on the Getting a grip side has backup and restore for the tasks on that device. There is no restore button for the household list yet.</p>
 </details>
 
 <details id="h-trouble"><summary>When something looks wrong</summary>
@@ -181,7 +181,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <div class="scroll"><table>
 <tr><th>File</th><th>What it is</th></tr>
 <tr><td><code>index.html</code></td><td>The planning side: Brainstorm, Share out, Devices, the ⋮ More panel, the detail panel, the PIN.</td></tr>
-<tr><td><code>tasks.html</code></td><td>My day: a fork of Get a grip (Today, Big, Small, Master, Activities and every edit screen) plus the household link that brings a person’s household jobs in and sends changes back.</td></tr>
+<tr><td><code>tasks.html</code></td><td>The Getting a grip side: a fork of Get a grip (Today, Big, Small, Master, Activities and every edit screen) plus the household link that brings a person’s household jobs in and sends changes back.</td></tr>
 <tr><td><code>sw.js</code></td><td>Service worker. Pages are fetched network-first with <code>cache:'no-cache'</code> so a release shows at the next open. It also handles push and notification clicks.</td></tr>
 <tr><td><code>worker/worker.js</code></td><td>The Cloudflare Worker: the shared store, the reminder sign-ups, and the daily reminder job.</td></tr>
 <tr><td><code>privacy.html</code>, <code>help.html</code></td><td>This page and the privacy page.</td></tr>
@@ -192,7 +192,7 @@ hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 <ul>
 <li><code>household.doc.v2</code>: the shared document <code>{tasks, gone, day, cats, triage}</code>. Each task has Get a grip’s own fields (<code>text</code>, <code>size</code>, <code>parent</code>, <code>done</code>, <code>wait</code>/<code>wf</code>/<code>wh</code>, <code>dur</code>, <code>dev</code>, <code>notes</code>, <code>updated</code>) plus <code>to</code> (0 Lauren, 1 Josh, null unshared), <code>area</code>, <code>r</code> (priority rank), <code>due</code>, <code>rep</code> (<code>week</code>, <code>month</code>, <code>3m</code>, <code>6m</code>, <code>year</code>, <code>2y</code>) and <code>lead</code> (days before the due date that it comes into the lists).</li>
 <li><code>household.local.v2</code>: this device’s settings: <code>code</code>, <code>me</code>, <code>kind</code>, <code>together</code>, <code>pin</code>/<code>pinSalt</code>/<code>pinWho</code>, <code>push</code>, plus where you were in the planning rounds.</li>
-<li><code>gagh.*</code>: My day’s own data and settings, behind the <code>LS</code> wrapper in <code>tasks.html</code>. Personal tasks live here and nowhere else.</li>
+<li><code>gagh.*</code>: the Getting a grip side’s own data and settings, behind the <code>LS</code> wrapper in <code>tasks.html</code>. Personal tasks live here and nowhere else.</li>
 <li>On the phone each household job is mirrored into an activity <code>hh:&lt;area&gt;</code>. Only tasks in those activities are ever written back to the shared document (<code>isHH</code>, <code>hhPull</code>, <code>hhPush</code>).</li>
 </ul>
 

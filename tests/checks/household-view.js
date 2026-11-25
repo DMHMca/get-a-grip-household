@@ -1,5 +1,5 @@
 // CHECK: household-view
-// Household view: hides My day, asks to set a PIN, asks for it to leave; an old shared-screen device becomes Household view.
+// Household view: hides Getting a grip, asks to set a PIN, asks for it to leave; an old shared-screen device becomes Household view.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';

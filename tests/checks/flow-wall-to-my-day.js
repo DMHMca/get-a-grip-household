@@ -1,5 +1,5 @@
 // CHECK: flow-wall-to-my-day
-// The basic flow: add a note on the wall, share it out to Lauren, find it in My day, set it up, give it to Josh, delete a step; nothing personal reaches the shared list.
+// The basic flow: add a note on the wall, share it out to Lauren, find it in Getting a grip, set it up, give it to Josh, delete a step; nothing personal reaches the shared list.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
@@ -13,7 +13,7 @@ await p.click('nav.tabs >> text=2 · Share out');await p.waitForTimeout(300);
 console.log('Both column?', (await p.locator('.col h3',{hasText:'Both'}).count())>0);
 await p.screenshot({path:'share.png',fullPage:true});
 const card=p.locator('article.card',{hasText:'Fix the gutter'});await card.locator('[aria-label="Give to Lauren"]').click();await p.waitForTimeout(300);
-await p.click('nav.tabs >> text=3 · My day');await p.waitForTimeout(1200);
+await p.click('nav.tabs >> text=3 · Getting a grip');await p.waitForTimeout(1200);
 console.log('url:', p.url().replace(B,''));
 await p.screenshot({path:'myday.png'});
 await p.getByRole('button',{name:'Small',exact:true}).last().click();await p.waitForTimeout(300);

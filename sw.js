@@ -1,4 +1,4 @@
-const CACHE='gagh-v33';
+const CACHE='gagh-v34';
 const SCOPE=new URL(self.registration.scope).pathname;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./','./manifest.webmanifest','./help.html']).catch(()=>{})));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('gagh-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
@@ -16,7 +16,7 @@ self.addEventListener('push',e=>{
     .then(s=>s?fetch(STORE+'/msg',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:s.endpoint})}).then(r=>r.json()):[])
     .catch(()=>[])
     .then(list=>{
-      if(!list||!list.length)list=[{title:'Get a Grip Household',body:'A household job is coming up. Open My day to see it.'}];
+      if(!list||!list.length)list=[{title:'Get a Grip Household',body:'A household job is coming up. Open Getting a grip to see it.'}];
       return Promise.all(list.map((m,i)=>self.registration.showNotification(m.title,{body:m.body,icon:'icon-192.png',badge:'icon-192.png',tag:'gagh-'+Date.now()+'-'+i})));
     }));
 });

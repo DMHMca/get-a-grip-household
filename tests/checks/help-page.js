@@ -1,5 +1,5 @@
 // CHECK: help-page
-// The Help page: reachable from the planning ⋮ More panel, the welcome card and My day's ⋮ menu; its three parts and how-tos are there;
+// The Help page: reachable from the planning ⋮ More panel, the welcome card and Getting a grip's ⋮ menu; its three parts and how-tos are there;
 // a link with a #address opens the right section; it follows the dark setting; nothing runs off the side of a phone screen; Back returns.
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';

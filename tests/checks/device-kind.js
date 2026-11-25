@@ -1,5 +1,5 @@
 // CHECK: device-kind
-// Phone and computer layouts: the first-run card, a phone opening on My day with Plan together in its menu, Home, Devices, Household view.
+// Phone and computer layouts: the first-run card, a phone opening on Getting a grip with Planning in its menu, Home, Devices, Household view.
 // Run through tests/run.sh (it serves the repository at http://localhost:8765/get-a-grip-household/ and passes a sample data file where one is named).
 const {chromium}=require('playwright');
 const B='http://localhost:8765/get-a-grip-household/';
@@ -14,8 +14,8 @@ console.log('2 chose phone, lands on:',here(),'| header Home link:',await p.getB
 console.log('  quiet note:',(await p.locator('text=Nothing shared out yet').count()));
 await p.screenshot({path:'phone_day.png'});
 await p.locator('.menubtn').click();await p.waitForTimeout(300);
-console.log('  menu has Plan together:',await p.locator('text=Plan together').count());
-await p.click('text=Plan together');await p.waitForTimeout(900);console.log('3 Plan together opens planning:',here(),'| card gone:',await p.locator('[data-act=kindfirst]').count()===0,'| tab:',await tabs());
+console.log('  menu has Planning:',await p.locator('span.l',{hasText:/^Planning$/}).count());
+await p.locator('span.l',{hasText:/^Planning$/}).click();await p.waitForTimeout(900);console.log('3 Planning opens planning:',here(),'| card gone:',await p.locator('[data-act=kindfirst]').count()===0,'| tab:',await tabs());
 await p.click('[data-act=home]');await p.waitForTimeout(1200);console.log('4 Home on a phone goes to:',here());
 await p.goto(B);await p.waitForTimeout(1200);console.log('5 reopening the app:',here());
 await p.goto(B+'#share');await p.waitForTimeout(600);console.log('6 #share link not redirected:',here());
