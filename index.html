@@ -89,7 +89,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ctl .homeb,.ctl .sidebtn{margin-right:0}
 .kindsel{display:flex;gap:6px;align-items:center}.kindsel .lbl{color:var(--mut);font-size:.9rem}.kindsel .sel1{min-height:40px;padding:0 14px;border-radius:999px}
-.devlabel{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line);background:transparent;color:var(--mut)}
+.devlabel{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px dashed var(--line);color:var(--mut)}
 .ctl .dots{margin-left:auto;font-size:1.9rem;line-height:1;font-weight:900;padding:0 16px;min-width:48px;min-height:44px}
 .logo{width:46px;height:46px;border-radius:14px;background:var(--acc);display:grid;grid-template-columns:repeat(2,9px);grid-template-rows:repeat(3,9px);gap:5px;place-content:center;box-shadow:var(--shadow)}
 .logo i{background:var(--onacc);border-radius:50%}
@@ -616,7 +616,7 @@ function generalTab(){
 }
 function whoSeg2(act){return '<div class="gseg" role="group" aria-label="Whose device is this">'+[0,1].map(function(i){return '<button class="'+(L.me===i?'on':'')+'" data-act="'+act+'" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</div>';}
 function deviceTab(){
- var h='<div class="note2"><b>Owner of this device</b><br>Each device belongs to one person: their personal tasks, and the household jobs shared out to them, are what it holds. Set it once. Planning is always both of you, so it never needs to know.<br>'+whoSeg2('whoset')+'</div>';
+ var h='<div class="note2"><b>Owner of this device</b><br>'+(L.whoSet?'This device belongs to <b>'+esc(NAMES[L.me===1?1:0])+'</b>: their personal tasks, and the household jobs shared out to them, are what it holds.':'Not chosen yet. You are asked the first time you open Getting a grip on this device.')+' Each device belongs to one person, chosen once, and it is not changed afterwards. Planning is always both of you, so it never needs to know.</div>';
  h+=kindRow();
  return h;
 }
@@ -919,7 +919,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.32';
+var APP_VERSION='H1.33';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -944,7 +944,7 @@ function head(){
   h+='<span class="kindsel" role="group" aria-label="Whose phone"><span class="lbl">Whose phone?</span>'+[0,1].map(function(i){return '<button class="sel1" data-act="whofirst" data-v="'+i+'">'+esc(NAMES[i])+'</button>';}).join('')+'</span>';
  }else{
   /* once answered it is just a label; the owner is changed in Settings, This device (owner, 25 Nov 2026) */
-  h+='<button class="devlabel" data-act="devset" title="Whose device this is: change it in Settings, This device">'+(ph?'📱':'💻')+' '+(L.whoSet?esc(NAMES[L.me===1?1:0]):'Whose?')+'</button>';
+  h+='<span class="devlabel" title="Whose device this is">'+(ph?'📱':'💻')+' '+(L.whoSet?esc(NAMES[L.me===1?1:0]):'Whose?')+'</span>';
  }
  h+='<button class="homeb dots" data-act="more" aria-label="Settings" title="Settings">⋮</button>';
  h+='</div></header>'+'<div class="status" id="st">'+esc(ui.status)+'</div>';
@@ -1030,8 +1030,6 @@ document.addEventListener('click',function(e){
  else if(act==='home'){if(opensOnMyDay()){persist();location.href='tasks.html';return;}toStart();ui.sheet=null;scrollTo(0,0);}
  else if(act==='more'){L.tab='set';L.stab=L.stab||'general';ui.updMsg='';scrollTo(0,0);}
  else if(act==='stab'){L.stab=b.getAttribute('data-v');}
- else if(act==='whoset'){var wn=+b.getAttribute('data-v');if(L.whoSet&&wn!==L.me&&!confirm('Change this device’s owner to '+NAMES[wn]+'?\n\nThis device holds '+NAMES[L.me]+'’s personal tasks. Do this only if the device really is changing hands.'))return;askMove({me:wn});}
- else if(act==='devset'){L.tab='set';L.stab='device';scrollTo(0,0);}
  else if(act==='mtheme'){try{localStorage.setItem('gagh.gag.theme',b.getAttribute('data-v'));}catch(x){}applyTheme();}
  else if(act==='mreload'){location.reload();return;}
  else if(act==='mcheck'){if(!swReg){location.reload();return;}ui.updMsg='Checking…';draw(true);var fin=function(){setTimeout(function(){ui.updMsg=ui.updateReady?'A new version is ready: tap Update now at the top.':'You have the newest version ('+APP_VERSION+').';draw(true);},2500);};try{swReg.update().then(fin,fin);}catch(x){fin();}return;}
