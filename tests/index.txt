@@ -29,3 +29,4 @@ chores:
 personal-sync:
 owner-needed:
 qr-link:
+ventures:

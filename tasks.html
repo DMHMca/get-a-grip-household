@@ -294,7 +294,7 @@ function scopeAct(){return getScope()==='hh'?hhActFor('wild'):null;}
 /* HOUSEHOLD ACTIVITIES: each area of the planning wall (House, Car, Health…) is an activity here, id 'hh:<area key>'.
    Any activity whose id starts 'hh' holds household jobs; every other activity is personal. */
 function isHH(t){return !!(t&&typeof t.activityId==='string'&&t.activityId.indexOf('hh')===0);}
-var HH_AREAS={clean:'🧽 Cleaning',house:'🏠 House',garden:'🌿 Garden',bills:'🧾 Major bills',money:'💷 Money',car:'🚗 Car',kids:'🧒 Kids',health:'🩺 Health',business:'🚀 Business ventures',trips:'✈️ Trips & fun',paper:'📄 Paperwork',wild:'✨ General'};
+var HH_AREAS={clean:'🧽 Cleaning',house:'🏠 House',garden:'🌿 Garden',bills:'🧾 Major bills',money:'💷 Money',car:'🚗 Car',kids:'🧒 Kids',health:'🩺 Health',business:'🚀 Business ventures',wellspent:'💰 Well Spent',botleague:'🤖 Bot League',storybella:'📖 StoryBella',trips:'✈️ Trips & fun',paper:'📄 Paperwork',wild:'✨ General'};
 function hhAreaName(k){if(HH_AREAS[k])return HH_AREAS[k];var c=(hhDoc().cats||[]).filter(function(x){return x.k===k;})[0];return c?'📌 '+c.n:'✨ General';}
 function hhActFor(k){
   k=k||'wild';var id='hh:'+k,a=act(id),nm=hhAreaName(k);
@@ -1055,7 +1055,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.35';
+var APP_VERSION='H1.36';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}

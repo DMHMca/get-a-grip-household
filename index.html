@@ -323,11 +323,24 @@ var AREAS=[
 var WARM=['What has been nagging at you this week?','What has been hanging around on the list for far too long?','What would you hate to forget this month?','What would make next week easier?','What is the one big thing you would love to have finished by the summer?','What keeps going wrong in the house that you just put up with?'];
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var MHINT={0:['Self Assessment tax return is due by 31 January'],1:['Half-term plans'],2:['Spring clean','Mother’s Day'],3:['New tax year: ISAs and pensions','Bills often change in April'],4:['Book the summer holiday','Planting time in the garden'],5:['Father’s Day','Book summer childcare'],6:['School holidays begin'],7:['Back-to-school uniform and kit'],8:['Boiler service before winter','Clear the gutters'],9:['Clocks go back: test the smoke alarms','Half-term'],10:['Christmas plans and presents','Winter check on the car'],11:['Christmas','Year-end accounts for the business']};
-var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'year',n:'The year ahead'},{k:'pay',n:'Regular payments'},{k:'group',n:'Group, sort and add details'}];
-function allAreas(){return AREAS.concat((D.cats||[]).filter(function(c){return !c.gone;}).map(function(c){return {k:c.k,n:c.n,e:'📌',c:'#E5E0D6',d:'#3B372E',y:'What needs doing for '+c.n+' in {M}?',s:[],custom:true};}));}
-function tilesList(){return allAreas().filter(function(a){return !a.hidden;});}
+var STAGES=[{k:'warm',n:'Warm up'},{k:'areas',n:'Walk each area'},{k:'vent',n:'Business ventures'},{k:'year',n:'The year ahead'},{k:'pay',n:'Regular payments'},{k:'group',n:'Group, sort and add details'}];
+/* BUSINESS VENTURES (owner, 25 Nov 2026, H1.36): a round of its own after "Walk each area", in the same format (tiles, each walked part by part), for the
+   ventures the two of them run between them. The three below, plus "Add your own" (stored in D.cats with v:true). Every venture walks the same parts. */
+function ventParts(nm){return [
+ {n:'Product',q:['What is the next thing to build, write or finish for '+nm+'?','What is broken, half-done or waiting on a decision?'],s:['Plan the next release','Fix the top problems','Decide what to build next']},
+ {n:'Customers and marketing',q:['Who is '+nm+' for, and how do they find it?','What would bring more of them in?'],s:['Update the website copy','Write the next newsletter','Plan the next campaign']},
+ {n:'Money and accounts',q:['What is coming in and going out for '+nm+'?','What needs invoicing, paying or reporting?'],s:['Do the accounts','Pay the supplier invoices','Check the business bank account']},
+ {n:'Legal and compliance',q:['Any registrations, terms, privacy or regulations to keep up with?','Anything expiring or due for renewal?'],s:['Review the terms and privacy policy','Check registrations and renewals','Get business insurance']},
+ {n:'Technology and hosting',q:['Domains, hosting, security, backups: anything due?','Anything fragile that worries you?'],s:['Renew the domain','Check the backups','Review security']},
+ {n:'People and partners',q:['Who is helping with '+nm+', and what do they need from you?','Anything to agree, hire or hand over?'],s:['Book a catch-up','Agree who owns what','Write down the plan']}];}
+var VENTURES=[
+ {k:'wellspent',n:'Well Spent',e:'💰',c:'#F3E3B8',d:'#4A3A12',v:true,parts:ventParts('Well Spent')},
+ {k:'botleague',n:'Bot League',e:'🤖',c:'#D6E2F3',d:'#1E3248',v:true,parts:ventParts('Bot League')},
+ {k:'storybella',n:'StoryBella',e:'📖',c:'#EBDDF0',d:'#3F2B4A',v:true,parts:ventParts('StoryBella')}];
+function allAreas(){return AREAS.concat(VENTURES).concat((D.cats||[]).filter(function(c){return !c.gone;}).map(function(c){return c.v?{k:c.k,n:c.n,e:'🚀',c:'#E5E0D6',d:'#3B372E',v:true,parts:ventParts(c.n),s:[],custom:true}:{k:c.k,n:c.n,e:'📌',c:'#E5E0D6',d:'#3B372E',y:'What needs doing for '+c.n+' in {M}?',s:[],custom:true};}));}
+function tilesList(v){return allAreas().filter(function(a){return !a.hidden&&!!a.v===!!v;});}
 function area(k){return allAreas().filter(function(a){return a.k===k;})[0];}
-function nextArea(a){var l=tilesList(),i=l.indexOf(a);return l[(i+1)%l.length];}
+function nextArea(a){var l=tilesList(a.v),i=l.indexOf(a);return l[(i+1)%l.length];}
 function monthIdx(j){return (new Date().getMonth()+j)%12;}
 var D=lo(DKEY,{tasks:[],gone:[],day:{}});if(!D.cats)D.cats=[];if(!D.triage)D.triage=[];
 var L=lo(LKEY,{code:'',me:0,tab:'brain',local:false,area:'house',whoSet:false});
@@ -437,27 +450,29 @@ function shareBox(kind){
 
 
 /* ---- the brainstorm page ---- */
+function curArea(st){var a=area(L.area);if(!a||(st==='vent')!==!!a.v)a=(st==='vent'?VENTURES[0]:AREAS[0]);return a;}
 function context(){
  var st=L.stage;
  if(st==='year'){var m=(new Date().getMonth()+idx('year'))%12;return {area:'wild',tag:MONTHS[m]};}
- if(st==='areas'){var aa=area(L.area)||AREAS[0],pi0=L.part[aa.k]||0;if(aa.parts){var pp=aa.parts[pi0%aa.parts.length];return {area:aa.k,tag:pp.n};}return {area:aa.k,tag:MONTHS[monthIdx(pi0%12)]};}
+ if(st==='areas'||st==='vent'){var aa=curArea(st),pi0=L.part[aa.k]||0;if(aa.parts){var pp=aa.parts[pi0%aa.parts.length];return {area:aa.k,tag:pp.n};}return {area:aa.k,tag:MONTHS[monthIdx(pi0%12)]};}
  return {area:'wild',tag:''};
 }
 function chips(list){var have=D.tasks.map(function(t){return t.text.toLowerCase();});var l=list.filter(function(x){return have.indexOf(x.toLowerCase())<0;});if(!l.length)return '';return '<div class="starters"><span class="sl">Tap to add:</span>'+l.map(function(x){return '<button class="chipb" data-act="starter" data-v="'+esc(x)+'">+ '+esc(x)+'</button>';}).join('')+'</div>';}
 function timerHtml(){return '<button class="tmr" data-act="timer">'+(ui.timer>Date.now()?'<span id="tleft"></span> left · stop':'⏱ Two-minute round')+'</button>';}
 function stageCard(){
  var st=L.stage,h='',a;
+ if(st==='vent'&&!L.walkOpen)return '<div class="stage" style="--ac:#F3E3B8;--acd:#4A3A12"><small>Business ventures</small><p class="q">Pick a venture to walk through</p><p class="pnote">Each venture goes part by part: product, customers, money, legal, technology and people. Come back here to pick the next, or add your own.</p></div>'+tiles('',true);
  if(st==='areas'&&!L.walkOpen)return '<div class="stage" style="--ac:#EADCF4;--acd:#3B2A52"><small>Walk each area</small><p class="q">Pick an area to walk through</p><p class="pnote">House, Garden and Paperwork go part by part. The others go month by month through the coming year. Come back here to pick the next one.</p></div>'+tiles('');
  if(st==='warm'){var p=WARM[idx('warm')%WARM.length];
   h='<div class="stage" style="--ac:#EADCF4;--acd:#3B2A52"><small>Warm up · question '+(idx('warm')%WARM.length+1)+' of '+WARM.length+'</small><div class="parts">'+WARM.map(function(x,i){var c=idx('warm')%WARM.length;return '<button class="'+(i===c?'on':i<c?'past':'')+'" data-act="seti" data-k="warm" data-i="'+i+'">'+(i+1)+'</button>';}).join('')+'</div><p class="q">'+esc(p)+'</p><div class="srow">'+(idx('warm')%WARM.length>0?'<button data-act="previ" data-k="warm">← Back</button>':'')+'<button data-act="nexti" data-k="warm">Next question →</button>'+timerHtml()+'</div></div>';}
  else if(st==='year'){var j=idx('year')%12,m=(new Date().getMonth()+j)%12;
   h='<div class="stage" style="--ac:#D8E6EE;--acd:#22394A"><small>The year ahead · month '+(j+1)+' of 12</small><div class="parts">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(function(i){return '<button class="'+(i===j?'on':i<j?'past':'')+'" data-act="seti" data-k="year" data-i="'+i+'">'+MONTHS[monthIdx(i)].slice(0,3)+'</button>';}).join('')+'</div><p class="q">What comes round in '+MONTHS[m]+'?</p><ul class="hints">'+(MHINT[m]||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'<li>Any birthdays or anniversaries?</li><li>Anything renewing: insurance, MOT, subscriptions?</li></ul><div class="srow">'+(j>0?'<button data-act="previ" data-k="year">← Back</button>':'')+'<button data-act="nexti" data-k="year">Next month →</button>'+timerHtml()+'</div></div>';}
- else if(st==='areas'){a=area(L.area)||AREAS[0];var na=nextArea(a),pi=L.part[a.k]||0;h='<div class="srow" style="margin-top:0"><button data-act="allareas">← All areas</button></div>';
+ else if(st==='areas'||st==='vent'){a=curArea(st);var na=nextArea(a),pi=L.part[a.k]||0;h='<div class="srow" style="margin-top:0"><button data-act="allareas">← '+(st==='vent'?'All ventures':'All areas')+'</button></div>';
   if(a.parts){pi=pi%a.parts.length;var pt=a.parts[pi],last=pi===a.parts.length-1;
    h+='<div class="stage open" style="--ac:'+a.c+';--acd:'+a.d+'"><small>'+a.e+' '+esc(a.n)+' · walk round · '+(pi+1)+' of '+a.parts.length+'</small>'
    +'<div class="parts">'+a.parts.map(function(x,i){return '<button class="'+(i===pi?'on':i<pi?'past':'')+'" data-act="part" data-i="'+i+'">'+esc(x.n)+'</button>';}).join('')+'</div>'
    +'<p class="q">'+esc(pt.n)+'</p><ul class="hints">'+pt.q.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+(a.gq?'<li>'+esc(a.gq)+'</li>':'')+'</ul>'+(a.note?'<p class="pnote">🔒 '+esc(a.note)+'</p>':'')
-   +'<div class="srow"><button data-act="prevpart">← Back</button><button data-act="nextpart">'+(last?'Next area: '+na.e+' '+esc(na.n):'Next: '+esc(a.parts[pi+1].n))+' →</button>'+timerHtml()+'</div>'+chips(pt.s)+'</div>';}
+   +'<div class="srow"><button data-act="prevpart">← Back</button><button data-act="nextpart">'+(last?'Next '+(a.v?'venture':'area')+': '+na.e+' '+esc(na.n):'Next: '+esc(a.parts[pi+1].n))+' →</button>'+timerHtml()+'</div>'+chips(pt.s)+(a.custom?'<div class="srow"><button class="lnk" data-act="delcat" data-k="'+a.k+'">Remove this '+(a.v?'venture':'area')+'</button></div>':'')+'</div>';}
   else{pi=pi%12;var m=monthIdx(pi),lastm=pi===11;
    h+='<div class="stage open" style="--ac:'+a.c+';--acd:'+a.d+'"><small>'+a.e+' '+esc(a.n)+' · the year ahead · '+(pi+1)+' of 12</small>'
    +'<div class="parts">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(function(i){return '<button class="'+(i===pi?'on':i<pi?'past':'')+'" data-act="part" data-i="'+i+'">'+MONTHS[monthIdx(i)].slice(0,3)+'</button>';}).join('')+'</div>'
@@ -473,7 +488,7 @@ function stageCard(){
   +'<div class="seg"><span class="sl">New notes are</span><button class="smallb'+(ui.dsize==='small'?' on':'')+'" data-act="dsize" data-v="small">Small</button><button class="bigb'+(ui.dsize==='big'?' on':'')+'" data-act="dsize" data-v="big">Big</button></div>';
 }
 function tb(k){var n=live().filter(function(t){return t.area===k;}).length;return n?'<span class="tb">'+n+'</span>':'';}
-function tiles(lead){var a=L.stage==='areas'?L.area:null;return '<div class="tilebox">'+(lead?'<div class="sl tlead">'+lead+'</div>':'')+'<div class="areas">'+tilesList().map(function(x){return '<button class="area'+(x.k===a?' sel':'')+'" style="--ac:'+x.c+';--acd:'+x.d+'" data-act="area" data-k="'+x.k+'"><span class="em">'+x.e+'</span>'+esc(x.n)+tb(x.k)+'</button>';}).join('')+'<button class="area addcat" data-act="addcat"><span class="em">＋</span>Add your own</button></div></div>';}
+function tiles(lead,v){var a=(L.stage==='areas'||L.stage==='vent')?L.area:null;return '<div class="tilebox">'+(lead?'<div class="sl tlead">'+lead+'</div>':'')+'<div class="areas">'+tilesList(v).map(function(x){return '<button class="area'+(x.k===a?' sel':'')+'" style="--ac:'+x.c+';--acd:'+x.d+'" data-act="area" data-k="'+x.k+'"><span class="em">'+x.e+'</span>'+esc(x.n)+tb(x.k)+'</button>';}).join('')+'<button class="area addcat" data-act="addcat" data-v="'+(v?'vent':'')+'"><span class="em">＋</span>Add your own</button></div></div>';}
 /* PLANNING IN ONE ROW (owner, 25 Nov 2026, H1.23): the six rounds are the whole planning side. Share out is round 6; there is no separate tab row. */
 function stepper(){
  var onShare=L.tab==='alloc',ci=onShare?STAGES.length:STAGES.map(function(s){return s.k;}).indexOf(L.stage);
@@ -496,7 +511,7 @@ function wall(){
  var ts=live(),exn=exList().length,h='<div class="wallhead"><h2>The wall</h2><span class="sub">'+ts.length+(ts.length===1?' note':' notes')+(ts.length?' · '+ts.filter(function(t){return t.size==='big';}).length+' big':'')+'</span><span class="wallact">'+(!D.tasks.length?'<button class="mini" data-act="example">Show me an example wall</button>':'')+(exn?'<button class="mini" data-act="clearex">Remove the example notes ('+exn+')</button>':'')+'</span></div>';
  if(!ts.length)h+='<div class="empty">Notes will appear here as you call them out.</div>';
  var n=0;
- tilesList().concat([area('wild')]).forEach(function(a){var g=ts.filter(function(t){return (area(t.area)?t.area:'wild')===a.k;});if(!g.length)return;
+ allAreas().filter(function(a){return !a.hidden;}).concat([area('wild')]).forEach(function(a){var g=ts.filter(function(t){return (area(t.area)?t.area:'wild')===a.k;});if(!g.length)return;
   h+='<section class="grp" data-area="'+a.k+'"><h3>'+a.e+' '+esc(a.n)+' <span class="cnt">'+g.length+'</span></h3><div class="notes">'+g.map(function(t){return note(t,n++);}).join('')+'</div></section>';});
  var nn=tops().filter(function(t){return t.nn;});
  if(nn.length)h+='<details class="nnpile"><summary>Not now ('+nn.length+')</summary>'+nn.map(function(t){return '<div class="ns">'+esc(t.text)+' <button class="lnk" data-act="unnn" data-id="'+t.id+'">Bring back</button></div>';}).join('')+'</details>';
@@ -940,7 +955,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.35';
+var APP_VERSION='H1.36';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -950,7 +965,7 @@ function updateBanner(){return ui.updateReady?'<div class="note2" role="status" 
 /* the phone/computer and whose-phone questions now live in the header row (head()), so there is no separate card */
 function kindCard(){return '';}
 /* the Help button opens the Help section that matches where you are (owner, 25 Nov 2026) */
-function helpKey(){if(L.tab==='alloc')return 'h-share';if(L.tab==='set')return '';return {warm:'h-planning',areas:'h-planning',year:'h-planning',pay:'h-payments',group:'h-board'}[L.stage]||'h-planning';}
+function helpKey(){if(L.tab==='alloc')return 'h-share';if(L.tab==='set')return '';return {warm:'h-planning',areas:'h-planning',vent:'h-planning',year:'h-planning',pay:'h-payments',group:'h-board'}[L.stage]||'h-planning';}
 function head(){
  var ph=(L.kind==='phone'),g=guessKind();
  /* one tidy header (owner, 25 Nov 2026): the name at the top left; underneath ONE row: Home, Help, the Planning/Getting a grip switch, the phone/computer
@@ -1068,18 +1083,18 @@ document.addEventListener('click',function(e){
  else if(act==='kindfirst'){L.kind=b.getAttribute('data-v');persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='whofirst'){L.me=+b.getAttribute('data-v');L.whoSet=true;persist();if(opensOnMyDay()){location.href='tasks.html';return;}}
  else if(act==='tab'){if(b.getAttribute('data-t')==='day'){persist();location.href='tasks.html';return;}L.tab=b.getAttribute('data-t');scrollTo(0,0);}
- else if(act==='stage'){var sk=b.getAttribute('data-k');if(sk==='share'){L.tab='alloc';}else{L.tab='brain';L.stage=sk;if(sk==='areas')L.walkOpen=false;}scrollTo(0,0);}
+ else if(act==='stage'){var sk=b.getAttribute('data-k');if(sk==='share'){L.tab='alloc';}else{L.tab='brain';L.stage=sk;if(sk==='areas'||sk==='vent')L.walkOpen=false;}scrollTo(0,0);}
  else if(act==='begin'){L.welcomed=true;L.stage='warm';}
  else if(act==='previ'){var pk=b.getAttribute('data-k'),pn=pk==='warm'?WARM.length:12;L.idx[pk]=Math.max(0,(idx(pk)%pn)-1);}
  else if(act==='seti'){L.idx[b.getAttribute('data-k')]=+b.getAttribute('data-i');}
  else if(act==='prevpart'){var pa=area(L.area)||AREAS[0],pn2=pa.parts?pa.parts.length:12,pc=(L.part[pa.k]||0)%pn2;if(pc>0)L.part[pa.k]=pc-1;else{var tl=tilesList(),pv=tl[(tl.indexOf(pa)-1+tl.length)%tl.length];L.area=pv.k;L.part[pv.k]=(pv.parts?pv.parts.length:12)-1;}}
  else if(act==='nexti'){var k=b.getAttribute('data-k');L.idx[k]=idx(k)+1;}
  else if(act==='nextpart'){var ca=area(L.area)||AREAS[0],cn=ca.parts?ca.parts.length:12,cp=(L.part[ca.k]||0)%cn;if(cp<cn-1)L.part[ca.k]=cp+1;else{L.part[ca.k]=0;L.area=nextArea(ca).k;L.part[L.area]=0;}}
- else if(act==='addcat'){var nm=prompt('Name the new area, for example “Allotment” or “Grandparents”');if(nm&&nm.trim()){var ck='c'+id();D.cats.push({k:ck,n:nm.trim().slice(0,40),u:now()});L.walkOpen=true;L.area=ck;L.part[ck]=0;L.stage='areas';changed();}}
- else if(act==='delcat'){var dk=b.getAttribute('data-k');if(confirm('Remove this area? Its notes stay on the wall.')){D.cats.forEach(function(c){if(c.k===dk){c.gone=true;c.u=now();}});D.tasks.forEach(function(t){if(t.area===dk){t.area='wild';t.updated=now();}});L.area='house';changed();}}
+ else if(act==='addcat'){var isv=b.getAttribute('data-v')==='vent';var nm=prompt(isv?'Name the new venture':'Name the new area, for example “Allotment” or “Grandparents”');if(nm&&nm.trim()){var ck='c'+id();D.cats.push(isv?{k:ck,n:nm.trim().slice(0,40),u:now(),v:true}:{k:ck,n:nm.trim().slice(0,40),u:now()});L.walkOpen=true;L.area=ck;L.part[ck]=0;L.stage=isv?'vent':'areas';changed();}}
+ else if(act==='delcat'){var dk=b.getAttribute('data-k');if(confirm('Remove this tile? Its notes stay on the wall.')){D.cats.forEach(function(c){if(c.k===dk){c.gone=true;c.u=now();}});D.tasks.forEach(function(t){if(t.area===dk){t.area='wild';t.updated=now();}});L.area='house';L.walkOpen=false;changed();}}
  else if(act==='part'){L.part[L.area]=+b.getAttribute('data-i');}
  else if(act==='allareas'){L.walkOpen=false;}
- else if(act==='area'){L.walkOpen=true;L.area=b.getAttribute('data-k');L.part[L.area]=0;L.stage='areas';L.welcomed=true;}
+ else if(act==='area'){L.walkOpen=true;L.area=b.getAttribute('data-k');L.part[L.area]=0;var ar0=area(L.area);L.stage=(ar0&&ar0.v)?'vent':'areas';L.welcomed=true;}
  else if(act==='timer'){ui.timer=ui.timer>Date.now()?0:Date.now()+120000;}
  else if(act==='starter'){addIdea(b.getAttribute('data-v'));changed();}
  else if(act==='dsize'){ui.dsize=b.getAttribute('data-v');}
