@@ -69,6 +69,9 @@ button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
 .gpanel input[type=text],.gpanel textarea,.gpanel select,.gpanel input[type=date]{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--tx)}
 .gpanel textarea{min-height:70px;resize:vertical}
 .gseg{display:flex;flex-wrap:wrap;gap:6px}.gseg button{min-height:40px}
+.kindbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;border:1.5px solid var(--acc);border-radius:12px;padding:6px 10px;margin:6px 0;background:var(--card)}
+.kindbar .kt{display:flex;flex-direction:column;min-width:200px;flex:1}.kindbar .kt span{font-size:.8rem;color:var(--mut)}
+.kindbar .kb{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:flex-end}.kindbar .gseg button{min-height:36px;padding:4px 12px}
 .gseg button.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
 .gstep{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
 .gstep input[type=checkbox]{width:22px;height:22px;flex:none}.gstep .gt{flex:1;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line)}
@@ -957,7 +960,7 @@ function mailTab(){
 }
 /* ---- MORE MENU, VERSION AND UPDATES (owner, 25 Nov 2026: like the personal app's three-dot menu). APP_VERSION matches tasks.html;
    bump both, and the sw.js cache, on every release. Appearance is shared with My day (key gagh.gag.theme). ---- */
-var APP_VERSION='H1.17';
+var APP_VERSION='H1.18';
 function getTheme(){try{return localStorage.getItem('gagh.gag.theme')||'auto';}catch(e){return 'auto';}}
 function applyTheme(){var t=getTheme(),r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
 applyTheme();
@@ -967,12 +970,13 @@ function updateBanner(){return ui.updateReady?'<div class="note2" role="status" 
 function kindCard(){
  if(L.kind)return '';
  var g=guessKind();
- return '<div class="note2" style="border:2px solid var(--acc)"><b>What is this device?</b><br>The app lays itself out differently for each. A <b>phone</b> is for doing: it opens on Getting a grip and keeps the planning pages tucked away. A <b>computer</b> is for planning together: it opens on Brainstorm. You can change this later in Settings.<div class="glab">Whose is it?</div>'+whoSeg2('whoset')+'<div class="srow">'+[['phone','📱 A phone'],['computer','💻 A computer']].map(function(o){return '<button class="'+(g===o[0]?'on':'')+'" data-act="kindfirst" data-v="'+o[0]+'">'+o[1]+(g===o[0]?' (looks like this)':'')+'</button>';}).join('')+'</div></div>';
+ /* one slim bar, asked once (owner, 25 Nov 2026): whose device and what kind, as a bank of buttons at the right; it goes as soon as you choose */
+ return '<div class="kindbar" role="group" aria-label="Set up this device"><div class="kt"><b>Set up this device</b><span>Phone: for doing. Computer: for planning together. Change it later in Settings.</span></div><div class="kb">'+whoSeg2('whoset')+'<div class="gseg">'+[['phone','📱 Phone'],['computer','💻 Computer']].map(function(o){return '<button class="'+(g===o[0]?'on':'')+'" data-act="kindfirst" data-v="'+o[0]+'" title="'+(g===o[0]?'This looks like a '+o[0]:'')+'">'+o[1]+'</button>';}).join('')+'</div></div></div>';
 }
 function head(){
  var ph=(L.kind==='phone');
  var h='<header class="top"><button class="homeb" data-act="home" aria-label="Home">⌂<span class="lbl2"> Home</span></button><button class="homeb" data-act="more" aria-label="Settings">⋮<span class="lbl2"> Settings</span></button>'+(hhOnly()?'':'<button class="sidebtn" data-act="tab" data-t="day" aria-label="Switch to Getting a grip" title="Switch to Getting a grip"><b>Planning</b> <span aria-hidden="true">⇄</span><span class="lbl2"> Getting a grip</span></button>')+'<div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="brand"><h1>Get a Grip Household</h1><div>'+(ph?esc(NAMES[L.me])+'’s phone':'Work it out together. Do a little each day.')+'</div></div>';
- if(!ph){
+ if(!ph&&L.kind){
   h+='<div class="who"><span class="lbl">This device is</span>';
   [0,1].forEach(function(i){h+='<button class="pick'+(!L.shared&&L.me===i?' on':'')+'" data-act="me" data-i="'+i+'">'+av(i,26)+esc(NAMES[i])+'</button>';});
   h+='<button class="pick'+(L.together?' on':'')+'" data-act="together" title="Hide Getting a grip and personal tasks while you look at the household together">'+(L.together?'🏠 Household view · tap to leave':'🏠 Household view')+'</button></div>';
