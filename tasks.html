@@ -253,6 +253,27 @@ input[type=checkbox]{width:24px;height:24px;accent-color:var(--accent)}
   .sheet{animation:up .18s ease-out}
   @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
 }
+
+/* H1.39: the other person's household tasks */
+.otop{padding:4px 16px 0}.ohead{display:flex;align-items:center;gap:10px;margin:18px 16px 6px;font-size:19px;font-weight:700}
+.ohead small{font-size:14px;font-weight:600;color:var(--muted)}
+.orow{display:flex;flex-wrap:wrap;align-items:center;padding:0 4px;border-bottom:1px solid var(--line);min-height:60px}
+.orow .tick{width:48px;height:48px}
+.otext{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 0;font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+.orow.big .otext{font-weight:700}
+.owait{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin-top:4px;padding:3px 10px 3px 8px;border-radius:999px;background:rgba(240,180,76,.25);color:var(--text);border:1.5px solid #D99A1E;font-size:13px;font-weight:700}
+.omove{flex:none;display:flex;flex-direction:column}
+.omove button{width:44px;height:30px;border:0;background:none;color:var(--text);display:flex;align-items:center;justify-content:center}
+.omove button:disabled{opacity:.25}
+.osteps{flex-basis:100%;padding:0 0 6px 36px}
+.ostep{display:flex;align-items:center;min-height:44px}
+.ostep .tick{width:40px;height:40px}.ostep .otext{padding:4px 0;font-size:15px}
+.odone{margin:6px 0 0;border-left:5px solid var(--accent);background:rgba(91,58,122,.08)}
+.odone .orow .otext{color:var(--muted);text-decoration:line-through}
+.odone .otext small{text-decoration:none}.osteps .otext{font-weight:400}
+.oadd{display:flex;flex-wrap:wrap;gap:8px;padding:6px 16px 8px}
+.oadd input{flex:1 1 100%;min-height:48px;padding:6px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-size:17px}
+.oadd .btn{flex:1;height:48px}
 </style>
 </head>
 <body>
@@ -285,7 +306,8 @@ var ui={view:'today',back:[],partsOpen:{},bigCards:{},tileOpen:{},bigOpen:false,
    Applies to Today's choices (Automatic, Custom, Slot), Big, Small and Master. The Activities page always shows all.
    Saved on this device only. New tasks added on Big or Small while showing Household go into the Household activity. */
 function getScope(){try{var v=LS.getItem('scope');return v==='hh'||v==='me'?v:'all';}catch(e){return 'all';}}
-function setScope(v){try{LS.setItem('scope',v);}catch(e){}render();}
+function setScope(v){try{LS.setItem('scope',v);LS.setItem('other','0');}catch(e){}render();}
+function setOther(){try{LS.setItem('other','1');}catch(e){}if(ui.view==='today'||ui.view==='activities'||ui.view==='activity')ui.view='big';render();}
 /* BROUGHT IN LATER: a household job with `lead` (days) and a due date stays out of Today, Big, Small and Master until `lead` days
    before it is due (jobs from email: 28). It is still on the Activities page. When its time comes, hhSurface puts it at the top. */
 function notYet(t){var x=t&&t.parent?task(t.parent):t;if(!x||!isHH(x)||!x.lead||!x.due||x.done)return false;var n=daysTo(x.due);return n!==null&&n>x.lead;}
@@ -308,7 +330,8 @@ function scopeBar(){
   var sc=getScope();
   return h('div',{class:'sorts',role:'group','aria-label':'Which tasks to show',style:'padding:2px 16px 6px'},
     [['hh','Household'],['me','Personal'],['all','Everything']].map(function(x){
-      return h('button',{class:'btn','aria-pressed':sc===x[0]?'true':'false',onclick:function(){setScope(x[0]);}},[x[1]]);}));
+      return h('button',{class:'btn','aria-pressed':(sc===x[0]&&!otherActive())?'true':'false',onclick:function(){setScope(x[0]);}},[x[1]]);})
+    .concat(hhCanOther()?[h('button',{class:'btn','aria-pressed':otherActive()?'true':'false','aria-label':'Show '+HH.NAMES[1-hhMe()]+'’s household tasks',onclick:function(){setOther();}},[HH.NAMES[1-hhMe()]+'’s'])]:[]));
 }
 /* ---------- DUE DATES (household app, owner 22 Nov 2026) ----------
    A household job can carry `due` (YYYY-MM-DD) and `rep` (week, month, 3m, 6m, year, 2y). The date is kept quiet: it shows only in the edit
@@ -1055,7 +1078,7 @@ function restoreFile(f){
 var gisReady=false,gisLoading=false;
 /* The app's own Google sign-in (the family project, Drive app-data permission only). A client ID is public, not a secret.
    It only ever carries the Drive app-data permission. The Google Tasks features need the user's own client ID. */
-var APP_VERSION='H1.38';
+var APP_VERSION='H1.39';
 var DEFAULT_CID='941879453696-6ob1dsj9mnna0ifiv5dki1h62k78vl3i.apps.googleusercontent.com';
 function getCustomCid(){try{return LS.getItem('gag.clientId')||'';}catch(e){return '';}}
 function getCid(){return getCustomCid()||DEFAULT_CID;}
@@ -3185,7 +3208,7 @@ function viewKids(){
 }
 function viewBody(){
   var v=ui.view;
-  return v==='activity'?viewActivity():v==='activities'?viewActivities():v==='archive'?viewArchive():v==='import'?viewImport():v==='sync'?viewSync():v==='settings'?viewSettings():v==='master'?viewMaster():v==='small'?viewSmall():v==='big'?viewBig():viewToday();
+  return (otherActive()&&(v==='big'||v==='small'||v==='master'))?viewOther():v==='activity'?viewActivity():v==='activities'?viewActivities():v==='archive'?viewArchive():v==='import'?viewImport():v==='sync'?viewSync():v==='settings'?viewSettings():v==='master'?viewMaster():v==='small'?viewSmall():v==='big'?viewBig():viewToday();
 }
 function render(){
   ui.dirty=false;
@@ -3459,7 +3482,7 @@ function hhSync(){
       if(hhStable(m)!==hhStable(remote.doc))return req('PUT',{base:remote.v,doc:m}).then(function(r){if(r.status===409&&tries>0)return round(tries-1);});
     });
   }
-  return round(2).catch(function(){}).then(function(){HH.busy=false;if(hhPull()|hhSurface())commit(true);});
+  return round(2).catch(function(){}).then(function(){HH.busy=false;if(hhPull()|hhSurface())commit(true);if(otherActive()&&!ui.sheet&&hhStable(hhDoc())!==HH.sig)render();});
 }
 function hhSurface(){
   if(hhNoOwner())return false;
@@ -3478,7 +3501,7 @@ function hhStart(){
   setInterval(function(){if(document.visibilityState==='visible')hhSync();},20000);
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')hhSync();});
   /* the planning page open in another tab changed the shared document */
-  window.addEventListener('storage',function(e){if(e.key===HH.DKEY||e.key===HH.LKEY){if(hhPull())commit(true);}});
+  window.addEventListener('storage',function(e){if(e.key===HH.DKEY||e.key===HH.LKEY){if(hhPull())commit(true);if(otherActive()&&!ui.sheet)render();}});
 }
 
 /* =================== PERSONAL SYNC (H1.15) ===================
@@ -3566,6 +3589,82 @@ function pSummary(){
   var st={};try{st=JSON.parse(localStorage.getItem('household.pstat.v1')||'{}');}catch(e){}
   if(st.err)return st.err;
   return st.at?'On. Last synced '+new Date(st.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'On. Waiting for the first sync';
+}
+
+/* ============ THE OTHER PERSON'S HOUSEHOLD TASKS (H1.39, owner 26 Nov 2026) ============
+   Lauren can open Josh's household Big and Small lists (and Josh Lauren's) from the fourth button beside Household / Personal / Everything:
+   in his priority order, with a Waiting marker, finished ones kept in view, and the power to tick, reorder (up and down) and add a task for them.
+   It works straight on the shared household document (never on this device's own tasks), then syncs. Personal tasks never appear. */
+function hhCanOther(){return !!hhLoc().code&&!hhNoOwner();}
+function otherOn(){try{return LS.getItem('other')==='1';}catch(e){return false;}}
+function otherActive(){return hhCanOther()&&otherOn()&&(ui.view==='big'||ui.view==='small'||ui.view==='master');}
+function oFinished(d,b){if(b.done)return true;var k=d.tasks.filter(function(x){return x.parent===b.id;});return k.length>0&&k.every(function(c){return c.done;});}
+function oShort(k){var p=k.split('-');try{return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){return k;}}
+function oWait(d,t,depth){
+  if(!t||t.done)return '';
+  if(t.wait&&t.wait>todayKey())return 'Waiting until '+oShort(t.wait);
+  if(t.wf){var b=d.tasks.filter(function(x){return x.id===t.wf;})[0];if(b&&!oFinished(d,b))return 'Waiting for “'+b.text+'”';}
+  if(t.parent&&!depth){var p=d.tasks.filter(function(x){return x.id===t.parent;})[0];var w=p?oWait(d,p,1):'';if(w)return w;}
+  return '';
+}
+function oSave(d){hhPutDoc(d);render();hhSync();}
+function oToggle(id){var d=hhDoc(),t=d.tasks.filter(function(x){return x.id===id;})[0];if(!t)return;t.done=t.done?false:iso();t.updated=iso();oSave(d);}
+function oMove(id,dir){
+  var o=1-hhMe(),d=hhDoc(),t=d.tasks.filter(function(x){return x.id===id;})[0];if(!t)return;
+  var list=hhRanked(d.tasks.filter(function(x){return !x.parent&&x.to===o&&!x.nn&&!x.done&&x.size===t.size;}));
+  var i=list.indexOf(t),j=i+dir;if(i<0||j<0||j>=list.length)return;
+  list.splice(i,1);list.splice(j,0,t);
+  list.forEach(function(x,k){if(x.r!==k*10){x.r=k*10;x.updated=iso();}});
+  oSave(d);
+}
+function oAdd(size){
+  var tx=(ui.odraft||'').replace(/\n/g,' ').trim();if(!tx)return;
+  var o=1-hhMe(),d=hhDoc();
+  d.tasks.push({id:uid(),text:tx,size:size,area:'wild',tag:'',to:o,by:hhMe(),done:false,n:Date.now(),updated:iso()});
+  ui.odraft='';oSave(d);
+}
+function oRow(d,t,pos,n){
+  var o=1-hhMe(),w=oWait(d,t),ks=d.tasks.filter(function(x){return x.parent===t.id;});
+  var kids=[h('button',{class:'tick','aria-label':(t.done?'Untick: ':'Tick: ')+t.text,onclick:function(){oToggle(t.id);}},[tickIcon(!!t.done)]),
+    h('div',{class:'otext'},[h('span',{text:t.text}),w?h('span',{class:'owait'},[svg('<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>',15),w]):null,
+      t.done?h('small',{style:'color:var(--muted)',text:'Done '+oShort(String(t.done).slice(0,10))}):null])];
+  if(!t.done&&n>1)kids.push(h('div',{class:'omove'},[
+    h('button',{'aria-label':'Move up: '+t.text,disabled:pos===0?'':null,onclick:function(){oMove(t.id,-1);}},[svg(ICON.chevup,20)]),
+    h('button',{'aria-label':'Move down: '+t.text,disabled:pos===n-1?'':null,onclick:function(){oMove(t.id,1);}},[svg(ICON.down,20)])]));
+  if(ks.length)kids.push(h('div',{class:'osteps'},ks.map(function(k){var kw=oWait(d,k);
+    return h('div',{class:'ostep'},[h('button',{class:'tick','aria-label':(k.done?'Untick: ':'Tick: ')+k.text,onclick:function(){oToggle(k.id);}},[tickIcon(!!k.done)]),
+      h('div',{class:'otext',style:k.done?'color:var(--muted);text-decoration:line-through':''},[h('span',{text:k.text}),kw?h('span',{class:'owait'},[svg('<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>',15),kw]):null])]);})));
+  return h('div',{class:'orow'+(t.size==='big'?' big':''),'data-id':t.id},kids);
+}
+function viewOther(){
+  var me=hhMe(),o=1-me,nm=HH.NAMES[o],d=hhDoc();
+  HH.sig=hhStable(d);
+  var tops=d.tasks.filter(function(t){return !t.parent&&t.to===o&&!t.nn;});
+  function comingLater(t){return !t.done&&t.lead&&t.due&&daysTo(t.due)!==null&&daysTo(t.due)>t.lead;}
+  var open=function(sz){return hhRanked(tops.filter(function(t){return !t.done&&!comingLater(t)&&(t.size==='big')===(sz==='big');}));};
+  var big=open('big'),small=open('small');
+  var done=tops.filter(function(t){return t.done;}).sort(function(a,b){return (hhDone(b)||'')<(hhDone(a)||'')?-1:1;});
+  var lk=[];
+  lk.push(h('p',{class:'note',text:nm+'’s household tasks, in '+nm+'’s order. Ticking, moving and adding here change '+nm+'’s list. Personal tasks are private and never shown.'}));
+  var inp=h('input',{type:'text',id:'oaddin','aria-label':'Add a task for '+nm,placeholder:'Add a task for '+nm,autocomplete:'off',autocapitalize:'sentences',enterkeyhint:'done',
+    oninput:function(e){ui.odraft=e.target.value;},onkeydown:function(e){if(e.key==='Enter'){e.preventDefault();oAdd('small');}}});
+  inp.value=ui.odraft||'';
+  lk.push(h('div',{class:'oadd'},[inp,h('button',{class:'btn',onclick:function(){oAdd('small');}},['Add small task']),h('button',{class:'btn',onclick:function(){oAdd('big');}},['Add big task'])]));
+  function section(title,list){
+    lk.push(h('div',{class:'ohead'},[title,h('small',{text:String(list.length)})]));
+    if(!list.length)lk.push(h('div',{class:'empty',style:'padding:6px 20px 10px',text:'None yet.'}));
+    else list.forEach(function(t,i){lk.push(oRow(d,t,i,list.length));});
+  }
+  section('Big tasks',big);
+  section('Small tasks',small);
+  lk.push(h('div',{class:'ohead',style:'color:var(--accent)'},[svg(ICON.check,22),'Done',h('small',{text:String(done.length)})]));
+  if(!done.length)lk.push(h('div',{class:'empty',style:'padding:6px 20px 10px',text:'Nothing finished yet.'}));
+  else lk.push(h('div',{class:'odone'},done.map(function(t){return oRow(d,t,0,1);})));
+  lk.push(h('div',{style:'height:16px'}));
+  var kids=[titleBar(nm+'’s tasks'),h('div',{class:'list'},lk)];
+  var sb=syncBanner();if(sb)kids.push(sb);
+  kids.push(navBar(ui.view));
+  return kids;
 }
 /* =================== END HOUSEHOLD LINK =================== */
 if(migrateParts()){try{LS.setItem(KEY,JSON.stringify(S));}catch(e){}}
